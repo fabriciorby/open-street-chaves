@@ -83,9 +83,10 @@ for ln in lines:
             stack.append({})
         continue
     c = ctx()
-    m = re.match(r"\(&DAT_004b44a4\)\[[^\]]*\] = \w+ \+ '([^']+)';", ln)
+    m = re.match(r"\(&DAT_004b44a4\)\[[^\]]*\] = \w+ \+ (?:'((?:\\.|[^'\\])+)'|(0x[0-9a-f]+|\d+));", ln)
     if m and c['state'] is not None:
-        frames.setdefault(c['char'], {}).setdefault(c['state'], {})[c['timer'] if c['timer'] is not None else '*'] = lit(m.group(1))
+        val = lit(m.group(1)) if m.group(1) is not None else int(m.group(2), 0)
+        frames.setdefault(c['char'], {}).setdefault(c['state'], {})[c['timer'] if c['timer'] is not None else '*'] = val
         continue
     m = re.match(r"func_0x00476870\(param_1 & 0xff,\([^)]*\) \+ (0x[0-9a-f]+|\d+),([^;]*)\);", ln)
     if m:
