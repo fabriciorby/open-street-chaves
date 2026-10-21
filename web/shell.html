@@ -7,56 +7,156 @@
   body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
   canvas { width: 800px; height: 600px; image-rendering: pixelated; background: #000; margin-top: 16px; }
   p, #picker { max-width: 800px; }
-  #picker { margin: 12px 0; padding: 12px; border: 1px dashed #666; }
-  button { font-size: 1em; padding: 6px 12px; }
+  #picker { margin: 12px 0; padding: 16px; border: 2px dashed #666; border-radius: 8px; text-align: center; }
+  #picker.over { border-color: #fc0; background: #222; }
+  button { font-size: 1em; padding: 6px 12px; margin: 4px; }
+  code { color: #fc0; }
 </style>
 </head>
 <body>
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
 <div id="picker">
-  <p><b>open-street-chaves</b> needs your own copy of the <i>Street Chaves 1.5A</i> folder (the one with
-  <code>Chaves.exe</code>, <code>Lutadores</code>, <code>Cenarios</code>…). Nothing is uploaded: the files stay in
-  this page's memory.</p>
-  <input type="file" id="folder" webkitdirectory directory multiple>
-  <span id="status"></span>
+  <p><b>open-street-chaves</b> needs your own copy of <i>Street Chaves 1.5A</i>. Drop the game folder
+  (the one with <code>Chaves.exe</code>, <code>Lutadores</code>, <code>Cenarios</code>…) or its
+  <code>.zip</code> here, or pick it below. The files are read in your browser only, never uploaded, and kept
+  in this browser's storage so the next visit starts at once.</p>
+  <button id="pickFolder">Choose folder</button>
+  <button id="pickZip">Choose .zip</button>
+  <button id="forget" style="display:none">Forget stored game files</button>
+  <input type="file" id="folder" webkitdirectory directory multiple style="display:none">
+  <input type="file" id="zip" accept=".zip,application/zip" style="display:none">
+  <p id="status"></p>
 </div>
-<p>Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.</p>
+<p>Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
+<code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
 <script>
+  var status = function (t) { document.getElementById('status').textContent = t; };
   var Module = {
     canvas: document.getElementById('canvas'),
     onRuntimeInitialized: function () {
-      document.getElementById('folder').addEventListener('change', function (ev) {
-        var files = Array.from(ev.target.files);
-        var status = document.getElementById('status');
-        status.textContent = 'reading ' + files.length + ' files…';
-        try { FS.mkdir('/data'); } catch (e) {}
-        var pending = files.length;
-        if (!pending) return;
-        files.forEach(function (f) {
-          var rel = (f.webkitRelativePath || f.name).split('/');
-          rel.shift();                       /* drop the chosen folder's own name */
-          if (!rel.length) { if (--pending === 0) done(); return; }
-          var dir = '/data';
-          for (var i = 0; i < rel.length - 1; i++) {
-            dir += '/' + rel[i];
-            try { FS.mkdir(dir); } catch (e) {}
-          }
-          var reader = new FileReader();
-          reader.onload = function () {
-            FS.writeFile(dir + '/' + rel[rel.length - 1], new Uint8Array(reader.result));
-            if (--pending === 0) done();
-          };
-          reader.readAsArrayBuffer(f);
-        });
-        function done() {
-          status.textContent = 'loaded';
-          Module.ccall('osc_web_data_ready', null, [], []);
-          document.getElementById('picker').style.display = 'none';
-          Module.canvas.focus();
-        }
+      try { FS.mkdir('/data'); } catch (e) {}
+      FS.mount(IDBFS, {}, '/data');
+      FS.syncfs(true, function (err) {
+        if (!err && exists('/data/Chaves.exe')) { start('from this browser’s storage'); return; }
+        status('waiting for the game folder');
       });
+      wire();
     }
   };
+  function exists(p) { try { FS.stat(p); return true; } catch (e) { return false; } }
+  function mkdirs(dir) {
+    var parts = dir.split('/').filter(Boolean), cur = '';
+    parts.forEach(function (p) { cur += '/' + p; try { FS.mkdir(cur); } catch (e) {} });
+  }
+  function putFile(rel, bytes) {
+    rel = rel.replace(/\\/g, '/').split('/').filter(Boolean);
+    if (!rel.length) return;
+    var dir = '/data' + (rel.length > 1 ? '/' + rel.slice(0, -1).join('/') : '');
+    mkdirs(dir);
+    FS.writeFile(dir + '/' + rel[rel.length - 1], bytes);
+  }
+  /* strip the top folder when every path shares it (e.g. "StreetChaves/Chaves.exe") */
+  function normalise(entries) {
+    var tops = {};
+    entries.forEach(function (e) { tops[e.path.split('/')[0]] = 1; });
+    var keys = Object.keys(tops);
+    if (keys.length === 1 && entries.some(function (e) { return e.path.indexOf('/') >= 0; }))
+      entries.forEach(function (e) { e.path = e.path.split('/').slice(1).join('/'); });
+    return entries;
+  }
+  function finish(entries) {
+    entries = normalise(entries);
+    entries.forEach(function (e) { putFile(e.path, e.bytes); });
+    if (!exists('/data/Chaves.exe')) { status('Chaves.exe not found in what you gave me'); return; }
+    status('saving in the browser…');
+    FS.syncfs(false, function () { start('loaded'); });
+  }
+  function start(how) {
+    status(how);
+    document.getElementById('picker').style.display = 'none';
+    Module.ccall('osc_web_data_ready', null, [], []);
+    Module.canvas.focus();
+  }
+  function readFiles(files, done) {
+    var out = [], pending = files.length;
+    if (!pending) return done(out);
+    files.forEach(function (f) {
+      var r = new FileReader();
+      r.onload = function () { out.push({ path: f.relpath || f.webkitRelativePath || f.name, bytes: new Uint8Array(r.result) }); if (--pending === 0) done(out); };
+      r.readAsArrayBuffer(f);
+    });
+  }
+  /* minimal zip reader: stored and deflate entries, via DecompressionStream */
+  async function readZip(buf) {
+    var dv = new DataView(buf), u8 = new Uint8Array(buf), n = u8.length, out = [];
+    var eocd = -1;
+    for (var i = n - 22; i >= Math.max(0, n - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('not a zip file');
+    var count = dv.getUint16(eocd + 10, true), off = dv.getUint32(eocd + 16, true);
+    for (var k = 0; k < count; k++) {
+      if (dv.getUint32(off, true) !== 0x02014b50) break;
+      var method = dv.getUint16(off + 10, true), csize = dv.getUint32(off + 20, true), usize = dv.getUint32(off + 24, true);
+      var nlen = dv.getUint16(off + 28, true), elen = dv.getUint16(off + 30, true), clen = dv.getUint16(off + 32, true);
+      var lho = dv.getUint32(off + 42, true);
+      var name = new TextDecoder('utf-8').decode(u8.subarray(off + 46, off + 46 + nlen));
+      off += 46 + nlen + elen + clen;
+      if (name.endsWith('/') || usize === 0) continue;
+      var lnlen = dv.getUint16(lho + 26, true), lelen = dv.getUint16(lho + 28, true);
+      var data = u8.subarray(lho + 30 + lnlen + lelen, lho + 30 + lnlen + lelen + csize);
+      var bytes;
+      if (method === 0) bytes = new Uint8Array(data);
+      else if (method === 8) {
+        var ds = new DecompressionStream('deflate-raw');
+        var blob = await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();
+        bytes = new Uint8Array(blob);
+      } else throw new Error('unsupported zip method ' + method);
+      out.push({ path: name, bytes: bytes });
+    }
+    return out;
+  }
+  function wire() {
+    var picker = document.getElementById('picker');
+    document.getElementById('pickFolder').onclick = function () { document.getElementById('folder').click(); };
+    document.getElementById('pickZip').onclick = function () { document.getElementById('zip').click(); };
+    document.getElementById('folder').onchange = function (ev) { status('reading…'); readFiles(Array.from(ev.target.files), finish); };
+    document.getElementById('zip').onchange = function (ev) { handleZip(ev.target.files[0]); };
+    function handleZip(f) {
+      if (!f) return;
+      status('unpacking ' + f.name + '…');
+      f.arrayBuffer().then(readZip).then(finish).catch(function (e) { status('could not read the archive: ' + e.message); });
+    }
+    picker.addEventListener('dragover', function (e) { e.preventDefault(); picker.classList.add('over'); });
+    picker.addEventListener('dragleave', function () { picker.classList.remove('over'); });
+    picker.addEventListener('drop', function (e) {
+      e.preventDefault(); picker.classList.remove('over');
+      var items = Array.from(e.dataTransfer.items || []);
+      var entries = items.map(function (it) { return it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; }).filter(Boolean);
+      if (entries.length === 1 && entries[0].isFile && /\.zip$/i.test(entries[0].name)) { handleZip(e.dataTransfer.files[0]); return; }
+      if (!entries.length) return;
+      status('reading…');
+      var files = [], pending = 0;
+      function walk(entry, prefix) {
+        if (entry.isFile) { pending++; entry.file(function (f) { f.relpath = prefix + f.name; files.push(f); if (--pending === 0) readFiles(files, finish); }); }
+        else if (entry.isDirectory) {
+          pending++;
+          var reader = entry.createReader();
+          (function readAll() {
+            reader.readEntries(function (es) {
+              if (!es.length) { if (--pending === 0) readFiles(files, finish); return; }
+              es.forEach(function (c) { walk(c, prefix + entry.name + '/'); });
+              readAll();
+            });
+          })();
+        }
+      }
+      entries.forEach(function (en) { walk(en, ''); });
+    });
+    if (exists('/data/Chaves.exe')) document.getElementById('forget').style.display = '';
+    document.getElementById('forget').onclick = function () {
+      function rmrf(p) { FS.readdir(p).forEach(function (n) { if (n === '.' || n === '..') return; var q = p + '/' + n; if (FS.isDir(FS.stat(q).mode)) { rmrf(q); FS.rmdir(q); } else FS.unlink(q); }); }
+      rmrf('/data'); FS.syncfs(false, function () { location.reload(); });
+    };
+  }
 </script>
 {{{ SCRIPT }}}
 </body>

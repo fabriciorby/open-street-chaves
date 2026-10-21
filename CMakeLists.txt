@@ -58,6 +58,7 @@ if(EMSCRIPTEN)
     -sALLOW_MEMORY_GROWTH=1
     -sEXPORTED_RUNTIME_METHODS=ccall,FS
     -sEXPORTED_FUNCTIONS=_main,_osc_web_data_ready
+    -lidbfs.js
     -sINITIAL_MEMORY=256MB
     --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html
     --embed-file ${CMAKE_SOURCE_DIR}/assets/fonts@/fonts)

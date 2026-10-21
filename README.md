@@ -67,7 +67,8 @@ folder to be provided (loading from the user's disk is not wired yet).
 
 Pre-built binaries for every platform are produced by GitHub Actions on each
 push (see the *Actions* tab → artifacts). The web build asks for your game
-folder with a folder picker; the files stay in the page's memory.
+folder (or its `.zip`, by picker or drag and drop); the files are read in the
+browser only and cached in its IndexedDB storage, never uploaded or hosted.
 
 ### Controls (current)
 
