@@ -18,6 +18,11 @@
 #include <string.h>
 
 #include "game.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+static int g_web_ready;
+EMSCRIPTEN_KEEPALIVE void osc_web_data_ready(void) { g_web_ready = 1; }
+#endif
 
 typedef struct {
     SDL_Window *win;
@@ -115,7 +120,13 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderVSync(a->ren, 1);
 
     a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
+#ifdef __EMSCRIPTEN__
+    data = "/data";   /* filled by the page's folder picker (web/shell.html) */
+    a->loaded = false;
+    (void)g_web_ready;
+#else
     a->loaded = osc_game_init(&a->game, a->ren, data);
+#endif
     if (lang) a->game.lang = lang;
     if (a->loaded && (direct || demo)) {
         a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
@@ -209,6 +220,14 @@ static uint8_t autofire_input(const osc_game *g)
 SDL_AppResult SDL_AppIterate(void *state)
 {
     app *a = state;
+#ifdef __EMSCRIPTEN__
+    if (!a->loaded && g_web_ready) {
+        g_web_ready = 0;
+        a->loaded = osc_game_init(&a->game, a->ren, "/data");
+        a->game.debug_boxes = false;
+        a->last_ns = SDL_GetTicksNS();
+    }
+#endif
     Uint64 now = SDL_GetTicksNS();
     a->acc_ns += now - a->last_ns;
     a->last_ns = now;
@@ -227,7 +246,11 @@ SDL_AppResult SDL_AppIterate(void *state)
         SDL_SetRenderDrawColor(a->ren, 40, 0, 0, 255);
         SDL_RenderClear(a->ren);
         SDL_SetRenderDrawColor(a->ren, 255, 255, 255, 255);
+        #ifdef __EMSCRIPTEN__
+        SDL_RenderDebugText(a->ren, 60, 140, "Choose your Street Chaves folder below");
+#else
         SDL_RenderDebugText(a->ren, 20, 140, "Game data not found. Run with --data <Street Chaves folder>");
+#endif
     }
     a->frames++;
     if (a->max_frames > 0 && a->frames >= a->max_frames && a->screenshot) {

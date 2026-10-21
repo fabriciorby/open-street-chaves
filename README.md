@@ -66,7 +66,8 @@ produces `open-street-chaves.html`. The browser build still needs the data
 folder to be provided (loading from the user's disk is not wired yet).
 
 Pre-built binaries for every platform are produced by GitHub Actions on each
-push (see the *Actions* tab → artifacts).
+push (see the *Actions* tab → artifacts). The web build asks for your game
+folder with a folder picker; the files stay in the page's memory.
 
 ### Controls (current)
 

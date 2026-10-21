@@ -148,6 +148,7 @@ typedef struct {
     SDL_Scancode last_key;    /* last key pressed (F2 menu assigns it) */
     bool key_f1, key_f2;
     int ending_char;          /* state 10: whose ending */
+    int challenge;            /* g_challengeTimer: a second player joined a 1P fight */
 } osc_game;
 
 enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,

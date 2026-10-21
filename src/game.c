@@ -239,11 +239,14 @@ static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
         if (r->timer >= 0 ? r->timer != f->anim_timer : f->anim_timer != 0) continue;
         if (r->variant && f->hit_level && r->variant != f->hit_level) continue;
         if (r->variant == 2 && !f->hit_level) continue;
-        /* the original's per-move offsets could not be recovered textually (99):
-         * projectiles start a body width ahead at chest height, dust at the feet */
-        double dx = f->facing == 1 ? 40.0 : -40.0;
-        double y = r->type == 2 ? f->y : f->y - f->sprite_h * 0.55;
-        spawn_fx(g, r->type, r->variant, pidx, f->x + dx, y);
+        /* offsets per (char, type) from the frame selector code (06b) */
+        double x, y = f->y + r->dy + (r->ry ? osc_random(g, r->ry) : 0);
+        if (r->type == 1 || r->type == 2) x = f->x - r->dx + (r->rx ? osc_random(g, r->rx) : 0);
+        else {
+            double d = r->dx + (r->rx ? osc_random(g, r->rx) : 0);
+            x = f->facing == 1 ? f->x + d : f->x - d;
+        }
+        spawn_fx(g, r->type, r->variant, pidx, x, y);
     }
 }
 
@@ -784,6 +787,17 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     g->tick++;
     if (g->paused) return;
     if (g->demo > 0) { g->timer_sec = 99; g->timer_sub = 25; }   /* attract demo: clock frozen */
+    if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
+        g->no_push = true;
+        if (--g->challenge == 0) {
+            g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 0;
+            g->sel_locked[1] = g->sel_locked[2] = 0; g->sel_timer = 20 * 25;
+            g->p[1].human = g->p1_in; g->p[2].human = g->p2_in; g->ai_p2 = !g->p2_in;
+            g->sel[1] = g->p[1].char_id; g->sel[2] = g->p[2].char_id;
+            g->no_push = false;
+        }
+        return;
+    }
     g->p[1].in = in1; g->p[2].in = in2;
     bool frozen = g->hit_stop || g->super_pause;
 
@@ -978,7 +992,8 @@ void osc_fight_render(osc_game *g)
         if (!t) continue;
         int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
         int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
-        SDL_FRect d = {(float)(r->x - g->cam_x), (float)(r->y - g->cam_y), (float)w, (float)h};
+        int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
+        SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
         SDL_RenderTexture(g->ren, t, NULL, &d);
     }
     /* fighter shadows: Efeito-001 under the feet (desenhalutador) */
@@ -993,6 +1008,22 @@ void osc_fight_render(osc_game *g)
     draw_fighter(g, &g->p[1]);
     osc_fx_render(g);
     draw_hud(g);
+    /* join prompt for the empty side (texto at 200 +/- 100, y 0, blinking) */
+    if (g->demo == 0 && g->challenge == 0 && g->ciclo < 15) {
+        for (int p = 1; p <= 2; p++) {
+            if (p == 1 ? g->p1_in : g->p2_in) continue;
+            if (g->credits == 0) osc_text_ex(g, p == 1 ? 100 : 300, 0, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 8, 255, 255, 255);
+            else if (!g->no_push) osc_text_ex(g, p == 1 ? 100 : 300, 0, osc_text(OSC_MEMO_TEXTO, 6, g->lang), 'c', 8, 255, 255, 255);
+        }
+    }
+    if (g->challenge > 0) {
+        SDL_FRect box = {80, 100, 240, 70};
+        SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255); SDL_RenderFillRect(g->ren, &box);
+        SDL_SetRenderDrawColor(g->ren, 255, 255, 255, 255); SDL_RenderRect(g->ren, &box);
+        osc_text_ex(g, 200, 100, osc_text(OSC_MEMO_TEXTO, 9, g->lang), 'c', 12, 255, 255, 255);    /* ESPERE ... */
+        osc_text_ex(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 10, g->lang), 'c', 12, 255, 255, 255);   /* ALGUÉM ENTROU */
+        osc_text_ex(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 11, g->lang), 'c', 12, 255, 255, 255);   /* NO COMBATE ! */
+    }
 }
 
 void osc_game_shutdown(osc_game *g)

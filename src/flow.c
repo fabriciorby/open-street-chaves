@@ -518,6 +518,10 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
         } else if (g->screen == OSC_SCREEN_SELECT && !g->no_push) {
             join_player(g, p);
             g->ai_p2 = !g->p2_in;
+        } else if (g->screen == OSC_SCREEN_FIGHT && g->demo == 0 && !g->no_push && g->challenge == 0) {
+            join_player(g, p);
+            g->p[p].human = true;
+            g->challenge = 100;
         } else if (g->screen == OSC_SCREEN_CONTINUE && g->timer_sec > 0) {
             join_player(g, p);
             g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 300;

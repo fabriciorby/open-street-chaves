@@ -6,15 +6,57 @@
 <style>
   body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
   canvas { width: 800px; height: 600px; image-rendering: pixelated; background: #000; margin-top: 16px; }
-  p { max-width: 800px; }
+  p, #picker { max-width: 800px; }
+  #picker { margin: 12px 0; padding: 12px; border: 1px dashed #666; }
+  button { font-size: 1em; padding: 6px 12px; }
 </style>
 </head>
 <body>
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
-<p>open-street-chaves web build. The game needs your own copy of the Street Chaves 1.5A data
-folder; the browser build does not ship any assets.</p>
+<div id="picker">
+  <p><b>open-street-chaves</b> needs your own copy of the <i>Street Chaves 1.5A</i> folder (the one with
+  <code>Chaves.exe</code>, <code>Lutadores</code>, <code>Cenarios</code>…). Nothing is uploaded: the files stay in
+  this page's memory.</p>
+  <input type="file" id="folder" webkitdirectory directory multiple>
+  <span id="status"></span>
+</div>
+<p>Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.</p>
 <script>
-  var Module = { canvas: document.getElementById('canvas') };
+  var Module = {
+    canvas: document.getElementById('canvas'),
+    onRuntimeInitialized: function () {
+      document.getElementById('folder').addEventListener('change', function (ev) {
+        var files = Array.from(ev.target.files);
+        var status = document.getElementById('status');
+        status.textContent = 'reading ' + files.length + ' files…';
+        try { FS.mkdir('/data'); } catch (e) {}
+        var pending = files.length;
+        if (!pending) return;
+        files.forEach(function (f) {
+          var rel = (f.webkitRelativePath || f.name).split('/');
+          rel.shift();                       /* drop the chosen folder's own name */
+          if (!rel.length) { if (--pending === 0) done(); return; }
+          var dir = '/data';
+          for (var i = 0; i < rel.length - 1; i++) {
+            dir += '/' + rel[i];
+            try { FS.mkdir(dir); } catch (e) {}
+          }
+          var reader = new FileReader();
+          reader.onload = function () {
+            FS.writeFile(dir + '/' + rel[rel.length - 1], new Uint8Array(reader.result));
+            if (--pending === 0) done();
+          };
+          reader.readAsArrayBuffer(f);
+        });
+        function done() {
+          status.textContent = 'loaded';
+          Module.ccall('osc_web_data_ready', null, [], []);
+          document.getElementById('picker').style.display = 'none';
+          Module.canvas.focus();
+        }
+      });
+    }
+  };
 </script>
 {{{ SCRIPT }}}
 </body>

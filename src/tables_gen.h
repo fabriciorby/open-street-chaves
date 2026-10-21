@@ -18,7 +18,7 @@ enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MO
 /* effects (06): per type init, (phase -> sprite) rows, spawns from the frame selector */
 typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
 typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
-typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
+typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; int16_t dx; uint8_t rx; int16_t dy; uint8_t ry; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B; offsets from 06b */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
 /* text index (07d): memo line -> index of the string constant inside Chaves.exe */
@@ -27,9 +27,9 @@ extern const osc_text_index_row osc_text_index[1966];
 #define OSC_N_TEXT_INDEX 1966
 
 /* stage animations (07c): drawn each fight tick after the background */
-typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; } osc_stage_anim_row;
-extern const osc_stage_anim_row osc_stage_anim[127];
-#define OSC_N_STAGE_ANIM 127
+typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; int8_t xmul, yjit; } osc_stage_anim_row;
+extern const osc_stage_anim_row osc_stage_anim[137];
+#define OSC_N_STAGE_ANIM 137
 
 extern const osc_fx_type osc_fx_types[36];
 extern const osc_fx_sprite_row osc_fx_sprites[125];

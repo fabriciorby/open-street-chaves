@@ -259,15 +259,25 @@ for line in read('05a-anim-tables.txt').split('\n'):
     spawns.add((char, int(m.group(1)), -1 if m.group(2) == '*' else int(m.group(2)), typ,
                 0 if variant is None else (1 if variant == 'A' else 2)))
 spawns = sorted(spawns)
+# 06b: spawn offsets per (char, type[, state])
+offs = {}
+for line in read('06b-spawn-offsets.txt').split('\n'):
+    m = re.match(r'(\d+) (\d+) (-?\d+) (\d+) (-?\d+) (\d+)(?: (\d+))?$', line)
+    if m:
+        offs[(int(m.group(1)), int(m.group(2)), int(m.group(7) or 0))] = tuple(int(m.group(i)) for i in range(3, 7))
+def spawn_off(ch, st, typ):
+    return offs.get((ch, typ, st)) or offs.get((ch, typ, 0)) or (40, 0, -85, 0)
+spawns = [row + spawn_off(row[0], row[1], row[3]) for row in spawns]
 fx_types = sorted(fx_init)
 
 # ---------------------------------------------------------------- 07c stage animations
 stage_anim = []
 for line in read('07c-stage-animations.txt').split('\n'):
-    m = re.match(r'(\d+) (\d+) (\d+) ([AE]) (\d+) (-?\d+) (-?\d+) (\d+)$', line)
+    m = re.match(r'(\d+) (\d+) (\d+) ([AE]) (\d+) (-?\d+) (-?\d+) (\d+)(?: (-?\d+) (\d+))?$', line)
     if m:
         stage_anim.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), 1 if m.group(4) == 'E' else 0,
-                           int(m.group(5)), int(m.group(6)), int(m.group(7)), int(m.group(8))))
+                           int(m.group(5)), int(m.group(6)), int(m.group(7)), int(m.group(8)),
+                           int(m.group(9) or 0), int(m.group(10) or 0)))
 
 # ---------------------------------------------------------------- 07d text index
 text_index = []
@@ -327,7 +337,7 @@ enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MO
 /* effects (06): per type init, (phase -> sprite) rows, spawns from the frame selector */
 typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
 typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
-typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
+typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; int16_t dx; uint8_t rx; int16_t dy; uint8_t ry; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B; offsets from 06b */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
 /* text index (07d): memo line -> index of the string constant inside Chaves.exe */
@@ -336,7 +346,7 @@ extern const osc_text_index_row osc_text_index[%d];
 #define OSC_N_TEXT_INDEX %d
 
 /* stage animations (07c): drawn each fight tick after the background */
-typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; } osc_stage_anim_row;
+typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; int8_t xmul, yjit; } osc_stage_anim_row;
 extern const osc_stage_anim_row osc_stage_anim[%d];
 #define OSC_N_STAGE_ANIM %d
 
