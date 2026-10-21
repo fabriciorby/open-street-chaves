@@ -88,6 +88,10 @@ typedef struct {
     osc_strip strips[2];
     SDL_Texture *fx_tex[OSC_MAX_FX_SPRITES];
     int fx_w[OSC_MAX_FX_SPRITES], fx_h[OSC_MAX_FX_SPRITES], n_fx_tex;
+    SDL_Texture *anim_tex[OSC_MAX_FX_SPRITES];   /* Animacoes/Anim-NN.bmp (stage animations) */
+    int anim_w[OSC_MAX_FX_SPRITES], anim_h[OSC_MAX_FX_SPRITES], n_anim_tex;
+    int stage_id;
+    int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
     osc_effect fx[OSC_MAX_FX];
     osc_fighter p[3];    /* 1-based like the original */
     int cam_x, cam_y;

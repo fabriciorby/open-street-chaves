@@ -600,6 +600,18 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int cha
         g->n_fx_tex = n;
     }
     SDL_Log("%d effect sprites loaded", g->n_fx_tex);
+    for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
+        char rel[48];
+        snprintf(rel, sizeof rel, "Animacoes/Anim-%02d.bmp", n);
+        load_path(path, sizeof path, data_dir, rel);
+        if (!osc_bmp_load(path, true, &img)) break;
+        g->anim_tex[n - 1] = osc_texture_from_image(ren, &img);
+        g->anim_w[n - 1] = img.w; g->anim_h[n - 1] = img.h;
+        osc_image_free(&img);
+        g->n_anim_tex = n;
+    }
+    SDL_Log("%d stage animation sprites loaded", g->n_anim_tex);
+    g->stage_id = 1;
 
     g->cam_x = 100;
     g->timer_sec = 99; g->timer_sub = 25;
@@ -700,6 +712,7 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
 
     if (g->hit_stop) g->hit_stop--;
     if (g->super_pause) g->super_pause--;
+    if (++g->ciclo > 30) g->ciclo = 0;   /* state 7 wraps the blink counter at 31 */
     if (!frozen && g->timer_sec > 0 && --g->timer_sub == 0) { g->timer_sec--; g->timer_sub = 25; }
     osc_audio_update();
 }
@@ -777,6 +790,20 @@ void osc_game_render(osc_game *g)
     if (g->stage) {
         SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->stage_w, (float)g->stage_h};
         SDL_RenderTexture(g->ren, g->stage, NULL, &dst);
+    }
+    /* stage animations (desenhaanimacoes, table 07c) */
+    for (int i = 0; i < OSC_N_STAGE_ANIM; i++) {
+        const osc_stage_anim_row *r = &osc_stage_anim[i];
+        if (!(r->stage_mask & (1u << g->stage_id))) continue;
+        if (g->ciclo < r->ciclo_lo || g->ciclo > r->ciclo_hi) continue;
+        if (r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char)) continue;
+        SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
+                                      : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
+        if (!t) continue;
+        int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
+        int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
+        SDL_FRect d = {(float)(r->x - g->cam_x), (float)(r->y - g->cam_y), (float)w, (float)h};
+        SDL_RenderTexture(g->ren, t, NULL, &d);
     }
     /* fighter shadows: Efeito-001 under the feet (desenhalutador) */
     for (int i = 1; i <= 2; i++) {

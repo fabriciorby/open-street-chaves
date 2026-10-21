@@ -97,5 +97,5 @@ for ln in logical:
         txt = clean(ln)
         if pending_item and ('DXImageListItem_Draw' in txt or 'func_0x004616' in txt):
             txt = txt.replace('uVar5,', 'ITEM{%s},' % pending_item, 1).replace('uVar7,', 'ITEM{%s},' % pending_item, 1)
-        print('[%s] %s' % (ctx[-160:], expand(txt)[:330]))
+        print('[%s] %s' % (ctx[-800:], expand(txt)[:330]))
         pending_item = None

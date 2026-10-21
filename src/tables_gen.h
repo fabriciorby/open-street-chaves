@@ -18,6 +18,11 @@ typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
+/* stage animations (07c): drawn each fight tick after the background */
+typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; } osc_stage_anim_row;
+extern const osc_stage_anim_row osc_stage_anim[127];
+#define OSC_N_STAGE_ANIM 127
+
 extern const osc_fx_type osc_fx_types[36];
 extern const osc_fx_sprite_row osc_fx_sprites[125];
 extern const osc_fx_spawn_row osc_fx_spawns[61];
