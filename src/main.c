@@ -132,6 +132,12 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     }
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
+        osc_game *g = &a->game;
+        g->p[1].human = true; g->p[1].char_id = c1; g->p[1].score = 5000;
+        memcpy(g->name[1], "AAA", 4); g->name_pos[1] = 1; g->name_active[1] = true;
+        g->name_after = OSC_SCREEN_CONTINUE; g->screen = OSC_SCREEN_NAME;
+    }
     a->game.debug_boxes = boxes;
     if (!a->loaded)
         SDL_Log("Could not load the game data from '%s'. Pass --data <folder containing Chaves.exe>.", data);

@@ -376,6 +376,90 @@ static void records_render(osc_game *g)
     if (g->ciclo < 10) osc_text_ex(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 12, 255, 255, 255);
 }
 
+
+/* ---- state 12: name entry for the records (07b "Name entry") -------------- */
+static void insert_record(osc_game *g, int p)
+{
+    /* criarecorde(10, name) + ordenarecordista: replace the last slot, sort by score */
+    osc_record *r = &g->records[9];
+    memcpy(r->name, g->name[p], 4);
+    r->char_id = g->p[p].char_id;
+    r->score = g->p[p].score;
+    for (int i = 9; i > 0 && g->records[i].score > g->records[i - 1].score; i--) {
+        osc_record t = g->records[i]; g->records[i] = g->records[i - 1]; g->records[i - 1] = t;
+    }
+}
+
+static void leave_name_entry(osc_game *g)
+{
+    for (int p = 1; p <= 2; p++) if (g->name_active[p]) { insert_record(g, p); g->name_active[p] = false; }
+    g->screen = g->name_after; g->screen_tick = 0; g->ciclo = 0; g->menu_cam = 0;
+    if (g->screen == OSC_SCREEN_CONTINUE) { g->timer_sec = 9; g->timer_sub = 25; }
+    if (g->screen == OSC_SCREEN_RECORDS) { g->p1_in = g->p2_in = false; }
+}
+
+/* A human finished (lost, or won the ladder): name entry if the score beats the table. */
+static void finish_player(osc_game *g, int p, bool won)
+{
+    int after = won ? OSC_SCREEN_RECORDS /* ending (state 10) not ported yet */ : OSC_SCREEN_CONTINUE;
+    if (g->p[p].human && g->p[p].score > g->records[9].score) {
+        memcpy(g->name[p], "AAA", 4);
+        g->name_pos[p] = 1;
+        g->name_active[p] = true;
+        g->name_after = after;
+        g->screen = OSC_SCREEN_NAME; g->screen_tick = 0; g->ciclo = 0;
+        g->p[p].in_prev = 0xff;
+        return;
+    }
+    g->name_after = after;
+    leave_name_entry(g);
+}
+
+static void name_tick(osc_game *g, uint8_t in1, uint8_t in2)
+{
+    uint8_t ins[3] = {0, in1, in2};
+    g->ciclo++;
+    if (g->ciclo > 20) g->ciclo = 0;
+    if (g->screen_tick < 1000) g->screen_tick++;
+    bool any = false;
+    for (int p = 1; p <= 2; p++) {
+        if (!g->name_active[p]) continue;
+        uint8_t pressed = (uint8_t)(ins[p] & ~g->p[p].in_prev);
+        g->p[p].in_prev = ins[p];
+        int *pos = &g->name_pos[p];
+        if (*pos > 3) continue;
+        any = true;
+        if (pressed & OSC_IN_LEFT) (*pos)--;
+        if (pressed & OSC_IN_RIGHT) (*pos)++;
+        if (*pos < 1) *pos = 1;
+        if (*pos > 3) *pos = 3;
+        char *c = &g->name[p][*pos - 1];
+        if (pressed & OSC_IN_UP) (*c)++;
+        if (pressed & OSC_IN_DOWN) (*c)--;
+        if (*c < '0') *c = '0';
+        if (*c > 'Z') *c = 'Z';
+        if (pressed & OSC_IN_B1) (*pos)++;
+    }
+    if (!any || g->screen_tick >= 1000) leave_name_entry(g);
+}
+
+static void name_render(osc_game *g)
+{
+    SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
+    SDL_RenderClear(g->ren);
+    for (int p = 1; p <= 2; p++) {
+        if (!g->name_active[p]) continue;
+        float x0 = (float)((p - 1) * 200 + 20);
+        for (int i = 0; i < 3; i++) {
+            char l[2] = {g->name[p][i], 0};
+            osc_text_ex(g, x0 + 15.f * (float)i, 5, l, 'l', 16, 255, 255, 255);
+        }
+        if (g->ciclo < 15 && g->name_pos[p] <= 3)   /* [approx] marker under the active letter */
+            fill(g, x0 + 15.f * (float)(g->name_pos[p] - 1), 27, x0 + 15.f * (float)(g->name_pos[p] - 1) + 12, 29, 255, 255, 255);
+        osc_text_ex(g, x0, 30, osc_text(OSC_MEMO_NOMES, g->p[p].char_id, g->lang), 'l', 8, 255, 255, 255);
+    }
+}
+
 /* ---- coins and start buttons (FormKeyDown '5', '1', '2') ------------------ */
 static void join_player(osc_game *g, int p)
 {
@@ -434,6 +518,7 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
     switch (g->screen) {
     case OSC_SCREEN_ATTRACT: attract_tick(g); break;
     case OSC_SCREEN_RECORDS: records_tick(g); break;
+    case OSC_SCREEN_NAME: name_tick(g, in1, in2); break;
     case OSC_SCREEN_SELECT: select_tick(g, in1, in2); break;
     case OSC_SCREEN_VS: vs_tick(g, in1, in2); break;
     case OSC_SCREEN_CONTINUE: continue_tick(g, in1, in2); break;
@@ -445,26 +530,42 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
             break;
         }
         if (g->match_over) {
-            int winner = g->match_over;
+            int winner = g->match_over, loser = 3 - winner;
             g->match_over = 0;
-            bool human_lost = (winner == 1 && g->p[2].human) || (winner == 2 && g->p[1].human);
             if (!g->p2_in && winner == 1) {
                 /* arcade ladder: next opponent */
                 g->fight_no++;
-                if (g->fight_no > 8) { g->fight_no = 0; g->screen = OSC_SCREEN_RECORDS; g->screen_tick = 0; g->menu_cam = 0; g->ciclo = 0; g->p1_in = g->p2_in = false; break; }   /* ending (state 10) not ported yet */
+                if (g->fight_no > 8) { g->fight_no = 0; finish_player(g, 1, true); break; }
                 g->sel[2] = g->ladder[g->fight_no];
                 g->screen = OSC_SCREEN_VS; g->screen_tick = 0;
                 g->stage_id = osc_stage_for(g, g->sel[2]);
-            } else if (human_lost || g->p2_in) {
-                g->screen = OSC_SCREEN_CONTINUE; g->screen_tick = 0;
-                g->timer_sec = 9; g->timer_sub = 25;
+            } else {
+                finish_player(g, g->p[loser].human ? loser : winner, false);
             }
         }
         break;
     }
 }
 
+static void osc_game_render_screen(osc_game *g);
+
+static void footer(osc_game *g)
+{
+    char buf[32];
+    snprintf(buf, sizeof buf, "%s%d", osc_text(OSC_MEMO_TEXTO, 17, g->lang), g->level);   /* NIVEL-n */
+    osc_text_ex(g, 200, 285, buf, 'c', 8, 255, 255, 255);
+    osc_text_ex(g, 300, 285, osc_text(OSC_MEMO_TEXTO, 18, g->lang), 'c', 8, 255, 255, 255);   /* CREDITOS */
+    snprintf(buf, sizeof buf, "%d", g->credits);
+    osc_text_ex(g, 395, 285, buf, 'e', 8, 255, 255, 255);
+}
+
 void osc_game_render(osc_game *g)
+{
+    osc_game_render_screen(g);
+    footer(g);
+}
+
+static void osc_game_render_screen(osc_game *g)
 {
     switch (g->screen) {
     case OSC_SCREEN_SELECT: select_render(g); break;
@@ -472,6 +573,7 @@ void osc_game_render(osc_game *g)
     case OSC_SCREEN_CONTINUE: continue_render(g); break;
     case OSC_SCREEN_ATTRACT: attract_render(g); break;
     case OSC_SCREEN_RECORDS: records_render(g); break;
+    case OSC_SCREEN_NAME: name_render(g); break;
     default:
         osc_fight_render(g);
         if (g->demo > 0) {

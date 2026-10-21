@@ -131,10 +131,16 @@ typedef struct {
     SDL_Texture *abertura[16]; int abertura_w[16], abertura_h[16], n_abertura;   /* DXImageListAbertura (from the exe) */
     SDL_Texture *icone[14];    int icone_w[14], icone_h[14], n_icone;            /* DXImageListIcone */
     osc_record records[10];
+    /* name entry (state 12) */
+    char name[3][4];          /* players' 3-letter names, 'AAA' on entry */
+    int name_pos[3];          /* 1..3, 4 = done */
+    bool name_active[3];
+    int name_after;           /* screen after the names: continue, records (ending) */
+    int level;                /* g_cfg0 "Nível do Jogo" (display only) */
 } osc_game;
 
 enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,
-       OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9 };
+       OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9, OSC_SCREEN_NAME = 12 };
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
 /* Start a fight: characters 1..15, stage 1..12 (0 = by opponent), round 1. */

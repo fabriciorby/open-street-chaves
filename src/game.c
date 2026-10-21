@@ -676,6 +676,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->rounds_to_win = 2;
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
+    g->level = 4;
     g->sel[1] = 1; g->sel[2] = 2;
     g->sel_timer = 30 * 25;
     g->p1_in = true;
