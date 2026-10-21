@@ -111,9 +111,8 @@ SDL_AppResult SDL_AppIterate(void *state)
     }
     a->frames++;
     if (a->max_frames > 0 && a->frames >= a->max_frames && a->screenshot) {
-        /* Grab the logical 400x300 frame before presenting it. */
-        SDL_Rect logical = {0, 0, OSC_SCREEN_W, OSC_SCREEN_H};
-        SDL_Surface *shot = SDL_RenderReadPixels(a->ren, &logical);
+        /* Grab the whole output (window-sized, letterboxed) before presenting it. */
+        SDL_Surface *shot = SDL_RenderReadPixels(a->ren, NULL);
         if (shot) {
             SDL_SaveBMP(shot, a->screenshot);
             SDL_DestroySurface(shot);
