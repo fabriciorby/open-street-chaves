@@ -29,6 +29,7 @@ add_executable(open-street-chaves
   src/game.c
   src/tables_gen.c
   src/exetext.c
+  src/exeimg.c
   src/flow.c
 )
 # Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.

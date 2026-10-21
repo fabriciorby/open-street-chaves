@@ -18,6 +18,8 @@ typedef struct {
 
 /* Load a BMP file into RGBA. Returns false and leaves *out zeroed on error. */
 bool osc_bmp_load(const char *path, bool colorkey, osc_image *out);
+/* Decode an in-memory BMP file or a bare DIB (BITMAPINFOHEADER + palette + pixels). */
+bool osc_bmp_decode(const uint8_t *data, size_t len, bool colorkey, osc_image *out);
 void osc_image_free(osc_image *img);
 
 /* Pixel helpers (no bounds checks). */
