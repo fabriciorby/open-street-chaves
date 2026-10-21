@@ -32,10 +32,16 @@ add_executable(open-street-chaves
   src/exeimg.c
   src/flow.c
   src/menu.c
+  src/font.c
 )
 # Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.
 set_target_properties(open-street-chaves PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
-target_include_directories(open-street-chaves PRIVATE src)
+target_include_directories(open-street-chaves PRIVATE src third_party)
+# stb_truetype is compiled with -Wall; silence its known unused-function noise
+set_source_files_properties(src/font.c PROPERTIES COMPILE_OPTIONS "$<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-unused-function>")
+# bundled fallback font (SIL OFL) next to the executable
+add_custom_command(TARGET open-street-chaves POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:open-street-chaves>/assets)
 target_link_libraries(open-street-chaves PRIVATE SDL3::SDL3)
 
 if(MSVC)
@@ -50,7 +56,8 @@ if(EMSCRIPTEN)
   target_link_options(open-street-chaves PRIVATE
     -sALLOW_MEMORY_GROWTH=1
     -sEXPORTED_RUNTIME_METHODS=ccall
-    --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html)
+    --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html
+    --embed-file ${CMAKE_SOURCE_DIR}/assets/fonts@/fonts)
 endif()
 
 if(APPLE)

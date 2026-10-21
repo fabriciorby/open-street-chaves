@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "exetext.h"
+#include "font.h"
 #include "game.h"
 
 static int lround_i(double v) { return (int)SDL_lround(v); }
@@ -12,6 +13,7 @@ static int lround_i(double v) { return (int)SDL_lround(v); }
 void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered)
 {
     if (!s || !*s) return;
+    if (osc_font_ready()) { osc_text_ex(g, x, y, s, centered ? 'c' : 'l', 8, 255, 255, 255); return; }
     /* the debug font is ASCII only: strip UTF-8 accents to the base letter */
     char buf[128];
     size_t n = 0;
@@ -201,6 +203,13 @@ static void continue_render(osc_game *g)
 void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b)
 {
     if (!s || !*s) return;
+    if (osc_font_ready()) {
+        float w = osc_font_width(s, size);
+        if (align == 'c') x -= w / 2.f;
+        else if (align == 'e') x -= w;
+        osc_font_draw(g->ren, x, y, s, size, r, gg, b);
+        return;
+    }
     char buf[160];
     size_t n = 0;
     for (const unsigned char *p = (const unsigned char *)s; *p && n < sizeof buf - 1; p++) {

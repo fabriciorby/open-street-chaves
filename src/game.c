@@ -7,6 +7,7 @@
 
 #include "exetext.h"
 #include "exeimg.h"
+#include "font.h"
 #include "tables_gen.h"
 
 /* ---- per-character constants (02, 03) ------------------------------------ */
@@ -672,6 +673,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
             g->records[i].score = i == 0 ? 10000 : 8500 - 500 * i;
         }
     }
+    osc_font_init(ren);
     osc_config_load(g);
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
@@ -986,6 +988,7 @@ void osc_game_shutdown(osc_game *g)
     if (g->has_music) osc_wav_free(&g->music);
     for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
     osc_text_free();
+    osc_font_quit();
     osc_audio_close();
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     for (int i = 0; i < g->n_fx_tex; i++) if (g->fx_tex[i]) SDL_DestroyTexture(g->fx_tex[i]);

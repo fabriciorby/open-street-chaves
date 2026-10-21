@@ -42,8 +42,7 @@ stocks, the command parser for the special moves (quarter circles, charges,
 mash) with their frames, hit boxes and projectiles/effects, a CPU opponent
 with the original's per-character decision table, round timer and KO/time-
 over flow, stage animations, sounds and music. All numeric data is
-generated from `docs/spec` by `tools/gen_tables.py`. Not yet: endings and
-the original font.
+generated from `docs/spec` by `tools/gen_tables.py`. Not yet: the endings.
 
 Not there yet: menus and screens (title, select, VS, continue, records,
 endings), stage animations, exact per-move projectile offsets, the
@@ -90,6 +89,11 @@ fight (`--2p` makes P2 human).
 - The source code of open-street-chaves is licensed under the
   **GNU GPL v3.0** (see [LICENSE](LICENSE)). The license covers only this
   code and documentation, never the original game's assets or text.
+- Text is drawn with the system's *Comic Sans MS* when present (the font
+  the original uses; it is never shipped here). Otherwise the bundled
+  [Comic Neue](https://github.com/crozynski/comicneue) by Craig Rozynski is
+  used, under the SIL Open Font License (`assets/fonts/OFL.txt`).
+  Rasterised with Sean Barrett's public-domain `stb_truetype`.
 
 ---
 
@@ -133,7 +137,7 @@ repetição) com seus quadros, hit boxes e projéteis/efeitos, CPU com a tabela
 de decisões por personagem do original, relógio do round e fluxo de KO e
 tempo esgotado, animações dos cenários, sons e música. Todos os dados
 numéricos são gerados de `docs/spec` por `tools/gen_tables.py`. Ainda
-faltam: finais e a fonte original.
+faltam: os finais.
 
 ### Como compilar
 

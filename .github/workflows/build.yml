@@ -19,7 +19,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: open-street-chaves-windows-x64
-          path: build/Release/open-street-chaves.exe
+          path: |
+            build/Release/open-street-chaves.exe
+            build/Release/assets
 
   macos:
     name: macOS (universal)
@@ -35,7 +37,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: open-street-chaves-macos-universal
-          path: build/open-street-chaves
+          path: |
+            build/open-street-chaves
+            build/assets
 
   linux:
     name: Linux (x86_64)
@@ -59,7 +63,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: open-street-chaves-linux-x64
-          path: build/open-street-chaves
+          path: |
+            build/open-street-chaves
+            build/assets
 
   web:
     name: Web (Emscripten)
