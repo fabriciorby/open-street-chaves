@@ -1,0 +1,43 @@
+# --- Original game content: NEVER committed ---------------------------------
+# The port reads assets and text from the user's own copy of Street Chaves 1.5A.
+re/game/
+re/out/
+re/ghidra/
+re/.venv/
+re/progress.log
+*.bmp
+*.BMP
+*.wav
+*.WAV
+*.exe
+*.rar
+*.dat
+Thumbs.db
+# Creative text dumps (dialogue, endings, quotes) and raw pseudocode-derived dumps
+docs/spec/07a-texts.txt
+docs/spec/07b-draw-calls/
+
+# --- Build output --------------------------------------------------------------
+build/
+build-*/
+out/
+cmake-build-*/
+_deps/
+CMakeCache.txt
+CMakeFiles/
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.dylib
+*.so
+*.wasm
+*.pdb
+
+# --- Editors / OS ------------------------------------------------------------------
+.DS_Store
+.vscode/
+.idea/
+*.swp
+__pycache__/

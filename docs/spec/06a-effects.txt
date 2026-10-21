@@ -1,0 +1,623 @@
+# desenhaefeitos: per effect type, per phase: sprite index and actions
+
+## effect type 1
+  phase 0    sprite=1
+  phase 1    sprite=2
+  phase 3    sprite=3
+
+## effect type 2
+  phase 0    sprite=4
+  phase 3    sprite=5
+  phase 6    sprite=6
+  phase 9    sprite=7
+  phase 12   sprite=8
+  phase *    *(double *)(pcVar9 + -0x23) = *(double *)(pcVar9 + -0x23) - (double)_DAT_00490568;
+
+## effect type 3
+  phase *    sprite=10
+  phase *    done=1
+
+## effect type 4
+  phase *    sprite=11
+  phase *    done=1
+
+## effect type 5
+  phase *    done=1
+  phase *    (**(code **)(*piVar5 + 0xc))(piVar5,5,&uStack_20);
+  phase *    TForm1_texto(iStack_8,iVar4 - g_4b44c8,iVar3,uVar12,uVar14);
+  phase *    func_0x0040287c();
+  phase *    (**(code **)(*piVar5 + 0xc))(piVar5,5,&iStack_24);
+  phase *    TForm1_texto(iStack_8,iVar4 - g_4b44c8,iVar3,uVar12,uVar14);
+  phase *    *(double *)(pcVar9 + -0x23) = *(double *)(pcVar9 + -0x23) - (double)_DAT_00490584;
+
+## effect type 6
+  phase *    sprite=12
+
+## effect type 7
+  phase 0    sprite=13
+  phase 1    sprite=13
+  phase 2    sprite=14
+  phase 3    phase=0
+
+## effect type 8
+  phase 0    sprite=15
+  phase 2    sprite=16
+  phase 5    sprite=17
+  phase 5    done=1
+  phase 2    FUN_004769c4(iStack_c,0xffffffd3,0xffffff6a,0,0x2d);
+  phase 5    FUN_004769c4(iStack_c,0xffffffd3,0xffffff24,0,0x2d);
+  phase 6    hasHitbox=1
+  phase 6    phase=pcVar9[1] + '\x01'
+  phase *    *(undefined1 *)((int)pdVar10 + 0x72) = 10;
+  phase *    *(undefined1 *)(pdVar10 + 0xf) = 0xc4;
+  phase *    *(undefined1 *)((int)pdVar10 + 0x6b) = 0x13;
+  phase *    *(undefined2 *)(pdVar10 + 3) = 0xffec;
+  phase *    *(undefined2 *)(pdVar10 + 3) = 0x14;
+
+## effect type 9
+  phase 0    sprite=18
+  phase 1    sprite=18
+  phase 2    sprite=19
+  phase 3    phase=0
+
+## effect type 10
+  phase 0    sprite=20
+  phase 2    sprite=21
+  phase 4    sprite=22
+  phase 6    sprite=23
+  phase 8    sprite=24
+  phase 10   sprite=25
+  phase 12   sprite=26
+
+## effect type 11
+  phase 0    sprite=27
+  phase 3    sprite=28
+  phase 6    sprite=29
+  phase 9    sprite=30
+  phase 12   sprite=31
+
+## effect type 12
+  phase 0    sprite=32
+  phase 1    sprite=32
+  phase 2    sprite=33
+  phase 3    phase=0
+
+## effect type 13
+  phase 0    sprite=34
+  phase 1    sprite=34
+  phase 2    sprite=35
+  phase 3    phase=0
+
+## effect type 14
+  phase 0    sprite=36
+  phase 2    sprite=37
+  phase 4    sprite=38
+
+## effect type 15
+  phase 0    sprite=39
+  phase 1    sprite=39
+  phase 2    sprite=40
+  phase 3    phase=0
+
+## effect type 16
+  phase 0    sprite=41
+  phase 2    sprite=42
+  phase 4    sprite=43
+
+## effect type 17
+  phase 0    sprite=44
+  phase 4    sprite=45
+  phase 8    sprite=46
+
+## effect type 18
+  phase 0    sprite=47
+  phase 1    sprite=47
+  phase 2    sprite=48
+  phase 3    phase=0
+
+## effect type 19
+  phase 0    sprite=49
+  phase 1    sprite=49
+  phase 2    sprite=50
+  phase 3    phase=0
+  phase *    *(double *)(pcVar9 + -0x23) = (double)uStack_10 + *(double *)(pcVar9 + -0x23);
+  phase *    *pcVar9 = '\0';
+  phase *    FUN_00476a04('\x01',(uint *)0x0,0,*(undefined4 *)(pcVar9 + -0x23), *(undefined4 *)(pcVar9 + -0x1f),*(undefined4 *)(pcVar9 + -0x2b), *(undefi
+
+## effect type 20
+  phase 0    sprite=51
+  phase 1    sprite=51
+  phase 2    sprite=52
+  phase 3    phase=0
+  phase *    *(double *)(pcVar9 + -0x23) = (*(double *)(pcVar9 + -0x23) - (double)_DAT_00490580) + (double)(int)uStack_10;
+  phase *    *(undefined1 *)(pdVar10 + 0xf) = 0xec;
+  phase *    *(undefined1 *)((int)pdVar10 + 0x92) = 0;
+  phase *    *(undefined1 *)((int)pdVar10 + 0x72) = 6;
+
+## effect type 22
+  phase *    done=1
+  phase *    hasHitbox=0
+
+## effect type 23
+  phase 0    sprite=57
+  phase 2    sprite=58
+  phase 4    sprite=57
+  phase 6    sprite=58
+  phase 8    sprite=57
+  phase 10   sprite=58
+  phase 12   sprite=57
+  phase 14   sprite=58
+  phase 16   sprite=57
+  phase 18   sprite=58
+  phase 20   sprite=57
+  phase 22   sprite=79
+  phase 24   sprite=60
+
+## effect type 24
+  phase *    sprite=61
+  phase *    sprite=62
+  phase *    Cos();
+  phase *    *(double *)(pcVar9 + -0x2b) = (double)CONCAT44(extraout_EDX_03,uStack_18) + *(double *)(pcVar9 + -0x2b);
+  phase *    *(double *)(pcVar9 + -0x23) = *(double *)(pcVar9 + -0x23) - (double)_DAT_00490568;
+
+## effect type 25
+  phase <12  sprite=63
+  phase >11  sprite=64
+  phase >23  sprite=65
+
+## effect type 26
+  phase 0    sprite=66
+  phase 1    sprite=66
+  phase 4    sprite=67
+  phase 6    phase=0
+
+## effect type 27
+  phase 0    sprite=68
+  phase 1    sprite=68
+  phase 4    sprite=69
+  phase 6    phase=0
+  phase *    hasHitbox=1
+  phase *    FUN_00476a04('\x1c',(uint *)"A",pcVar9[-7], SUB84(*(double *)(pcVar9 + -0x23) + (double)_DAT_00490590,0), (int)((ulonglong)(*(double *)(pcVa
+  phase *    FUN_00476a04('\x1c',(uint *)"A",pcVar9[-7], SUB84(*(double *)(pcVar9 + -0x23) + (double)_DAT_00490590,0), (int)((ulonglong)(*(double *)(pcVa
+  phase *    FUN_00476a04('\x1c',(uint *)"A",pcVar9[-7], SUB84(*(double *)(pcVar9 + -0x23) - (double)_DAT_004905a4,0), (int)((ulonglong)(*(double *)(pcVa
+
+## effect type 28
+  phase 0    sprite=70
+  phase 1    sprite=70
+  phase 3    sprite=71
+  phase 4    phase=0
+  phase *    hasHitbox=1
+  phase *    c4=pcVar9[4] + '\x01'
+
+## effect type 29
+  phase 0    sprite=72
+  phase 2    sprite=72
+  phase 4    sprite=73
+  phase 5    sprite=74
+  phase 6    phase=0
+
+## effect type 30
+  phase 0    sprite=75
+  phase 1    sprite=75
+  phase 4    sprite=76
+  phase 5    phase=0
+  phase *    sprite=77
+  phase *    sprite=78
+  phase *    sprite=79
+  phase *    *pcVar9 = '\0';
+
+## effect type 31
+  phase 2    sprite=72
+  phase 4    sprite=73
+  phase 5    sprite=74
+  phase 6    phase=0
+  phase *    Cos();
+  phase *    *(double *)(pcVar9 + -0x2b) = (double)CONCAT44(extraout_EDX,uStack_18) + *(double *)(&g_4b44e8 + (uint)(byte)pcVar9[-7] * 0xb0 + -0xb0);
+  phase *    Cos();
+  phase *    *(double *)(pcVar9 + -0x23) = (*(double *)(&g_4b44e8 + (uint)(byte)pcVar9[-7] * 0xb0 + -0xa8) - (double)_DAT_00490574) + (double)CONCAT44(ex
+  phase *    func_0x0040287c();
+  phase *    hasHitbox=1
+  phase *    c4=pcVar9[4] + '\x01'
+  phase *    *pcVar9 = '\0';
+
+## effect type 32
+  phase <2   sprite=72
+  phase 2    sprite=72
+  phase 4    sprite=73
+  phase 5    sprite=74
+  phase 6    phase=0
+  phase *    Cos();
+  phase *    *(double *)(pcVar9 + -0x2b) = *(double *)(&g_4b44e8 + (uint)(byte)pcVar9[-7] * 0xb0 + -0xb0) - (double)CONCAT44(extraout_EDX_01,uStack_18);
+  phase *    Cos();
+  phase *    *(double *)(pcVar9 + -0x23) = (*(double *)(&g_4b44e8 + (uint)(byte)pcVar9[-7] * 0xb0 + -0xa8) - (double)_DAT_00490574) + (double)CONCAT44(ex
+
+## effect type 33
+  phase 0    sprite=80
+  phase 1    sprite=80
+  phase 2    sprite=81
+  phase 4    sprite=82
+  phase 5    sprite=83
+  phase 6    phase=0
+
+## effect type 34
+  phase 0    sprite=84
+  phase 3    sprite=85
+  phase 6    sprite=86
+  phase 9    sprite=87
+  phase 12   sprite=88
+  phase 15   sprite=89
+  phase 18   sprite=90
+  phase >13  hasHitbox=0
+
+## effect type 35
+  phase 0    sprite=91
+  phase 2    sprite=92
+  phase 4    sprite=93
+  phase 6    sprite=94
+  phase 8    sprite=95
+
+## effect type 36
+  phase 0    sprite=96
+  phase 2    sprite=97
+  phase 4    sprite=98
+  phase 6    sprite=99
+  phase 8    sprite=100
+
+
+# FUN_00476a04 spawn(type, variant, owner, y, x): per-type initial fields
+
+## type 0
+  phase = 0
+  hb_dx = 0
+  hb_dy = 0
+  done = 0
+  dir = 1
+  speed = 0
+  hasHitbox = 0
+  flagA = 0
+  -0xffffffff0000001b = 0
+  -0xffffffff0000001a = 0
+  -0xffffffff00000019 = 0
+  -0xffffffff00000018 = 0
+  -0xffffffff00000017 = 0
+  -0xffffffff00000016 = 0
+  -0xffffffff00000015 = 0
+  -0xffffffff00000014 = 0
+  -0xffffffff00000013 = 0
+  -0xffffffff00000012 = 0
+  -0xffffffff00000011 = 0
+  -0xffffffff00000010 = 0
+  -0xffffffff0000000f = 0
+  -0xffffffff0000000e = 0
+  -0xffffffff0000000d = 0
+  -0xffffffff0000000c = 0
+  owner = param_3
+  flagB = 0
+  c4 = 0
+  c5 = 0
+  c7 = 0
+  f8 = 0
+  f9 = 0
+  damage = 0
+  param = 0
+
+## type 1
+  life = 3
+
+## type 2
+  life = 15
+  f8 = 1
+
+## type 3/4
+  life = 80
+  hb_dx = -22
+  hb_dy = -1
+  f9 = 1
+  hitbox l=-12 t=-8 r=12 b=10
+
+## type 5
+  life = 20
+
+## type 6
+  life = 99
+  hb_dx = -22
+  hb_dy = -1
+  f9 = 1
+  dir = ownerFacing
+  speed = 5
+
+## type 7
+  life = 5
+  hasHitbox = 1
+  f8 = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-25 t=-38 r=25 b=0
+
+## type 8
+  life = 23
+  hasHitbox = 1
+  f8 = 1
+  damage = 40
+  param = (char)uVar2
+  flagA = 1
+  flagB = 1
+  dir = ownerFacing
+  hitbox l=-30 t=-50 r=30 b=0
+
+## type 9
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-20 t=-14 r=20 b=75
+
+## type 10
+  life = 14
+
+## type 11
+  life = 15
+
+## type 12
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-20 t=-20 r=20 b=85
+
+## type 13
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-25 t=-10 r=25 b=80
+
+## type 14
+  life = 6
+
+## type 15
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-25 t=-25 r=25 b=37
+
+## type 16
+  life = 3
+  dir = ownerFacing
+
+## type 17
+  life = 10
+
+## type 18
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-30 t=-10 r=30 b=80
+
+## type 19
+  life = 5
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 5
+  LStrCmp(local_c,(uint *)"B");
+  speed = 7
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-12 t=-10 r=12 b=20
+
+## type 20
+  life = 5
+  hasHitbox = 1
+  dir = ownerFacing
+  uVar2 = Random(2);
+  speed = rand+10
+  damage = 7
+  param = (char)uVar2
+  flagA = 1
+  hitbox l=-8 t=-5 r=8 b=5
+
+## type 21
+  life = 23
+  uVar2 = Random(5);
+  f9 = 1
+  uVar2 = Random(2);
+  dir = rand+1
+  uVar2 = Random(10);
+  speed = (char)uVar2
+  uVar2 = Random(3);
+  sprite = rand+53
+  life = 20
+  sprite = 56
+  f9 = 1
+  LStrCmp(local_c,(uint *)"A");
+  hb_dx = -13
+  hb_dy = -1
+  LStrCmp(local_c,(uint *)"B");
+  hb_dx = -17
+  hb_dy = -1
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 10
+  LStrCmp(local_c,(uint *)"B");
+  speed = 13
+  damage = 10
+  param = (char)uVar2
+  hitbox l=-12 t=-5 r=12 b=5
+
+## type 23
+  life = 26
+  hasHitbox = 1
+  damage = 12
+  param = (char)uVar2
+  dir = ownerFacing
+  flagB = 1
+  flagA = 1
+  f8 = 1
+  hitbox l=-30 t=-145 r=30 b=0
+
+## type 24
+  uVar2 = Random(0xf);
+  life = rand+15
+
+## type 25
+  life = 36
+
+## type 26
+  life = 6
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-25 t=-25 r=25 b=70
+
+## type 27
+  life = 6
+  damage = 0
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 3
+  LStrCmp(local_c,(uint *)"B");
+  speed = 4
+  LStrCmp(local_c,(uint *)"A");
+  c5 = 22
+  LStrCmp(local_c,(uint *)"B");
+  c5 = 35
+
+## type 28
+  life = 4
+  c5 = 20
+  hasHitbox = 1
+  flagB = 1
+  damage = 2
+  param = (char)uVar2
+  dir = ownerFacing
+  hitbox l=-40 t=-40 r=40 b=40
+
+## type 29
+  life = 6
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-25 t=-25 r=25 b=70
+
+## type 30
+  life = 5
+  c5 = 25
+  hasHitbox = 1
+  flagB = 1
+  dir = ownerFacing
+  flagA = 1
+  c7 = 1
+  speed = 0
+  damage = 10
+  param = (char)uVar2
+  hitbox l=-15 t=-30 r=15 b=30
+
+## type 31/32
+  life = 6
+  c5 = 70
+  hasHitbox = 1
+  flagB = 1
+  flagA = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  damage = 35
+  param = (char)uVar2
+  hitbox l=-25 t=-25 r=25 b=70
+
+## type 33
+  life = 6
+  hasHitbox = 1
+  iVar1 = Random(5);
+  flagA = 1
+  dir = ownerFacing
+  LStrCmp(local_c,(uint *)"A");
+  speed = 8
+  LStrCmp(local_c,(uint *)"B");
+  speed = 11
+  damage = 12
+  param = (char)uVar2
+  hitbox l=-18 t=-15 r=18 b=70
+
+## type 34
+  life = 20
+  hasHitbox = 1
+  f8 = 1
+  flagB = 1
+  flagA = 1
+  dir = ownerFacing
+  damage = 18
+  param = (char)uVar2
+  hitbox l=-45 t=-75 r=45 b=30
+
+## type 35
+  life = 10
+  dir = ownerFacing
+
+## type 36
+  life = 10
+  dir = ownerFacing

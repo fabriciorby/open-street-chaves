@@ -1,0 +1,1482 @@
+
+## char 0
+  state  1: *->1
+  state  2: 0->2 4->3 8->2 12->1
+  state  3: 0->4 2->5 4->4
+  state  4: 0->6 2->7 4->6
+  state  5: 0->8 5->9 8->8
+  state  6: 0->10 5->11 8->10
+  state  7: *->12
+  state  8: 0->13 2->14 4->13
+  state  9: 0->15 2->16 4->15
+  state 10: 0->17 5->18 8->17
+  state 11: 0->19 5->20 8->19
+  state 12: *->21
+  state 13: 0->22 3->23
+  state 14: 0->24 3->25
+  state 15: 0->22 5->23 8->22
+  state 16: 0->24 5->25 8->24
+  state 17: 0->26
+  state 18: 0->27 1->27
+  state 19: *->28
+  state 20: 0->29 18->30
+  state 21: *->31
+  state 22: *->32
+  state  1 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44ca) = 0;
+  state 20 timer *  : *(undefined2 *)(&DAT_004b44ac + uVar7 * 0xb0) = 0;
+  state 20 timer *  : *(double *)(uVar7 * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 21 timer *  : *(undefined1 *)(uVar7 * 0xb0 + 0x4b44cb) = 1;
+
+## char 1
+  state 23: 0->33 7->34 14->35 21->34 28->33
+  state 24: 0->12 2->30
+  state 25: 0->36 4->37 7->38
+  state 28: 0->45 4->46 8->47 12->48 15->49 18->12
+  state 29: 0->36 3->37 6->38
+  state 23 timer 28 : *(undefined2 *)(&DAT_004b44ac + uVar7 * 0xb0) = 0;
+  state 25 timer 10 : (&DAT_004b44a4)[uVar7 * 0xb0] = cVar14 + '\'';
+  state 25 timer 10 : FUN_00476a04('\a',(uint *)"A",bVar5,uVar3,uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\a',(uint *)"A",bVar5,uVar6,uVar7,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\a',(uint *)"B",bVar5,uVar6,uVar7,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\a',(uint *)"B",bVar5,uVar6,uVar7,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : g_sndIndexA = 0xe;
+  state 26 timer 0  : g_sndIndexA = 0xf;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 26 timer 6  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x29;
+  state 26 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x29;
+  state 26 timer 12 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2a;
+  state 26 timer 19 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2a;
+  state 26 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : FUN_00476a04('\x10',(uint *)0x0,bVar5,SUB84(in_stack_ffffffc4,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer *  : FUN_00476a04('\x10',(uint *)0x0,bVar5,SUB84(in_stack_ffffffc4,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 27 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 1;
+  state 27 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 1;
+  state 27 timer 0  : g_sndIndexA = 0x10;
+  state 27 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)3.0;
+  state 27 timer *  : sub_40287c_fpu();
+  state 27 timer *  : (&DAT_004b44a4)[uVar7 * 0xb0] = bVar15 + 0x2c;
+  state 27 timer *  : (&DAT_004b44a4)[uVar7 * 0xb0] = bVar15 + 0x2b;
+  state 27 timer *  : *(double *)(uVar7 * 0xb0 + 0x4b4440) = *(double *)(uVar7 * 0xb0 + 0x4b4440) - 10.0;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer 20 : *(undefined1 *)(uVar7 * 0xb0 + 0x4b44a2) = 1;
+  state 27 timer *  : *(undefined1 *)(uVar7 * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer 0  : g_sndIndexA = 0x11;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 9  : g_sndIndexA = 0x12;
+  state 29 timer 9  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 29 timer 9  : FUN_00476a04('\b',(uint *)"A",bVar5,*(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4440), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (i
+  state 29 timer 9  : FUN_00476a04('\b',(uint *)"A",bVar5,uVar6, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer 9  : DAT_004b449a = 0x14;
+
+## char 2
+  state 24: 0->12 2->30
+  state 25: 0->35 8->36 10->37
+  state 27: 0->24 *->25
+  hurt frame  2: -12
+  hurt frame  4: -12
+  hurt frame  8: -12
+  hurt frame 12: -12,170,20,70
+  hurt frame 13: -12,170,20,70
+  hurt frame 15: -12,170,20,70
+  hurt frame 17: -12,170,20,70
+  hurt frame 19: -12,170,20,70
+  hurt frame 21: -12,140,20,40
+  hurt frame 28: -22,110,30,60
+  hurt frame 29: -22,170,30,115
+  hurt frame 31: -12,170,20,40
+  hurt frame 32: -12,170,20,70
+  hurt frame 35: -12,170,20,30
+  hurt frame 39: -12,140,15,40
+  hurt frame 41: -18,170,13,30
+  hurt frame 45: -12,170,40,40
+  hit  3,2,0,7,1,1,60,67,50,20
+  hit  4,2,0,7,1,1,133,70,95,25
+  hit  5,5,0,14,2,1,58,68,5,5
+  hit  6,5,0,14,2,1,90,92,55,18
+  hit  8,2,0,7,1,1,94,67,82,20
+  hit  9,2,0,7,1,1,165,70,145,20
+  hit  10,5,0,14,2,1,92,45,35,15
+  hit  11,5,0,14,2,1,138,90,115,30
+  hit  13,2,0,7,1,1,78,85,40,50
+  hit  14,2,0,7,1,1,145,55,115,0
+  hit  15,5,0,14,1,1,78,85,40,50
+  hit  16,5,0,14,2,1,145,55,115,0
+  hit  26,3,1,3,0,1,90,50,-5,10
+  hit  26,5,4,18,0,1,90,50,-5,10
+  hit  26,9,0,0,0,0,0,0,0,0
+  hit  27,3,2,18,0,1,145,55,115,0
+  hit  28,1,2,0,0,1,160,60,40,20
+  hit  28,5,1,0,0,1,160,60,40,20
+  hit  28,9,1,0,0,1,160,60,40,20
+  hit  28,13,2,0,0,1,160,60,40,20
+  hit  30,3,0,0,0,1,160,60,80,20
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '!';
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '\"';
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,SUB84(in_stack_ffffffb4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : g_sndIndexA = 0x14;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 26 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x27;
+  state 26 timer 11 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 26 timer 11 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 26 timer 11 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfa;
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 11.0;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 12.0;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 26 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 27 timer 0  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 27 timer 0  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) + 20.0;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) + 13.0;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 2;
+  state 28 timer 0  : g_sndIndexA = 0x16;
+  state 28 timer *  : for (in_stack_ffffffc4 = (double)CONCAT71((int7)((ulonglong)in_stack_ffffffc4 >> 8), (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0]);
+  state 28 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] == SUB81(in_stack_ffffffc4,0);
+  state 28 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = SUB81(in_stack_ffffffc4,0);
+  state 28 timer *  : g_sndIndexA = 5;
+  state 28 timer *  : g_sndIndexA = 6;
+  state 28 timer *  : g_sndIndexA = 5;
+  state 28 timer *  : g_sndIndexA = 6;
+  state 29 timer *  : DAT_004b449b = 3;
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44aa) = 0;
+  state 29 timer *  : (&DAT_004b44a4)[(3 - (param_1 & 0xff)) * 0xb0] = (char)uVar3 + ('L' - (char)((uint)uVar4 >> 8));
+  state 29 timer *  : *(undefined2 *)(&DAT_004b44ac + (3 - (param_1 & 0xff)) * 0xb0) = 0;
+  state 29 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ae) = 5;
+  state 29 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0;
+  state 29 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) + 10.0;
+  state 29 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 29 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 40.0 + (double)(iVar2 << 3);
+  state 29 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = (*(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 40.0) - (double)(iVar2 << 3);
+  state 29 timer *  : pcVar1 = (char *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 1);
+  state 29 timer *  : *pcVar1 = *pcVar1 + '\x01';
+  state 29 timer *  : *(undefined1 *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 2) = 0x14;
+  state 29 timer *  : g_sndIndexA = 7;
+  state 29 timer *  : g_sndIndexA = 8;
+  state 29 timer *  : g_sndIndexA = 9;
+  state 29 timer *  : FUN_00476a04('\x01',(uint *)0x0,0,SUB84(in_stack_ffffffb4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : (&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] = 0x14;
+  state 29 timer *  : *(double *)(&DAT_004b4478 + iVar2 * 0xb0) = *(double *)(&DAT_004b4478 + (3 - (param_1 & 0xff)) * 0xb0) - (double)(byte)(&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] 
+  state 29 timer *  : sub_4775fc_setMove(CONCAT31((int3)((uint)(iVar2 * 0x16) >> 8),'\x03' - bVar5), CONCAT31((int3)((uint)iVar2 >> 8),10));
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44aa) = 0x1e;
+  state 30 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + ',';
+  state 30 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 30 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffb4 >> 8) + '-';
+  state 30 timer *  : sub_47648c(param_1);
+  state 30 timer *  : sub_47648c(param_1);
+  state 31 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44aa) = 0;
+  state 31 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)uVar4 + '\x01' + cVar14;
+  state 31 timer *  : DAT_004b449b = 3;
+  state 31 timer *  : sub_47648c(param_1);
+  state 31 timer *  : sub_47648c(param_1);
+  state 31 timer *  : (&DAT_004b44a4)[(3 - (param_1 & 0xff)) * 0xb0] = (char)uVar4 + ('L' - cStack_2b);
+  state 31 timer *  : *(undefined2 *)(&DAT_004b44ac + (3 - (param_1 & 0xff)) * 0xb0) = 0;
+  state 31 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ae) = 5;
+  state 31 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0;
+  state 31 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) + 10.0;
+  state 31 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 31 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 40.0 + (double)(iVar2 << 3);
+  state 31 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = (*(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 40.0) - (double)(iVar2 << 3);
+  state 31 timer *  : pcVar1 = (char *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 1);
+  state 31 timer *  : *pcVar1 = *pcVar1 + '\x02';
+  state 31 timer *  : *(undefined1 *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 2) = 0x2b;
+  state 31 timer *  : DAT_004b57f9 = '\x05';
+  state 31 timer *  : g_sndIndexA = 7;
+  state 31 timer *  : g_sndIndexA = 8;
+  state 31 timer *  : g_sndIndexA = 9;
+  state 31 timer *  : FUN_00476a04('\x01',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 31 timer *  : (&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] = 0x2f;
+  state 31 timer *  : *(double *)(&DAT_004b4478 + iVar2 * 0xb0) = *(double *)(&DAT_004b4478 + (3 - (param_1 & 0xff)) * 0xb0) - (double)(byte)(&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] 
+  state 31 timer *  : (&DAT_004b44a3)[(param_1 & 0xff) * 0xb0] = 1;
+  state 31 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)dVar12 >> 8) + '&';
+  state 31 timer *  : DAT_004b57f9 = '\x05';
+  state 31 timer *  : sub_4775fc_setMove(param_1,CONCAT31((int3)((uint)iVar2 >> 8),0x13));
+  state 31 timer *  : sub_4775fc_setMove('\x03' - bVar5,10);
+  state 31 timer *  : (&DAT_004b44a0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 31 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44aa) = 0x1c;
+  state 31 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0xe2;
+  state 31 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0xffe7;
+  state 31 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0x19;
+
+## char 3
+  state 23: 5->34 10->35 15->34 20->33 25->34 30->35 35->34 *->33
+  state 24: 0->12 2->30
+  state 25: 0->36 5->37 10->38
+  state 26: 1->40 3->41 8->42
+  state 27: 0->43 3->44
+  state 28: 0->46 2->47 4->46 6->47 8->46
+  state 30: *->50
+  hurt frame  2: -17
+  hurt frame  4: -17
+  hurt frame  8: -17
+  hurt frame 12: -17,155,14,65
+  hurt frame 13: -17,155,14,65
+  hurt frame 15: -17,155,14,65
+  hurt frame 17: -17,155,14,65
+  hurt frame 19: -17,155,14,65
+  hurt frame 21: -17,110,14,30
+  hurt frame 28: -27,115,24,70
+  hurt frame 29: -27,155,24,115
+  hurt frame 31: -17,155,25,40
+  hurt frame 32: -12,155,30,65
+  hurt frame 35: -17,155,14,30
+  hurt frame 38: -7,140,24,30
+  hurt frame 39: -17,110,14,30
+  hurt frame 41: 0,140,28,50
+  hurt frame 43: -7,140,24,30
+  hurt frame 45: 10,140,50,40
+  hit  3,2,0,7,1,1,55,60,45,20
+  hit  4,2,0,7,1,1,140,48,100,15
+  hit  5,5,0,14,2,1,58,55,45,15
+  hit  6,5,0,14,2,1,90,60,60,10
+  hit  8,2,0,7,1,1,90,70,80,15
+  hit  9,2,0,7,1,1,143,70,127,20
+  hit  10,5,0,14,2,1,95,60,80,15
+  hit  11,5,0,14,2,1,123,80,102,17
+  hit  13,2,0,7,1,1,105,68,75,17
+  hit  14,2,0,7,1,1,105,80,80,10
+  hit  15,5,0,14,2,1,105,68,75,17
+  hit  16,5,0,14,2,1,105,80,80,10
+  hit  26,2,3,20,0,1,95,50,5,10
+  hit  26,7,0,0,0,0,95,50,5,10
+  hit  27,5,4,16,0,1,82,100,68,10
+  hit  28,1,1,12,0,1,110,70,80,20
+  hit  28,3,1,12,0,1,110,5,80,-70
+  hit  28,5,1,8,0,1,110,70,80,20
+  hit  28,7,1,8,0,1,110,5,80,-70
+  hit  28,9,0,0,0,0,0,0,0,0
+  hit  29,1,0,5,0,1,130,70,45,40
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,SUB84(in_stack_ffffffb4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 27 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffb4 >> 8) + '-';
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0), (int)((ulonglong)in_stack_ffffffb4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffb4 >> 8) + '0';
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 30 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44aa) = 0;
+  state 30 timer *  : fVar8 = (float10)(byte)g_counterD / (float10)4.0;
+  state 30 timer *  : sub_40287c_fpu();
+  state 30 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 3.0;
+  state 30 timer *  : DAT_004b449b = 3;
+  state 30 timer *  : (&DAT_004b44a4)[(3 - (param_1 & 0xff)) * 0xb0] = (char)uVar4 + ('L' - (char)((ulonglong)in_stack_ffffffc4 >> 8));
+  state 30 timer *  : *(undefined2 *)(&DAT_004b44ac + (3 - (param_1 & 0xff)) * 0xb0) = 0;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ae) = 5;
+  state 30 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) + 10.0;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 65.0 + (double)(iVar2 * 5);
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = (*(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 65.0) - (double)(iVar2 * 5);
+  state 30 timer *  : pcVar1 = (char *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 1);
+  state 30 timer *  : *pcVar1 = *pcVar1 + '\x01';
+  state 30 timer *  : *(undefined1 *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 2) = 0x2b;
+  state 30 timer *  : DAT_004b57f9 = '\x05';
+  state 30 timer *  : g_sndIndexA = 7;
+  state 30 timer *  : g_sndIndexA = 8;
+  state 30 timer *  : g_sndIndexA = 9;
+  state 30 timer *  : FUN_00476a04('\x01',(uint *)0x0,0,SUB84(in_stack_ffffffc4,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 30 timer *  : FUN_00476a04('\x01',(uint *)0x0,0,SUB84(in_stack_ffffffc4,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 30 timer *  : (&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] = 0x24;
+  state 30 timer *  : *(double *)(&DAT_004b4478 + iVar2 * 0xb0) = *(double *)(&DAT_004b4478 + (3 - (param_1 & 0xff)) * 0xb0) - (double)(byte)(&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] 
+  state 30 timer *  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xe4;
+  state 30 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 30 timer *  : (&DAT_004b44a3)[(param_1 & 0xff) * 0xb0] = 0xc;
+  state 30 timer *  : *(undefined2 *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) = 0;
+  state 30 timer *  : *(undefined2 *)((param_1 & 0xff) * 0xb0 + 0x4b44ae) = 99;
+  state 30 timer *  : sub_4775fc_setMove(CONCAT31((int3)((param_1 & 0xff) * 0x16 >> 8),'\x03' - bVar5), CONCAT31((int3)((uint)iVar2 >> 8),10));
+  state 30 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44aa) = 0x1e;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0xfff1;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0xf;
+
+## char 4
+  state 23: 13->34 *->33
+  state 24: 0->12 2->30
+  state 25: 0->35 5->36 10->37
+  state 26: 0->35 4->36 *->38
+  state 27: 0->12 6->40 9->41
+  state 28: 0->42 2->43 4->44 6->45
+  state 29: 0->12 5->40 9->41
+  hurt frame  2: -17
+  hurt frame  4: -17
+  hurt frame  8: -17
+  hurt frame 12: -17,160,14,65
+  hurt frame 13: -17,160,14,65
+  hurt frame 15: -17,160,14,65
+  hurt frame 17: -17,160,14,65
+  hurt frame 19: -17,160,14,65
+  hurt frame 21: -17,120,14,25
+  hurt frame 28: -27,100,24,50
+  hurt frame 29: -27,160,24,110
+  hurt frame 31: -17,160,14,20
+  hurt frame 32: -17,160,14,65
+  hurt frame 35: -17,160,14,20
+  hurt frame 38: -10,160,55,40
+  hurt frame 39: -40,70,25,50
+  hurt frame 43: -12,150,20,20
+  hit  3,2,0,7,1,1,48,60,35,18
+  hit  4,2,0,7,1,1,80,80,50,20
+  hit  5,5,0,14,2,1,45,70,35,20
+  hit  6,5,0,14,2,1,150,80,110,20
+  hit  8,2,0,7,1,1,90,50,80,15
+  hit  9,2,0,7,1,1,150,75,135,20
+  hit  10,5,0,14,2,1,90,67,80,15
+  hit  11,5,0,14,2,1,125,85,110,15
+  hit  13,2,0,7,1,1,97,50,65,20
+  hit  14,2,0,7,1,1,115,75,90,20
+  hit  15,5,0,14,2,1,97,50,65,20
+  hit  16,5,0,14,2,1,115,75,90,20
+  hit  26,3,3,20,0,1,85,90,55,30
+  hit  27,4,1,5,0,1,70,75,30,20
+  hit  27,5,1,9,0,1,70,75,30,10
+  hit  27,6,2,7,0,1,70,75,30,10
+  hit  28,2,3,22,0,1,95,55,0,20
+  hit  28,7,0,0,0,0,95,55,0,20
+  hit  29,2,8,40,2,1,70,75,30,10
+  state 25 timer 10 : FUN_00476a04('\f',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\f',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 29 timer 0  : g_sndIndexA = 0x1c;
+  state 29 timer 1  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : FUN_00476a04('\v',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : FUN_00476a04('\v',(uint *)0x0,0,SUB84(in_stack_ffffffc4,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+
+## char 5
+  state 23: 9->34 13->33 17->34 21->33 25->34 29->33 33->34 37->33 41->35 *->33
+  state 24: 0->12 2->30
+  state 25: 0->36 5->37 10->38
+  state 26: 5->40 10->41 15->42 20->12
+  state 27: 2->40 35->40 *->44
+  state 29: 0->7 1->10 2->11 3->6 4->7 5->10 6->11
+  hurt frame  2: -17
+  hurt frame  4: -17
+  hurt frame  8: -17
+  hurt frame 12: -17,150,14,65
+  hurt frame 13: -17,150,14,65
+  hurt frame 15: -17,150,14,65
+  hurt frame 17: -17,150,14,65
+  hurt frame 19: -17,150,14,65
+  hurt frame 21: -7,120,24,25
+  hurt frame 28: -27,110,24,60
+  hurt frame 29: -27,140,24,105
+  hurt frame 31: -17,150,14,20
+  hurt frame 32: -17,150,14,65
+  hurt frame 36: -17,150,14,20
+  hurt frame 42: -17,150,14,70
+  hurt frame 43: -17,140,14,60
+  hurt frame 45: -17,150,14,20
+  hit  3,2,0,7,1,1,42,58,32,20
+  hit  4,2,0,7,1,1,118,75,95,20
+  hit  5,5,0,14,2,1,40,63,28,20
+  hit  6,5,0,14,2,1,60,63,22,25
+  hit  8,2,0,7,1,1,92,58,82,20
+  hit  9,2,0,7,1,1,142,67,130,20
+  hit  10,5,0,14,2,1,87,60,77,20
+  hit  11,5,0,14,2,1,133,77,115,20
+  hit  13,2,0,7,1,1,80,67,45,25
+  hit  14,2,0,7,1,1,113,67,96,25
+  hit  15,5,0,14,2,1,80,67,45,25
+  hit  16,5,0,14,2,1,113,67,96,25
+  hit  26,10,1,10,2,1,145,70,20,20
+  hit  26,15,2,15,2,1,145,70,120,20
+  hit  27,3,1,4,0,1,75,70,50,-60
+  hit  27,7,1,3,0,1,75,70,50,-60
+  hit  27,11,0,4,0,1,75,70,50,-60
+  hit  27,15,1,3,0,1,75,70,50,-60
+  hit  27,19,2,4,0,1,75,70,50,-60
+  hit  27,23,2,3,0,1,75,70,50,-60
+  hit  27,27,2,4,0,1,75,70,50,-60
+  hit  28,1,1,4,0,1,110,70,28,18
+  hit  28,3,1,4,0,1,110,70,28,18
+  hit  28,5,1,3,0,1,110,70,28,18
+  hit  28,7,1,4,0,1,110,70,28,18
+  hit  28,9,1,3,0,1,110,70,28,18
+  hit  28,11,1,4,0,1,110,70,28,18
+  hit  28,13,1,4,0,1,110,70,28,18
+  hit  29,1,1,5,2,1,110,70,28,18
+  hit  29,3,1,5,2,1,110,70,28,18
+  hit  29,5,0,5,2,1,110,70,28,18
+  hit  29,7,1,5,2,1,110,70,28,18
+  hit  29,9,2,5,2,1,110,70,28,18
+  hit  29,11,0,5,2,1,110,70,28,18
+  hit  29,13,1,5,2,1,110,70,28,18
+  hit  29,15,3,10,2,1,110,70,28,18
+  state 25 timer 10 : FUN_00476a04('\r',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\r',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\r',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\r',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 27 timer *  : sub_40287c_fpu();
+  state 27 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '+';
+  state 27 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 27 timer *  : sub_40287c_fpu();
+  state 27 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 27 timer 38 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : for (in_stack_ffffffc4 = (double)CONCAT71((int7)((ulonglong)in_stack_ffffffc4 >> 8), (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0]);
+  state 28 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] == SUB81(in_stack_ffffffc4,0);
+  state 28 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = SUB81(in_stack_ffffffc4,0);
+  state 28 timer *  : g_sndIndexA = 0x20;
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)uVar4 + (char)((ulonglong)in_stack_ffffffc4 >> 8) + '-';
+  state 29 timer 28 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '\x06';
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 1  : g_sndIndexA = 0x20;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+
+## char 6
+  state 24: 0->12 2->30
+  state 25: 0->35 5->36 10->37
+  state 26: 0->38 10->40
+  state 27: 0->41 3->42 9->43
+  state 28: 0->41 2->44 7->41
+  state 29: 0->41 3->44 7->41 8->41 9->42 25->43
+  hurt frame  2: -5
+  hurt frame  4: -5
+  hurt frame  8: -5
+  hurt frame 12: -10,200,20,97
+  hurt frame 13: -10,200,20,97
+  hurt frame 15: -10,200,20,97
+  hurt frame 17: -10,200,20,97
+  hurt frame 19: -10,200,20,97
+  hurt frame 21: -18,160,18,35
+  hurt frame 28: -40,140,35,100
+  hurt frame 29: -40,180,35,145
+  hurt frame 31: -5,190,35,40
+  hurt frame 32: -17,190,14,97
+  hurt frame 35: -12,190,20,40
+  hurt frame 38: -17,190,14,78
+  hurt frame 41: -17,190,44,78
+  hurt frame 42: -15,180,25,40
+  hurt frame 44: -10,150,35,30
+  hit  3,2,0,7,1,1,82,68,55,20
+  hit  4,2,0,7,1,1,145,108,95,20
+  hit  5,4,0,4,2,1,90,77,58,30
+  hit  5,6,0,10,2,1,80,73,23,40
+  hit  6,5,0,14,2,1,100,105,40,25
+  hit  8,2,0,7,1,1,125,80,110,15
+  hit  9,2,0,7,1,1,190,93,160,18
+  hit  10,5,0,14,2,1,120,74,102,15
+  hit  11,5,0,14,2,1,155,110,135,15
+  hit  13,2,0,7,1,1,140,85,100,38
+  hit  14,2,0,7,1,1,143,108,110,18
+  hit  15,5,0,14,2,1,140,85,100,38
+  hit  16,5,0,14,2,1,143,108,110,18
+  hit  27,2,2,22,0,1,170,50,0,8
+  hit  27,13,0,0,0,0,0,0,0,0
+  hit  28,1,1,3,0,1,130,75,70,0
+  hit  28,3,1,18,0,1,130,75,70,0
+  hit  28,5,0,0,0,0,0,0,0,0
+  hit  29,1,1,2,2,1,155,70,70,0
+  hit  29,3,1,1,1,1,155,70,70,0
+  hit  29,6,1,2,2,1,155,70,70,0
+  hit  29,8,2,3,1,1,165,55,40,8
+  hit  29,10,1,2,2,1,165,55,40,8
+  hit  29,12,1,4,2,1,165,55,40,8
+  hit  29,14,2,3,1,1,165,55,40,8
+  hit  29,16,1,6,2,1,165,55,40,8
+  hit  29,18,2,5,2,1,165,55,40,8
+  hit  29,20,1,6,3,1,165,55,40,8
+  hit  29,22,1,9,3,1,165,55,40,8
+  hit  29,25,0,0,0,0,0,0,0,0
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)4.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 25 timer 10 : FUN_00476a04('\x0f',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x0f',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x0f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x0f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer 10 : FUN_00476a04('\x0f',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x0f',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x0f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x0f',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 10.0;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 13.0;
+  state 27 timer 13 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfd;
+  state 27 timer 13 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfa;
+  state 27 timer 13 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 15.0;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer 6  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 0;
+  state 29 timer 8  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 29 timer 8  : g_sndIndexA = 0x22;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 10.0;
+  state 29 timer 26 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 29 timer 26 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfb;
+  state 17 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 17 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+
+## char 7
+  state 24: 0->12 2->30
+  state 25: 0->35 2->36 4->37 6->35 8->36 10->37 12->35 14->36 16->37
+  state 26: 0->38 4->40 6->41 8->40
+  state 27: 0->42 2->43 4->44
+  state 28: 0->45 2->46
+  state 29: 0->38 *->38
+  hurt frame  2: -12
+  hurt frame  4: -12
+  hurt frame  8: -12
+  hurt frame 12: -18,170,25,73
+  hurt frame 13: -18,170,25,73
+  hurt frame 15: -18,170,25,73
+  hurt frame 17: -18,170,25,73
+  hurt frame 19: -18,170,25,73
+  hurt frame 21: -18,130,25,35
+  hurt frame 28: -28,120,40,80
+  hurt frame 29: -28,160,40,120
+  hurt frame 31: -12,170,20,35
+  hurt frame 32: -18,170,25,73
+  hurt frame 38: -12,170,20,35
+  hit  3,2,0,7,1,1,60,60,45,20
+  hit  4,2,0,7,1,1,140,70,110,20
+  hit  5,5,0,14,2,1,95,72,62,25
+  hit  6,5,0,14,2,1,105,85,90,20
+  hit  8,2,0,7,1,1,95,60,80,20
+  hit  9,2,0,7,1,1,160,74,142,30
+  hit  10,5,0,14,2,1,120,72,88,25
+  hit  11,5,0,14,2,1,135,82,118,25
+  hit  13,2,0,7,1,1,115,70,80,27
+  hit  14,2,0,7,1,1,108,83,82,30
+  hit  15,5,0,14,2,1,115,70,80,27
+  hit  16,5,0,14,2,1,108,83,82,30
+  hit  25,2,2,5,0,1,95,55,10,-30
+  hit  25,5,2,5,0,1,95,55,10,-30
+  hit  25,8,2,5,0,1,95,55,10,-30
+  hit  25,11,2,5,0,1,95,55,10,-30
+  hit  25,14,2,5,0,1,95,55,10,-30
+  hit  26,3,2,12,0,1,90,90,65,20
+  hit  26,5,2,12,0,1,90,123,65,20
+  hit  26,8,0,0,0,0,90,120,65,20
+  hit  27,1,2,8,0,1,120,80,35,5
+  hit  27,3,2,14,0,1,120,80,35,5
+  hit  27,6,0,0,0,0,120,80,35,5
+  hit  28,1,3,22,0,1,120,65,20,5
+  hit  29,2,2,5,0,1,125,65,35,20
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '!';
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '\"';
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 26 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 30 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44aa) = 0;
+  state 30 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)uVar4 + '\x01' + cVar14;
+  state 30 timer *  : DAT_004b449b = 3;
+  state 30 timer *  : DAT_004b57f9 = (char)uVar4 + '\x03';
+  state 30 timer *  : sub_47648c(param_1);
+  state 30 timer *  : sub_47648c(param_1);
+  state 30 timer *  : (&DAT_004b44a4)[(3 - (param_1 & 0xff)) * 0xb0] = (char)uVar4 + ('L' - cStack_2b);
+  state 30 timer *  : *(undefined2 *)(&DAT_004b44ac + (3 - (param_1 & 0xff)) * 0xb0) = 0;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ae) = 5;
+  state 30 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) + 10.0;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 40.0 + (double)(iVar2 << 3);
+  state 30 timer *  : *(double *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4438) = (*(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 40.0) - (double)(iVar2 << 3);
+  state 30 timer *  : pcVar1 = (char *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 1);
+  state 30 timer *  : *pcVar1 = *pcVar1 + '\x01';
+  state 30 timer *  : *(undefined1 *)((int)&g_counterE + (param_1 & 0xff) * 0xb0 + 2) = 0x2b;
+  state 30 timer *  : g_sndIndexA = 7;
+  state 30 timer *  : g_sndIndexA = 8;
+  state 30 timer *  : g_sndIndexA = 9;
+  state 30 timer *  : FUN_00476a04('\x01',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 30 timer *  : (&DAT_004b44a8)[(param_1 & 0xff) * 0xb0] = 0x24;
+  state 30 timer *  : *(double *)(&DAT_004b4478 + (3 - (param_1 & 0xff)) * 0xb0) = *(double *)(&DAT_004b4478 + (3 - (param_1 & 0xff)) * 0xb0) - (double)(byte)(&DAT_004b44a8)[(param_1
+  state 30 timer *  : (&DAT_004b44a3)[(param_1 & 0xff) * 0xb0] = 1;
+  state 30 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)dVar12 >> 8) + '\f';
+  state 30 timer *  : DAT_004b57f9 = '\x05';
+  state 30 timer *  : *(undefined2 *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) = 0;
+  state 30 timer *  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xd0;
+  state 30 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 30 timer *  : sub_4775fc_setMove(param_1,CONCAT31((int3)((uint)iVar2 >> 8),0x15));
+  state 30 timer *  : sub_4775fc_setMove('\x03' - bVar5,10);
+  state 30 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44aa) = 0x1e;
+  state 30 timer *  : (&DAT_004b44b0)[(3 - (param_1 & 0xff)) * 0xb0] = 0xdd;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0xffe7;
+  state 30 timer *  : *(undefined2 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b4450) = 0x19;
+
+## char 8
+  state  2: *->3
+  state 24: 0->12 2->30
+  state 25: 0->34 5->35 10->36
+  state 26: 0->34 5->37 10->38
+  state 27: 2->40 4->41 6->40 8->41 10->40
+  state 28: 9->42 11->43 13->42 15->43 17->42
+  hurt frame  2: -17
+  hurt frame  4: -17
+  hurt frame  8: -17
+  hurt frame 12: -17,170,20,67
+  hurt frame 13: -17,170,20,67
+  hurt frame 15: -17,170,20,67
+  hurt frame 17: -17,170,20,67
+  hurt frame 19: -17,170,20,67
+  hurt frame 21: -17,140,14,30
+  hurt frame 28: -27,110,34,80
+  hurt frame 29: -27,140,34,120
+  hurt frame 31: -17,170,14,30
+  hurt frame 32: -17,170,14,67
+  hurt frame 34: -17,170,14,30
+  hit  3,2,0,7,1,1,74,62,48,20
+  hit  4,2,0,7,1,1,144,45,108,20
+  hit  5,5,0,14,2,1,74,65,48,20
+  hit  6,5,0,14,2,1,144,60,108,20
+  hit  8,2,0,7,1,1,99,62,73,20
+  hit  9,2,0,7,1,1,150,62,103,30
+  hit  10,5,0,14,2,1,99,70,73,20
+  hit  11,5,0,14,2,1,150,78,103,40
+  hit  13,2,0,7,1,1,120,68,73,30
+  hit  14,2,0,7,1,1,160,68,113,30
+  hit  15,5,0,14,2,1,120,68,73,30
+  hit  16,5,0,14,2,1,160,68,113,30
+  hit  27,2,3,18,0,1,150,45,10,-30
+  hit  27,7,0,0,0,0,0,0,0,0
+  hit  28,9,3,18,0,1,160,45,60,-10
+  state  2 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffc4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '!';
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 4.0;
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) + 4.0;
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 25 timer 10 : FUN_00476a04('\x12',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x12',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x12',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x12',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 0  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 26 timer 0  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 0;
+  state 26 timer 10 : FUN_00476a04('\x13',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x13',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x13',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 10 : FUN_00476a04('\x13',(uint *)"B",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 8  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 26 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 0;
+  state 27 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 27 timer 2  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xe7;
+  state 27 timer 2  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xe0;
+  state 27 timer 2  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 27 timer 2  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer 0  : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4438), *(undefined4 *)((pa
+  state 28 timer 0  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 28 timer 0  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 0;
+  state 28 timer 1  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44ca) = 1;
+  state 28 timer 9  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44ca) = 0;
+  state 28 timer 8  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 80.0;
+  state 28 timer 8  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 150.0;
+  state 28 timer 8  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 80.0;
+  state 28 timer 8  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 150.0;
+  state 28 timer 8  : *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = 0;
+  state 28 timer 8  : *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444) = 0x40490000;
+  state 28 timer 8  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 28 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 28 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 28 timer 8  : FUN_00476a04('\x18',(uint *)0x0,bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 0  : g_sndIndexA = 0x2a;
+  state 29 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '!';
+  state 29 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 29 timer *  : sub_40287c_fpu();
+  state 29 timer *  : FUN_00476a04('\x14',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : FUN_00476a04('\x14',(uint *)"A",bVar5,SUB84(in_stack_ffffffc4,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+
+## char 9
+  state 24: 0->12 2->30
+  state 25: *->12
+  state 26: 0->37 4->38
+  state 27: 0->40 3->41 5->42 7->43
+  state 28: 0->24 3->44
+  state 29: 0->35 1->36 2->35 3->36 4->35 5->36 6->35 7->36 8->35 9->36 11->37 12->38
+  hurt frame  2: -17
+  hurt frame  4: -17
+  hurt frame  8: -17
+  hurt frame 12: -17,160,20,70
+  hurt frame 13: -17,160,20,70
+  hurt frame 15: -17,160,20,70
+  hurt frame 17: -17,160,20,70
+  hurt frame 19: -17,160,20,85
+  hurt frame 21: -17,130,14,30
+  hurt frame 28: -27,110,34,80
+  hurt frame 29: -27,140,34,120
+  hurt frame 31: -17,160,14,30
+  hurt frame 32: -17,160,14,65
+  hurt frame 35: -27,140,40,110
+  hurt frame 37: -17,130,14,10
+  hurt frame 40: -17,120,14,30
+  hurt frame 42: -17,160,14,30
+  hurt frame 44: 10,160,40,30
+  hit  3,2,0,7,1,1,65,50,55,10
+  hit  4,2,0,7,1,1,85,60,48,30
+  hit  5,5,0,14,2,1,60,55,50,10
+  hit  6,5,0,14,2,1,90,70,48,20
+  hit  8,2,0,7,1,1,98,45,88,10
+  hit  9,2,0,7,1,1,150,50,135,20
+  hit  10,5,0,14,2,1,98,45,88,10
+  hit  11,5,0,14,2,1,135,67,115,20
+  hit  13,2,0,7,1,1,100,67,80,20
+  hit  14,2,0,7,1,1,110,69,90,20
+  hit  15,5,0,14,2,1,100,67,80,20
+  hit  16,5,0,14,2,1,110,69,90,20
+  hit  25,2,3,18,0,1,130,85,110,20
+  hit  25,10,0,0,0,0,0,0,0,0
+  hit  25,15,0,0,0,0,0,0,0,0
+  hit  26,2,3,18,0,1,120,38,-30,10
+  hit  26,6,0,0,0,0,0,0,0,0
+  hit  27,4,2,10,0,1,80,38,60,10
+  hit  27,6,2,8,0,1,80,70,60,10
+  hit  28,3,2,16,0,1,162,75,110,20
+  hit  29,1,1,3,0,1,130,85,110,20
+  hit  29,3,0,5,2,1,130,85,110,20
+  hit  29,5,1,5,2,1,130,85,110,20
+  hit  29,7,1,3,2,1,130,85,110,20
+  hit  29,9,0,5,2,1,130,85,110,20
+  hit  29,10,1,3,2,1,120,50,-30,10
+  hit  29,11,1,4,2,1,120,50,-30,10
+  hit  29,12,0,3,2,1,120,50,-30,10
+  hit  29,13,1,4,2,1,120,50,-30,10
+  hit  29,14,1,3,2,1,120,50,-30,10
+  hit  29,15,0,4,2,1,120,50,-30,10
+  hit  29,16,1,2,2,1,120,50,-30,10
+  hit  29,17,0,0,0,0,120,50,-30,10
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)3.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 25 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 25 timer *  : sub_40287c_fpu();
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 26 timer 8  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer 8  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xf6;
+  state 26 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 9.0;
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 15.0;
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer 0  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) + 15.0;
+  state 28 timer *  : (&DAT_004b44a3)[(param_1 & 0xff) * 0xb0] = 1;
+  state 28 timer *  : *(undefined2 *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) = 0;
+  state 28 timer *  : (&DAT_004b44a0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)_DAT_004b4498;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 0  : g_sndIndexA = 0x2e;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 18.0;
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 29 timer 22 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = (char)((ulonglong)in_stack_ffffffc4 >> 8) + '\'';
+  state 29 timer 22 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xf2;
+  state 29 timer 22 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+
+## char 10
+  state 23: 12->34 *->33
+  state 24: 0->12 2->30
+  state 26: 0->38 4->40 10->12 16->12
+  state 27: 0->41 4->42
+  state 28: 0->43 6->44
+  state 29: 0->38 4->40 15->41 20->42
+  hurt frame  1: -14
+  hurt frame  2: -14
+  hurt frame  4: -14
+  hurt frame  8: -14
+  hurt frame 12: -20,170,20,65
+  hurt frame 13: -20,170,20,65
+  hurt frame 15: -20,170,20,65
+  hurt frame 17: -20,170,20,65
+  hurt frame 19: -20,170,20,65
+  hurt frame 21: -20,140,19,28
+  hurt frame 28: -28,112,36,68
+  hurt frame 29: -28,152,36,118
+  hurt frame 31: -14,170,19,30
+  hurt frame 32: -20,170,20,65
+  hurt frame 40: -30,120,40,85
+  hit  3,2,0,7,1,1,68,55,52,10
+  hit  4,2,0,7,1,1,145,55,122,20
+  hit  5,5,0,14,2,1,68,60,52,20
+  hit  6,5,0,14,2,1,85,85,60,30
+  hit  8,2,0,7,1,1,104,55,88,10
+  hit  9,2,0,7,1,1,154,63,140,10
+  hit  10,5,0,14,2,1,104,65,88,10
+  hit  11,5,0,14,2,1,153,74,135,10
+  hit  13,2,0,7,1,1,102,80,60,20
+  hit  14,2,0,7,1,1,110,75,65,10
+  hit  15,5,0,14,2,1,102,80,60,20
+  hit  16,5,0,14,2,1,110,75,65,10
+  hit  25,1,1,4,0,1,105,70,45,10
+  hit  25,3,1,4,0,1,105,70,45,10
+  hit  25,5,1,3,0,1,105,70,45,10
+  hit  25,7,1,4,0,1,105,70,45,10
+  hit  25,9,1,4,0,1,105,70,45,10
+  hit  25,12,1,4,0,0,0,0,0,0
+  hit  26,3,3,18,0,1,115,75,85,40
+  hit  26,15,0,0,0,0,0,0,0,0
+  hit  27,1,2,5,0,1,110,50,30,-30
+  hit  27,5,3,18,0,1,140,50,100,-30
+  hit  28,6,3,18,0,1,132,45,35,20
+  hit  29,3,3,4,0,1,115,75,85,40
+  hit  29,5,2,6,2,1,115,75,85,40
+  hit  29,7,2,8,2,1,115,75,85,40
+  hit  29,9,2,6,2,1,115,75,85,40
+  hit  29,11,1,8,2,1,115,75,85,40
+  hit  29,13,2,4,2,1,115,75,85,40
+  hit  29,15,1,6,2,1,115,75,85,40
+  hit  29,17,2,4,2,1,115,75,85,40
+  hit  29,19,1,6,2,1,115,75,85,40
+  hit  29,23,3,3,2,1,138,58,100,-38
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : sub_47648c(param_1);
+  state 25 timer *  : g_sndIndexA = 0x2f;
+  state 26 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer 2  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 29 timer 15 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xdd;
+  state 29 timer 15 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 29 timer 20 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 10;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer 14 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 25 timer *  : func_0x00476870(param_1 & 0xff,bVar15 + 3,0xfffffff2);
+  state 25 timer *  : func_0x00476870(param_1 & 0xff,bVar15 + 6,0xfffffff2);
+  state 25 timer *  : func_0x00476870(param_1 & 0xff,bVar15 + 10,0xfffffff2,0xaa,0x13,0x1e);
+
+## char 11
+  state 23: *->33
+  state 24: 0->12 2->30
+  state 25: 0->34 5->35 10->36
+  state 26: 0->37 4->38
+  state 27: *->40
+  state 28: 0->41 2->42 4->41 6->42 8->41 10->42 12->41
+  state 29: 0->7 2->9 4->7 6->5 8->9 10->5 12->9 14->5 16->9 18->7 20->9 22->7 24->5 26->9 28->11
+  hurt frame  1: -14
+  hurt frame  2: -14
+  hurt frame  4: -14
+  hurt frame  8: -14
+  hurt frame 12: -9,170,24,68
+  hurt frame 21: -15,140,19,28
+  hurt frame 28: -28,112,36,78
+  hurt frame 29: -28,152,36,118
+  hurt frame 31: -14,170,19,30
+  hurt frame 32: -9,170,24,68
+  hurt frame 34: -14,170,19,30
+  hurt frame 39: -14,170,25,75
+  hurt frame 41: -14,150,19,10
+  hit  3,2,0,7,1,1,68,55,58,10
+  hit  4,2,0,7,1,1,85,68,60,20
+  hit  5,5,0,14,2,1,70,73,58,20
+  hit  6,5,0,14,2,1,85,85,48,20
+  hit  8,2,0,7,1,1,102,58,88,10
+  hit  9,2,0,7,1,1,156,65,135,10
+  hit  10,5,0,14,2,1,102,68,89,10
+  hit  11,5,0,14,2,1,147,73,126,10
+  hit  13,2,0,7,1,1,115,50,70,20
+  hit  14,2,0,7,1,1,103,68,85,10
+  hit  15,5,0,14,2,1,115,50,70,20
+  hit  16,5,0,14,2,1,103,68,85,10
+  hit  27,1,3,18,0,1,158,82,130,10
+  hit  27,1,3,18,0,1,55,70,25,10
+  hit  28,0,2,8,0,1,83,75,65,10
+  hit  28,2,2,8,0,1,83,-10,65,-60
+  hit  28,4,2,8,0,1,83,75,65,10
+  hit  28,6,2,8,0,1,83,-10,65,-60
+  hit  28,8,2,8,0,1,83,75,65,10
+  hit  29,0,2,2,2,1,90,70,40,10
+  hit  29,2,1,1,2,1,90,70,40,10
+  hit  29,4,0,1,1,1,90,70,40,10
+  hit  29,6,1,1,2,1,90,70,40,10
+  hit  29,8,0,1,1,1,90,70,40,10
+  hit  29,10,1,2,1,1,90,70,40,10
+  hit  29,12,2,4,2,1,90,70,40,10
+  hit  29,14,1,3,2,1,90,70,40,10
+  hit  29,16,1,3,1,1,90,70,40,10
+  hit  29,18,0,6,1,1,90,70,40,10
+  hit  29,20,1,3,2,1,90,70,40,10
+  hit  29,22,0,4,1,1,90,70,40,10
+  hit  29,24,1,3,2,1,90,70,40,10
+  hit  29,26,1,5,1,1,90,70,40,10
+  hit  29,28,2,6,2,1,90,70,40,10
+  state 25 timer 10 : FUN_00476a04('\x16',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x16',(uint *)"A",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x16',(uint *)"B",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x16',(uint *)"B",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : g_sndIndexA = 0x32;
+  state 26 timer 4  : FUN_00476a04('\x17',(uint *)"A",bVar5,*(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4440), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), 
+  state 26 timer 4  : FUN_00476a04('\x17',(uint *)"A",bVar5,uVar7, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 4  : FUN_00476a04('\x17',(uint *)"B",bVar5,uVar7, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 4  : FUN_00476a04('\x17',(uint *)"B",bVar5,uVar7, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 4  : g_sndIndexA = 0x33;
+  state 27 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 27 timer 1  : g_sndIndexA = 0x34;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 0;
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 6.0;
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 8.0;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 19 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 19 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 1;
+  state 28 timer 11 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xf6;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+
+## char 12
+  state 24: 0->12 2->30
+  state 25: 0->35 5->36 10->37
+  state 27: 0->41 2->42 4->41 6->43 8->44 10->43 12->41 14->42 16->41
+  state 28: 0->38 8->40 10->38 25->40
+  hurt frame  1: -8
+  hurt frame  2: -8
+  hurt frame  4: -8
+  hurt frame  8: -8
+  hurt frame 12: -9,170,24,72
+  hurt frame 13: -9,170,24,72
+  hurt frame 15: -9,170,24,72
+  hurt frame 17: -9,170,24,72
+  hurt frame 19: -9,170,24,90
+  hurt frame 21: -15,140,19,28
+  hurt frame 28: -28,112,36,78
+  hurt frame 29: -28,152,36,118
+  hurt frame 31: -14,170,19,30
+  hurt frame 32: -9,170,24,72
+  hurt frame 35: -8,175,26,30
+  hurt frame 39: -14,170,25,30
+  hurt frame 41: -14,150,19,70
+  hit  3,2,0,7,1,1,70,80,60,15
+  hit  4,2,0,7,1,1,145,58,110,15
+  hit  5,2,0,5,2,1,60,60,10,15
+  hit  5,5,0,10,2,1,60,60,10,15
+  hit  6,5,0,14,2,1,80,97,60,15
+  hit  8,2,0,7,1,1,93,70,83,15
+  hit  9,2,0,7,1,1,160,75,138,15
+  hit  10,5,0,14,2,1,90,42,35,10
+  hit  11,5,0,14,2,1,160,90,130,10
+  hit  13,2,0,7,1,1,110,75,70,35
+  hit  14,2,0,7,1,1,135,90,80,20
+  hit  15,5,0,14,2,1,110,75,70,35
+  hit  16,5,0,14,2,1,135,90,80,20
+  hit  26,3,4,20,0,1,110,45,-8,5
+  hit  26,9,0,0,0,0,0,0,0,0
+  hit  27,2,2,8,0,1,132,90,104,5
+  hit  27,8,2,8,0,1,132,90,104,5
+  hit  27,12,2,8,0,1,132,90,104,5
+  hit  27,17,0,0,0,0,0,0,0,0
+  hit  28,1,1,1,2,1,110,45,-2,5
+  hit  28,5,2,2,2,1,110,45,-2,5
+  hit  28,9,3,1,2,1,110,45,-2,5
+  hit  28,13,2,5,2,1,110,45,-2,5
+  hit  28,15,1,5,2,1,110,45,-2,5
+  hit  28,17,2,7,2,1,110,45,-2,5
+  hit  28,19,1,7,2,1,110,45,-2,5
+  hit  28,21,1,5,2,1,110,45,-2,5
+  hit  28,23,1,9,2,1,110,45,-2,5
+  hit  28,25,0,0,0,0,0,0,0,0
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) + 12.0;
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) - 12.0;
+  state 23 timer *  : (&DAT_004b44a5)[(param_1 & 0xff) * 0xb0] = 1;
+  state 23 timer *  : (&DAT_004b44a5)[(param_1 & 0xff) * 0xb0] = 2;
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)8.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a5)[(param_1 & 0xff) * 0xb0] = 2;
+  state 23 timer *  : (&DAT_004b44a5)[(param_1 & 0xff) * 0xb0] = 1;
+  state 23 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"A",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\t',(uint *)"B",bVar5,uVar7,uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : g_sndIndexA = 0x35;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 26 timer 0  : g_sndIndexA = 0x36;
+  state 26 timer 3  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x27;
+  state 26 timer 8  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 26 timer 8  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 26 timer 8  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfa;
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 15.0;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 17.0;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 26 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 11.0;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) + *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer 2  : g_sndIndexA = 0x37;
+  state 27 timer 8  : g_sndIndexA = 0x37;
+  state 27 timer 14 : g_sndIndexA = 0x38;
+  state 27 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer 4  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 28 timer 13 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = cVar14 + '\'';
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 12.0;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer 25 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 28 timer 25 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 28 timer 25 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xf8;
+  state 28 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44aa) = 0;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+
+## char 13
+  state 11: 0->19 4->20 16->19
+  hurt frame  2: -12
+  hurt frame  4: -12
+  hurt frame  8: -12
+  hurt frame 12: -12,160,23,55
+  hurt frame 13: -12,160,23,55
+  hurt frame 15: -12,160,23,55
+  hurt frame 17: -12,160,23,55
+  hurt frame 19: -12,160,23,55
+  hurt frame 21: -17,120,17,30
+  hurt frame 28: -27,120,27,60
+  hurt frame 29: -27,130,27,100
+  hurt frame 31: -12,160,23,25
+  hurt frame 32: -12,160,23,62
+  hurt frame 33: -12,160,23,25
+  hurt frame 34: -12,160,23,25
+  hurt frame 37: -8,120,45,45
+  hurt frame 42: -12,160,23,25
+  hurt frame 44: -12,100,12,50
+  hit  3,2,0,7,1,1,52,87,38,15
+  hit  4,2,0,7,1,1,130,75,95,15
+  hit  5,5,0,14,2,1,52,90,38,15
+  hit  6,5,0,14,2,1,75,100,55,15
+  hit  8,2,0,7,1,1,78,65,63,15
+  hit  9,2,0,7,1,1,160,68,138,15
+  hit  10,5,0,14,2,1,90,75,75,20
+  hit  11,5,0,14,2,1,160,50,130,10
+  hit  13,2,0,7,1,1,107,90,70,35
+  hit  14,2,0,7,1,1,120,83,90,-70
+  hit  15,5,0,14,2,1,107,90,70,35
+  hit  16,5,0,14,2,1,120,83,90,-70
+  hit  26,5,2,10,2,1,90,75,40,30
+  hit  26,8,1,8,1,1,120,90,45,30
+  hit  26,11,0,3,2,1,120,70,80,30
+  hit  29,1,2,3,2,1,105,90,45,-60
+  hit  29,3,2,4,2,1,105,90,45,-60
+  hit  29,5,2,3,2,1,105,90,45,-60
+  hit  29,7,2,4,2,1,105,90,45,-60
+  hit  29,9,3,3,2,1,105,90,45,-60
+  hit  29,11,2,4,2,1,105,90,45,-60
+  hit  29,13,2,3,2,1,105,90,45,-60
+  hit  29,15,3,18,2,1,105,90,45,-60
+  state 11 timer *  : sub_47648c(param_1);
+  state 11 timer *  : sub_47648c(param_1);
+  state 11 timer *  : FUN_00476a04('\x02',(uint *)0x0,0,SUB84(in_stack_ffffffc4,0), (int)((ulonglong)in_stack_ffffffc4 >> 0x20),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 23 timer *  : Cos();
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - (double)CONCAT26(uStack_2a,CONCAT15(cStack_2b,CONCAT14(uStac
+  state 23 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)(_DAT_004b4498 + -10);
+  state 25 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 25 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x23;
+  state 25 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x24;
+  state 25 timer 10 : FUN_00476a04('\x1a',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1a',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1a',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1a',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 3  : g_sndIndexA = 0x39;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x25;
+  state 26 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 26 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x27;
+  state 26 timer 8  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 26 timer 11 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x29;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 27 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 27 timer *  : sub_40287c_fpu();
+  state 27 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2a;
+  state 27 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2b;
+  state 27 timer 3  : FUN_00476a04('\x1b',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 3  : FUN_00476a04('\x1b',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 3  : FUN_00476a04('\x1b',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 3  : FUN_00476a04('\x1b',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 3  : g_sndIndexA = 0x3a;
+  state 28 timer 1  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 28 timer 10 : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4438), *(undefined4 *)((pa
+  state 28 timer 10 : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84((double)(g_counterE + 0x6e),0), (int)((ulonglong)(double)(g_counterE + 0x6e) >> 0x20), SUB84((double)(_DAT_004b44c8 
+  state 28 timer 10 : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84((double)(g_counterE + 0x6e),0), (int)((ulonglong)(double)(g_counterE + 0x6e) >> 0x20), SUB84((double)(_DAT_004b44c8 
+  state 28 timer 10 : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84((double)(g_counterE + 0x6e),0), (int)((ulonglong)(double)(g_counterE + 0x6e) >> 0x20), SUB84((double)(_DAT_004b44c8 
+  state 28 timer 10 : FUN_00476a04('\x11',(uint *)0x0,bVar5,SUB84((double)(g_counterE + 0x6e),0), (int)((ulonglong)(double)(g_counterE + 0x6e) >> 0x20), SUB84((double)(_DAT_004b44c8 
+  state 28 timer 10 : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = (double)(_DAT_004b44c8 + 0x50);
+  state 28 timer 10 : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = (double)(_DAT_004b44c8 + 0xa0);
+  state 28 timer 10 : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = (double)(_DAT_004b44c8 + 0xf0);
+  state 28 timer 10 : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4438) = (double)(_DAT_004b44c8 + 0x140);
+  state 28 timer 10 : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)(g_counterE + 0x96);
+  state 28 timer 10 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 28 timer 10 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0;
+  state 28 timer 10 : g_sndIndexA = 0x29;
+  state 29 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 29 timer *  : sub_40287c_fpu();
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2c;
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2d;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer 2  : g_sndIndexA = 0x3b;
+
+## char 14
+  hurt frame  2: -12
+  hurt frame  4: -12
+  hurt frame  8: -12
+  hurt frame 12: -12,160,18,85
+  hurt frame 13: -12,160,18,85
+  hurt frame 15: -12,160,18,85
+  hurt frame 17: -12,160,18,85
+  hurt frame 19: -12,160,18,85
+  hurt frame 21: -17,130,17,42
+  hurt frame 28: -27,110,35,70
+  hurt frame 29: -27,135,35,120
+  hurt frame 31: -12,160,18,42
+  hurt frame 32: -12,160,18,85
+  hurt frame 40: -17,110,17,62
+  hit  3,2,0,7,1,1,67,65,53,15
+  hit  4,2,0,7,1,1,150,47,120,15
+  hit  5,5,0,14,2,1,72,62,58,15
+  hit  6,5,0,14,2,1,155,72,98,15
+  hit  8,2,0,7,1,1,107,62,95,15
+  hit  9,2,0,7,1,1,160,58,138,15
+  hit  10,5,0,14,2,1,106,54,93,15
+  hit  11,5,0,14,2,1,160,74,130,10
+  hit  13,2,0,7,1,1,100,80,60,35
+  hit  14,2,0,7,1,1,130,77,86,15
+  hit  15,5,0,14,2,1,100,80,60,35
+  hit  16,5,0,14,2,1,130,77,86,15
+  hit  27,1,1,4,0,1,116,23,56,-23
+  hit  27,3,1,3,0,1,116,23,56,-23
+  hit  27,5,1,4,0,1,116,23,56,-23
+  hit  27,7,1,3,0,1,116,23,56,-23
+  hit  28,3,3,18,2,1,90,40,10,10
+  hit  28,20,0,0,0,0,0,0,0,0
+  state 23 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)3.0;
+  state 23 timer *  : sub_40287c_fpu();
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 25 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x23;
+  state 25 timer 7  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x24;
+  state 25 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x25;
+  state 25 timer 10 : FUN_00476a04('\x1d',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1d',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1d',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('\x1d',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 3  : g_sndIndexA = 0x3c;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 26 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x27;
+  state 26 timer 5  : FUN_00476a04('\x1e',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 5  : FUN_00476a04('\x1e',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 32 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 26 timer 3  : g_sndIndexA = 0x3d;
+  state 27 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 27 timer 1  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 27 timer 3  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x29;
+  state 27 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2a;
+  state 27 timer 7  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2b;
+  state 27 timer 9  : *(undefined2 *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) = 1;
+  state 27 timer 0  : g_sndIndexA = 0x3e;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) + 8.0;
+  state 28 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2c;
+  state 28 timer 3  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2d;
+  state 28 timer 5  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2e;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 6.0;
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 9.0;
+  state 28 timer 17 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 28 timer 17 : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a6) = 0;
+  state 28 timer 17 : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfe;
+  state 28 timer 17 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x15;
+  state 28 timer 2  : g_sndIndexA = 0x3c;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : fVar8 = (float10)*(short *)(&DAT_004b44ac + (param_1 & 0xff) * 0xb0) / (float10)2.0;
+  state 29 timer *  : sub_40287c_fpu();
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x30;
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2f;
+  state 29 timer 1  : FUN_00476a04('\x1f',(uint *)"A",bVar5,SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4438), *(undefined4 *)((pa
+  state 29 timer 1  : FUN_00476a04(' ',(uint *)"A",bVar5,SUB84(dVar13,0),uVar4, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4438), *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b443
+
+## char 15
+  hurt frame  2: -8
+  hurt frame  4: -8
+  hurt frame  8: 5
+  hurt frame 12: -12,160,20,64
+  hurt frame 13: -12,160,20,64
+  hurt frame 15: -12,160,20,64
+  hurt frame 17: -12,160,20,64
+  hurt frame 19: -20,160,25,85
+  hurt frame 21: -8,120,23,28
+  hurt frame 28: -30,110,38,70
+  hurt frame 29: -30,135,38,120
+  hurt frame 31: -8,160,23,28
+  hurt frame 32: -12,160,20,64
+  hurt frame 36: -8,160,23,28
+  hurt frame 39: -8,160,23,40
+  hurt frame 43: -8,160,23,28
+  hurt frame 49: -8,160,23,28
+  hurt frame 50: -8,160,23,28
+  hit  3,2,0,7,1,1,53,73,45,15
+  hit  4,2,0,7,1,1,150,69,110,15
+  hit  5,5,0,14,2,1,53,83,45,15
+  hit  6,5,0,14,2,1,80,75,20,15
+  hit  8,2,0,7,1,1,91,75,82,15
+  hit  9,2,0,7,1,1,160,73,130,15
+  hit  10,5,0,14,2,1,83,68,74,15
+  hit  11,5,0,14,2,1,160,94,110,10
+  hit  13,2,0,7,1,1,105,70,60,25
+  hit  14,2,0,7,1,1,120,80,90,10
+  hit  15,5,0,14,2,1,105,70,60,25
+  hit  16,5,0,14,2,1,120,80,90,10
+  hit  27,5,3,18,0,1,110,75,-30,-40
+  hit  27,10,0,0,0,0,0,0,0,0
+  hit  28,2,3,15,0,1,90,68,54,10
+  hit  29,2,2,9,2,1,90,68,54,10
+  hit  29,5,1,5,2,1,90,68,54,10
+  hit  29,7,1,5,2,1,90,68,54,10
+  hit  29,10,2,7,2,1,90,68,54,10
+  hit  29,13,1,5,2,1,90,68,54,10
+  hit  29,15,2,12,2,1,90,68,54,10
+  state 23 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x21;
+  state 23 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x22;
+  state 23 timer 14 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x23;
+  state 25 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x24;
+  state 25 timer 7  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x25;
+  state 25 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x26;
+  state 25 timer 10 : FUN_00476a04('!',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('!',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('!',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 10 : FUN_00476a04('!',(uint *)"B",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 25 timer 3  : g_sndIndexA = 0x3f;
+  state 26 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x27;
+  state 26 timer 4  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x28;
+  state 26 timer 8  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x29;
+  state 26 timer 12 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2a;
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer *  : sub_47648c(param_1);
+  state 26 timer 3  : FUN_00476a04('\"',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 3  : FUN_00476a04('\"',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 26 timer 1  : g_sndIndexA = 0x40;
+  state 27 timer 0  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2b;
+  state 27 timer 2  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2c;
+  state 27 timer 4  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2d;
+  state 27 timer 7  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2e;
+  state 27 timer 10 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x2f;
+  state 27 timer 13 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x30;
+  state 27 timer 16 : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0xc;
+  state 27 timer 5  : FUN_00476a04('#',(uint *)"A",bVar5,SUB84(dVar12,0),(int)((ulonglong)dVar12 >> 0x20), SUB84(dVar13,0),(int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer 5  : FUN_00476a04('#',(uint *)"A",bVar5,SUB84(dVar12,0),uVar3,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 6.0;
+  state 27 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) - 10.0;
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer *  : sub_47648c(param_1);
+  state 27 timer 9  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a2) = 1;
+  state 27 timer 9  : (&DAT_004b44b0)[(param_1 & 0xff) * 0xb0] = 0xfb;
+  state 27 timer 1  : g_sndIndexA = 0x41;
+  state 27 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 27 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 28 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x31;
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : sub_47648c(param_1);
+  state 28 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)(int)(char)((char)uVar4 + -8) + *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440);
+  state 28 timer 1  : g_sndIndexA = 0x42;
+  state 28 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 28 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;
+  state 29 timer *  : (&DAT_004b44a4)[(param_1 & 0xff) * 0xb0] = bVar15 + 0x32;
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : sub_47648c(param_1);
+  state 29 timer *  : FUN_00476a04('$',(uint *)"A",bVar5,SUB84(dVar12,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : FUN_00476a04('$',(uint *)"A",bVar5,SUB84(dVar12,0),uVar4,SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
+  state 29 timer *  : *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440) = (double)(int)(char)((char)uVar4 + -5) + *(double *)((param_1 & 0xff) * 0xb0 + 0x4b4440);
+  state 29 timer 1  : g_sndIndexA = 0x42;
+  state 29 timer *  : *(undefined1 *)((param_1 & 0xff) * 0xb0 + 0x4b44a1) = 1;
+  state 29 timer *  : *(undefined1 *)((3 - (param_1 & 0xff)) * 0xb0 + 0x4b44ca) = 0;

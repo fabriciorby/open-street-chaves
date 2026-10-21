@@ -1,0 +1,82 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-street-chaves-windows-x64
+          path: build/Release/open-street-chaves.exe
+
+  macos:
+    name: macOS (universal)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Check architectures
+        run: lipo -info build/open-street-chaves
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-street-chaves-macos-universal
+          path: build/open-street-chaves
+
+  linux:
+    name: Linux (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL3 build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git make pkg-config cmake ninja-build \
+            libasound2-dev libpulse-dev libaudio-dev libjack-dev libsndio-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev \
+            libxss-dev libxkbcommon-dev libxtst-dev \
+            libwayland-dev libdecor-0-dev libdrm-dev libgbm-dev \
+            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libpipewire-0.3-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --parallel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-street-chaves-linux-x64
+          path: build/open-street-chaves
+
+  web:
+    name: Web (Emscripten)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+      - name: Configure
+        run: emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --parallel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-street-chaves-web
+          path: |
+            build/open-street-chaves.html
+            build/open-street-chaves.js
+            build/open-street-chaves.wasm

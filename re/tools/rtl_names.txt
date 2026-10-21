@@ -1,0 +1,22 @@
+# Delphi RTL / VCL / DelphiX routines identified by their code
+00402a1c Random
+00402894 Round
+0040286c Cos
+00402830 Randomize
+00406de4 RGB
+00403d10 LStrCatN
+00403d60 LStrCmp
+004039d0 LStrClr
+004039f4 LStrArrayClr
+00403e04 LStrAddRef
+00403a24 LStrAsg
+00403c50 LStrLen
+00408490 FileSearch
+00408190 IntToStr
+004081f4 StrToInt
+00402d08 TObject_Free
+0040efcc TList_Count_of
+0040efd4 TCollection_GetItem_inner
+00461dcc TPictureCollection_GetItem
+00449f54 TWaveCollection_GetItem
+0045cd9c TDirectDrawSurface_GetCanvas

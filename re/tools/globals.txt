@@ -1,0 +1,52 @@
+# game state / input (from FormKeyDown 0x49e2d4, FormCreate 0x49cd34)
+4b44d6 g_state u8          # 1 attract, 2 F1 config, 3 F2 keys, 4 select, 5 ?, 7 fight, 8 ?, 9 continue?
+4b44da g_credits u8
+4b44d0 g_speedDelay u8     # '-' increments (max 80), '+' decrements (min 0)
+4b44c1 g_speedOverlayTimer u8
+4b58a7 g_paused u8
+4b58a6 g_showMoves u8
+4b449e g_menuCursor u8
+4b44d7 g_selectSub u8
+4b44dd g_fightNo u8          # arcade fight number 1..8 (8 = rival); drives AI probability
+4b44e3 g_timerA u8         # set to 30 on start/join
+4b44e4 g_timerB u8         # set to 25 on start/join
+4b44c4 g_ciclo2 i16        # debug label CICLO2
+4b44c0 g_ciclo u8          # debug label CICLO
+4b44cc g_camY i32          # debug label TELAY
+4b57fa g_challengeTimer u8
+4b580c g_demo i16          # debug label DEMO (demo/attract countdown)
+4b5809 g_sndIndexA u8
+4b580a g_sndFlagB u8
+4b44e8 g_players              # 2 x 176-byte records
+# config saved to Chaves.dat (line order)
+4b44d9 g_cfg0 u8
+4b58a0 g_cfg1_mode u8      # "1".."4"
+4b44e2 g_cfg2 u8
+4b44e1 g_cfg4_bool u8
+4b44dc g_cfg5 u8
+4b58a1 g_cfg6 u8
+4b58a8 g_cfg7_bool u8
+4b58a9 g_cfg8_bool u8
+4b58aa g_cfg9_bool u8
+# unlock files
+4b58ab g_unlockChurros u8
+4b58ac g_unlockGentalha u8
+# from the debug overlay labels in DXTimer1Timer
+4b44c8 g_camX i32          # TELAX
+4b4498 g_groundY i32       # CHAO
+4b44de g_roundStart u8     # INICIO ROUND
+4b44df g_roundEnd u8       # FIM ROUND
+4b57f9 g_hitStop u8        # GOLPE PAUSA
+4b57f8 g_superPause u8     # PAUSA ESPECIAL
+4b57f6 g_dialogo u8        # DIALOGO
+4b5800 g_mouseX i32
+4b5804 g_mouseY i32
+4b58a4 g_debugOverlay u8   # when 1 and state 7: draws the debug text
+4b58a5 g_debugBoxes u8
+4b44e0 g_noPush u8         # blocks push/collision and joining
+4b5890 g_meterUnit f64     # 2.0; special meter gain unit
+4b5888 g_cfgFloat f64      # 0.9 (Chaves.dat line 3)
+4b5898 g_energeticos f64   # 0.15 when Energeticos.dat exists
+4b4648 g_effects           # 80 x 56-byte effect records
+4b5810 g_records           # 10 x 12-byte high scores
+4b4448 g_players_charId_m1 # players[0].charId alias used by p*0xb0 indexing

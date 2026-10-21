@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>open-street-chaves</title>
+<style>
+  body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+  canvas { width: 800px; height: 600px; image-rendering: pixelated; background: #000; margin-top: 16px; }
+  p { max-width: 800px; }
+</style>
+</head>
+<body>
+<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<p>open-street-chaves web build. The game needs your own copy of the Street Chaves 1.5A data
+folder; the browser build does not ship any assets.</p>
+<script>
+  var Module = { canvas: document.getElementById('canvas') };
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

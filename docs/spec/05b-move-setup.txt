@@ -1,0 +1,151 @@
+
+## common
+  move 1     from 1,2                    -> state 2    dur 99   meter x-   snd -     moveX
+  move 2     from 1,2                    -> state 2    dur 99   meter x-   snd -     moveX
+  move 3     from -                      -> state 3    dur 6    meter x1.0 snd 5     onGround(+0x78==0)
+  move 4     from 1,2,3,21               -> state 4    dur 6    meter x1.0 snd 5     onGround(+0x78==0)
+  move 5     from 1,2,3,4,21             -> state 5    dur 0xb  meter x2.0 snd 6     onGround(+0x78==0)
+  move 6     from -                      -> state 6    dur 0xb  meter x2.0 snd 6     onGround(+0x78==0) flag+0x6a==0
+  move 7     from 1,2                    -> state 7    dur 99   meter x-   snd -     
+  move 3     from 7,22                   -> state 8    dur 6    meter x1.0 snd 5     
+  move 4     from 7,8,22                 -> state 9    dur 6    meter x1.0 snd 5     
+  move 5     from 7,8,9,22               -> state 10   dur 0xb  meter x2.0 snd 6     
+  move 6     from 7,9,22                 -> state 0xb  dur 0xb  meter x2.0 snd 6     
+  move 3     from 12                     -> state 0xd  dur 0xf  meter x1.0 snd 5     
+  move 4     from 12                     -> state 0xe  dur 0xf  meter x1.0 snd 5     
+  move 5     from 12                     -> state 0xf  dur 0xb  meter x2.0 snd 6     
+  move 6     from 12                     -> state 0x10 dur 0xb  meter x2.0 snd 6     
+  move 8     from -                      -> state 0x11 dur 8    meter x-   snd -     onGround(+0x78==0)
+  move 9     from -                      -> state 0x12 dur 8    meter x-   snd -     onGround(+0x78==0)
+  move 12    from 20                     -> state 0x15 dur 0xb  meter x-   snd -     
+  move 13    from 20                     -> state 0x16 dur 0xb  meter x-   snd -     
+
+## char 1
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -    needs7 
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x10 meter x5.0 snd -     
+  move 20/21 from -                      -> state 0x1b dur 10   meter x6.0 snd -     
+  move 22/23 from 1,2,21,22              -> state 0x1c dur 0x16 meter x5.0 snd -     
+  move 24    from -                      -> state 0x1d dur 0x26 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 2
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -    needs9 
+  move 18/19 from 1,2,3,5,7,21,22,30     -> state 0x1a dur 0x1e meter x6.0 snd -     
+  move 20/21 from 12,14                  -> state 0x1b dur 0x14 meter x5.0 snd 0x15  
+  move 22    from 1,2,21,22              -> state 0x1c dur 0x2d meter x7.0 snd -     
+  move 23    from 25                     -> state 0x1e dur 0xd  meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 3
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd 0x17 needs9 
+  move 18/19 from -                      -> state 0x1a dur 0xf  meter x5.0 snd 0x18  
+  move 20/21 from 1,2,21,22              -> state 0x1b dur 0xe  meter x5.0 snd 0x18  
+  move 22/23 from 1,2,21,22              -> state 0x1c dur 0xf  meter x6.0 snd -     
+  move 24    from -                      -> state 0x1d dur 0xf  meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 4
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd 0x19  
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0xd  meter x5.0 snd 0x1a  
+  move 20/21 from -                      -> state 0x1b dur 0xf  meter x6.0 snd -     
+  move 22/23 from 1,2,21,22              -> state 0x1c dur 0xf  meter x5.0 snd 0x1b  
+  move 24    from -                      -> state 0x1d dur 0xd  meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 5
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd 0x1d  
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x17 meter x5.0 snd 0x1e  
+  move 20/21 from 1,2,12,22              -> state 0x1b dur 0x26 meter x6.0 snd 0x1f  
+  move 22/23 from -                      -> state 0x1c dur 0x14 meter x5.0 snd 0x20  
+  move 24    from -                      -> state 0x1d dur 0x1e meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 6
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd 0x21  
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x1c meter x5.0 snd 0x21  
+  move 20/21 from 1,2,7,21,22            -> state 0x1b dur 0x19 meter x5.0 snd 0x22  
+  move 22/23 from 1,2,7,21,22            -> state 0x1c dur 0x1e meter x5.0 snd 0x23  
+  move 24    from 1,2,5,7,21,22          -> state 0x1d dur 0x32 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 7
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x11 meter x5.0 snd 0x24  
+  move 18/19 from 1,2,7,21,22            -> state 0x1a dur 0xf  meter x5.0 snd 0x25  
+  move 20/21 from 1,2,12,22              -> state 0x1b dur 0xf  meter x5.0 snd 0x26  
+  move 22/23 from 1,2,12,22              -> state 0x1c dur 0xf  meter x5.0 snd 0x25  
+  move 24    from 1,2,5,7,21,22          -> state 0x1d dur 0xc  meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 8
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd 0x27  
+  move 18/19 from 12                     -> state 0x1a dur 0xf  meter x5.0 snd 0x27  
+  move 20/21 from 1,2,7,21,22            -> state 0x1b dur 0x14 meter x5.0 snd 0x28  
+  move 22/23 from 1,2,7,12,21,22         -> state 0x1c dur 0x19 meter x5.0 snd 0x29  
+  move 24    from 1,2,7,21,22            -> state 0x1d dur 0x14 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 9
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0xe  meter x5.0 snd 0x2b  
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x14 meter x5.0 snd 0x2c  
+  move 20/21 from 1,2,21,22              -> state 0x1b dur 0xf  meter x5.0 snd 0x2d  spawnEffect
+  move 22/23 from 12                     -> state 0x1c dur 0xf  meter x5.0 snd 0x2d  
+  move 24    from 1,2,7,21,22,27         -> state 0x1d dur 0x28 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 10
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x14 meter x5.0 snd 0x2f  
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0xb  meter x6.0 snd 0x30  
+  move 20/21 from 1,2,12,22              -> state 0x1b dur 0x14 meter x5.0 snd 0x31  
+  move 22/23 from 1,2,5,21,22            -> state 0x1c dur 0xd  meter x5.0 snd 0x31  
+  move 24    from 1,2,7,21,22,25         -> state 0x1d dur 0x28 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 11
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -     
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x1e meter x6.0 snd -     
+  move 20/21 from 1,2,21,22              -> state 0x1b dur 9    meter x5.0 snd -     
+  move 22/23 from 1,2,21,22,29           -> state 0x1c dur 0xc  meter x5.0 snd -     
+  move 24    from 1,2,7,21,22,27         -> state 0x1d dur 0x2d meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 12
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 15    from 1,2                    -> state 0x18 dur 0x14 meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -    needs9 
+  move 18/19 from 1,2,7,21,22,30         -> state 0x1a dur 0x14 meter x6.0 snd -     
+  move 20/21 from 1,2,5,12,21,22         -> state 0x1b dur 0x1c meter x5.0 snd -     
+  move 22    from 1,2,7,21,22            -> state 0x1c dur 0x20 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 13
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -     
+  move 18/19 from 1,2,5,12,21,22         -> state 0x1a dur 0x10 meter x5.0 snd -     
+  move 20/21 from 1,2,21,22              -> state 0x1b dur 0x1e meter x5.0 snd -     
+  move 22/23 from 1,2,12,21,22           -> state 0x1c dur 0x1e meter x5.0 snd -     
+  move 26    from 1,2,7,12,21,22,27      -> state 0x1d dur 0x1e meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 14
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -     
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x23 meter x5.0 snd -     
+  move 20/21 from 12                     -> state 0x1b dur 0x23 meter x5.0 snd -     
+  move 22/23 from 1,2,12,21,22           -> state 0x1c dur 0x23 meter x5.0 snd -     
+  move 24    from 1,2,7,21,22            -> state 0x1d dur 0x46 meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
+
+## char 15
+  move 14    from 1,2,7                  -> state 0x17 dur 0xfa meter x-   snd -     
+  move 16/17 from 1,2,21,22              -> state 0x19 dur 0x1c meter x5.0 snd -     
+  move 18/19 from 1,2,21,22              -> state 0x1a dur 0x16 meter x5.0 snd -     
+  move 20/21 from 1,2,6,21,22            -> state 0x1b dur 0x19 meter x5.0 snd -     
+  move 22/23 from 1,2,21,22              -> state 0x1c dur 0x12 meter x5.0 snd -     
+  move 24    from 1,2,7,21,22,25         -> state 0x1d dur 0x1e meter x-   snd 0x13  health/meter cond uses +0x58 superPause=0x16
