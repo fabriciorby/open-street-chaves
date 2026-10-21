@@ -55,7 +55,8 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     long max_frames = 0;
     const char *screenshot = NULL;
     int c1 = 1, c2 = 2;
-    bool demo = false, boxes = false, two_players = false, autofire = false;
+    bool demo = false, boxes = false, two_players = false, autofire = false, direct = false;
+    int lang = 0, stage = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
@@ -67,6 +68,9 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--boxes") == 0) boxes = true;
         else if (strcmp(argv[i], "--2p") == 0) two_players = true;
         else if (strcmp(argv[i], "--autofire") == 0) autofire = true;
+        else if (strcmp(argv[i], "--fight") == 0) direct = true;
+        else if (strcmp(argv[i], "--stage") == 0 && i + 1 < argc) stage = (int)SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--es") == 0) lang = 1;
         else if (strcmp(argv[i], "--help") == 0) {
             SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--p1 N] [--p2 N] [--frames N] [--screenshot f.bmp] [--demo] [--boxes]");
             return SDL_APP_SUCCESS;
@@ -95,7 +99,17 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderVSync(a->ren, 1);
 
     a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
-    a->loaded = osc_game_init(&a->game, a->ren, data, c1, c2);
+    a->game.lang = lang;
+    a->loaded = osc_game_init(&a->game, a->ren, data);
+    if (a->loaded && (direct || demo)) {
+        a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
+        a->game.fight_no = 1;
+        osc_make_ladder(&a->game, c1);
+        a->game.sel[1] = c1; a->game.sel[2] = c2;
+        a->game.p[1].human = true; a->game.p[2].human = !a->game.ai_p2;
+        a->game.p[1].char_id = c1; a->game.p[2].char_id = c2;
+        a->loaded = osc_fight_start(&a->game, c1, c2, stage);
+    }
     a->game.debug_boxes = boxes;
     if (!a->loaded)
         SDL_Log("Could not load the game data from '%s'. Pass --data <folder containing Chaves.exe>.", data);
@@ -140,6 +154,7 @@ static uint8_t demo_input(const osc_game *g)
 /* --autofire: P1 performs down, down-forward, forward + punch every 60 ticks (QCF+P). */
 static uint8_t autofire_input(const osc_game *g)
 {
+    if (g->screen != OSC_SCREEN_FIGHT) return (g->screen_tick % 30) == 20 ? OSC_IN_B1 : 0; /* confirm menus */
     int t = (int)(g->tick % 60);
     const osc_fighter *p1 = &g->p[1];
     uint8_t fwd = p1->facing == 1 ? OSC_IN_RIGHT : OSC_IN_LEFT;

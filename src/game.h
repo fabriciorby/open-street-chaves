@@ -108,11 +108,33 @@ typedef struct {
     int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
     int rounds_to_win;
     bool ai_p2;
+    int lang;                /* 0 Portuguese, 1 Spanish */
+
+    /* screens (07) */
+    int screen;              /* osc_screen */
+    int screen_tick;
+    int sel[3], sel_locked[3], sel_timer, sel_sub;
+    int ladder[9];           /* ladder[1..7] opponents, ladder[8] rival */
+    int match_over;          /* 0 running, 1 P1 won, 2 P2 won */
+    SDL_Texture *face_small[16], *face_big[16];
+    int face_big_w[16], face_big_h[16];
+    bool p1_in, p2_in;       /* humans who joined */
+    int first_hit_given;
 } osc_game;
 
-bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int char1, int char2);
+enum { OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7, OSC_SCREEN_CONTINUE = 9 };
+
+bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
+/* Start a fight: characters 1..15, stage 1..12 (0 = by opponent), round 1. */
+bool osc_fight_start(osc_game *g, int char1, int char2, int stage);
 void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_game_render(osc_game *g);
 void osc_game_shutdown(osc_game *g);
+/* fight-screen internals used by flow.c */
+void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2);
+void osc_fight_render(osc_game *g);
+void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered);
+void osc_make_ladder(osc_game *g, int char_id);
+int osc_stage_for(osc_game *g, int opponent);
 
 #endif

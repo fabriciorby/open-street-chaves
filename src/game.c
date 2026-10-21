@@ -559,79 +559,53 @@ void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
     f->hurt_l = -20; f->hurt_r = 20; f->hurt_t = 10; f->hurt_b = f->sprite_h; /* fallback box */
 }
 
-bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int char1, int char2)
+static bool load_image_tex(osc_game *g, const char *rel, bool key, SDL_Texture **tex, int *w, int *h)
+{
+    char path[1200];
+    osc_image img;
+    load_path(path, sizeof path, g->data_dir, rel);
+    if (!osc_bmp_load(path, key, &img)) return false;
+    *tex = osc_texture_from_image(g->ren, &img);
+    if (w) *w = img.w;
+    if (h) *h = img.h;
+    osc_image_free(&img);
+    return *tex != NULL;
+}
+
+/* Common assets: effects, stage animations, faces, sounds, text (FormCreate). */
+bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
 {
     bool ai_p2 = g->ai_p2;
+    int lang = g->lang;
     memset(g, 0, sizeof *g);
     g->ai_p2 = ai_p2;
+    g->lang = lang;
     g->ren = ren;
     g->rng = (uint32_t)SDL_GetTicksNS();
     SDL_strlcpy(g->data_dir, data_dir, sizeof g->data_dir);
-    char path[1200];
-    osc_image img;
+    char path[1200], rel[64];
 
-    load_path(path, sizeof path, data_dir, "Cenarios/Cenario-01.bmp");
-    if (!osc_bmp_load(path, false, &img)) return false;
-    g->stage = osc_texture_from_image(ren, &img);
-    g->stage_w = img.w; g->stage_h = img.h;
-    osc_image_free(&img);
-    if (!g->stage) return false;
-
-    int chars[2] = {char1, char2};
-    for (int i = 0; i < 2; i++) {
-        char rel[64];
-        snprintf(rel, sizeof rel, "Lutadores/C%02d.bmp", chars[i]);
-        load_path(path, sizeof path, data_dir, rel);
-        if (!osc_bmp_load(path, true, &img)) return false;
-        bool ok = osc_strip_build(ren, &img, &g->strips[i]);
-        osc_image_free(&img);
-        if (!ok) return false;
-        SDL_Log("%s: %d frames, height %d", rel, g->strips[i].count, g->strips[i].h);
-        init_fighter(&g->p[i + 1], chars[i], i + 1, &g->strips[i]);
-    }
-    /* Efeitos/Efeito-NNN.bmp -> DXImageListEfeitos[NNN-1]; a missing file ends the list */
     for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
-        char rel[48];
         snprintf(rel, sizeof rel, "Efeitos/Efeito-%03d.bmp", n);
-        load_path(path, sizeof path, data_dir, rel);
-        if (!osc_bmp_load(path, true, &img)) break;
-        g->fx_tex[n - 1] = osc_texture_from_image(ren, &img);
-        g->fx_w[n - 1] = img.w; g->fx_h[n - 1] = img.h;
-        osc_image_free(&img);
+        if (!load_image_tex(g, rel, true, &g->fx_tex[n - 1], &g->fx_w[n - 1], &g->fx_h[n - 1])) break;
         g->n_fx_tex = n;
     }
-    SDL_Log("%d effect sprites loaded", g->n_fx_tex);
+    if (g->n_fx_tex == 0) return false;   /* no data folder */
     for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
-        char rel[48];
         snprintf(rel, sizeof rel, "Animacoes/Anim-%02d.bmp", n);
-        load_path(path, sizeof path, data_dir, rel);
-        if (!osc_bmp_load(path, true, &img)) break;
-        g->anim_tex[n - 1] = osc_texture_from_image(ren, &img);
-        g->anim_w[n - 1] = img.w; g->anim_h[n - 1] = img.h;
-        osc_image_free(&img);
+        if (!load_image_tex(g, rel, true, &g->anim_tex[n - 1], &g->anim_w[n - 1], &g->anim_h[n - 1])) break;
         g->n_anim_tex = n;
     }
-    SDL_Log("%d stage animation sprites loaded", g->n_anim_tex);
-    g->stage_id = 1;
-
-    osc_text_load(data_dir);
-    SDL_Log("fight: %s vs %s (%s)", osc_text(OSC_MEMO_NOMES, char1, 0), osc_text(OSC_MEMO_NOMES, char2, 0), osc_text(OSC_MEMO_CENARIOS, 0, 0));
-
-    g->cam_x = 100;
-    g->timer_sec = 99; g->timer_sub = 25;
-    g->round_no = 1; g->fight_no = 1; g->rounds_to_win = 2;
-    g->p[2].human = !g->ai_p2;
-    g->p[1].ai_pref = g->p[2].ai_pref = 200;
+    for (int c = 1; c <= 15; c++) {
+        snprintf(rel, sizeof rel, "Rostos/R%02d-a.bmp", c);
+        load_image_tex(g, rel, true, &g->face_small[c], NULL, NULL);
+        snprintf(rel, sizeof rel, "Rostos/R%02d-c.bmp", c);
+        load_image_tex(g, rel, true, &g->face_big[c], &g->face_big_w[c], &g->face_big_h[c]);
+    }
+    SDL_Log("%d effect sprites, %d stage animation sprites loaded", g->n_fx_tex, g->n_anim_tex);
 
     if (osc_audio_open()) {
-        load_path(path, sizeof path, data_dir, "Musicas/Musica-01.wav");
-        if (osc_wav_load(path, &g->music)) {
-            g->has_music = true;
-            osc_audio_play(&g->music, true);
-        }
-        /* Sons/Som-NN.wav in order; a missing file ends the list like FormCreate does */
         for (int n = 1; n <= 80; n++) {
-            char rel[32];
             snprintf(rel, sizeof rel, "Sons/Som-%02d.wav", n);
             load_path(path, sizeof path, data_dir, rel);
             if (!osc_wav_load(path, &g->sounds[g->n_sounds])) break;
@@ -639,10 +613,109 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int cha
         }
         SDL_Log("%d sounds loaded", g->n_sounds);
     }
+    osc_text_load(data_dir);
+    g->rounds_to_win = 2;
+    g->screen = OSC_SCREEN_SELECT;
+    g->sel[1] = 1; g->sel[2] = 2;
+    g->sel_timer = 30 * 25;
+    g->p1_in = true;
+    g->p2_in = !g->ai_p2;
     return true;
 }
 
-void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
+/* Stage chosen by the CPU opponent's character (07, state 5). */
+int osc_stage_for(osc_game *g, int opponent)
+{
+    static const int base[16] = {0, 1, 2, 2, 3, 3, 4, 11, 1, 1, 11, 6, 1, 1, 2, 1};
+    static const int alt[16] = {0, 0, 7, 10, 10, 8, 8, 5, 9, 10, 10, 5, 9, 5, 1, 6};
+    int st = base[opponent];
+    if (osc_random(g, 5) < 2 && g->fight_no < 8 && alt[opponent]) st = alt[opponent];
+    if (osc_random(g, 6) < 2 && g->fight_no < 8 &&
+        (opponent == 3 || opponent == 4 || opponent == 9 || opponent == 10 || opponent == 11 || opponent == 14)) st = 12;
+    return st;
+}
+
+/* criaadversario: 7 random distinct opponents plus the rival (02). */
+void osc_make_ladder(osc_game *g, int ch)
+{
+    static const int rival[16] = {0, 2, 5, 9, 1, 2, 7, 2, 5, 3, 1, 3, 1, 5, 5, 3};
+    static const int excl[16][6] = {{0}, {3, 9}, {3, 8, 9, 14, 15}, {1, 2, 14}, {5, 6}, {4, 6}, {4, 5, 15},
+                                    {8, 10}, {2, 7}, {1, 2, 15}, {7, 9}, {1, 9}, {5, 8}, {1, 8, 14}, {2, 3, 13}, {1, 2, 9}};
+    bool avail[16];
+    for (int i = 1; i <= 15; i++) avail[i] = true;
+    avail[ch] = false;
+    avail[rival[ch]] = false;
+    for (int i = 0; i < 6 && excl[ch][i]; i++) avail[excl[ch][i]] = false;
+    for (int slot = 1; slot <= 7; slot++) {
+        int c;
+        do { c = osc_random(g, 15) + 1; } while (!avail[c]);
+        g->ladder[slot] = c;
+        avail[c] = false;
+    }
+    g->ladder[8] = rival[ch];
+}
+
+/* Round/fight init (state 6 -> 7). */
+bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
+{
+    char rel[64];
+    osc_image img;
+    char path[1200];
+    if (g->stage) { SDL_DestroyTexture(g->stage); g->stage = NULL; }
+    for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
+    memset(g->fx, 0, sizeof g->fx);
+
+    int chars[2] = {char1, char2};
+    for (int i = 0; i < 2; i++) {
+        snprintf(rel, sizeof rel, "Lutadores/C%02d.bmp", chars[i]);
+        load_path(path, sizeof path, g->data_dir, rel);
+        if (!osc_bmp_load(path, true, &img)) return false;
+        bool ok = osc_strip_build(g->ren, &img, &g->strips[i]);
+        osc_image_free(&img);
+        if (!ok) return false;
+        bool human = g->p[i + 1].human, had = g->p[i + 1].char_id != 0;
+        int wins = g->p[i + 1].wins, score = g->p[i + 1].score;
+        init_fighter(&g->p[i + 1], chars[i], i + 1, &g->strips[i]);
+        g->p[i + 1].human = had ? human : (i == 0 || !g->ai_p2);
+        g->p[i + 1].wins = wins; g->p[i + 1].score = score;
+    }
+    if (stage < 1 || stage > 12) stage = osc_stage_for(g, char2);
+    g->stage_id = stage;
+    snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
+    if (!load_image_tex(g, rel, false, &g->stage, &g->stage_w, &g->stage_h)) return false;
+
+    /* music: Chaves 4, Quico 2, Madruga 3 (CPU side), stage 12 -> 6, else random 1..5 */
+    int music = 0;
+    for (int i = 1; i <= 2; i++) {
+        if (g->p[i].human) continue;
+        if (g->p[i].char_id == 1) music = 4;
+        if (g->p[i].char_id == 4) music = 2;
+        if (g->p[i].char_id == 2) music = 3;
+    }
+    if (stage == 12) music = 6;
+    if (!music) music = osc_random(g, 5) + 1;
+    if (g->has_music) { osc_wav_free(&g->music); g->has_music = false; }
+    snprintf(rel, sizeof rel, "Musicas/Musica-%02d.wav", music);
+    load_path(path, sizeof path, g->data_dir, rel);
+    osc_audio_close();
+    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_play(&g->music, true); }
+
+    g->cam_x = 100; g->cam_y = 20;
+    g->timer_sec = 99; g->timer_sub = 25;
+    g->round_no = 1;
+    if (g->fight_no < 1) g->fight_no = 1;
+    g->round_start = 0; g->round_end = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
+    g->match_over = 0;
+    g->p[1].wins = g->p[2].wins = 0;
+    g->p[1].ai_pref = g->p[2].ai_pref = 200;
+    g->screen = OSC_SCREEN_FIGHT;
+    g->screen_tick = 0;
+    SDL_Log("fight %d: %s vs %s at %s", g->fight_no, osc_text(OSC_MEMO_NOMES, char1, g->lang),
+            osc_text(OSC_MEMO_NOMES, char2, g->lang), osc_text(OSC_MEMO_CENARIOS, stage - 1, g->lang));
+    return true;
+}
+
+void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
     if (g->paused) return;
@@ -671,6 +744,18 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (f->meter > OSC_METER_MAX) f->meter = OSC_METER_MAX;
     }
 
+    /* round intro (g_roundStart 0..72): bars fill, no input until tick 55 */
+    if (g->round_start < 72 && g->round_end == 0) {
+        g->round_start++;
+        g->no_push = g->round_start < 55;
+        if (g->round_start < 5) { g->p[1].health = g->p[2].health = 1.0; }
+        else if (g->round_start < 55) {
+            for (int i = 1; i <= 2; i++) if (g->p[i].health < OSC_HEALTH_MAX) g->p[i].health += 3.0;
+        }
+        if (g->round_start == 55) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
+        if (g->round_start < 55) return;
+    }
+
     /* round end: KO or time over (simplified sequence, 05 "Round flow") */
     bool ko = g->p[1].health <= 0.0 || g->p[2].health <= 0.0;
     if ((ko || g->timer_sec == 0) && g->round_end == 0) {
@@ -696,10 +781,11 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
                 extern void osc_reset_fighter(osc_fighter *, int, int, const osc_strip *);
                 osc_reset_fighter(f, ch, i, s);
                 f->wins = wins; f->stocks = st; f->score = score; f->human = human;
-                if (g->p[1].wins >= g->rounds_to_win || g->p[2].wins >= g->rounds_to_win) f->wins = 0;
             }
+            if (g->p[1].wins >= g->rounds_to_win) g->match_over = 1;
+            else if (g->p[2].wins >= g->rounds_to_win) g->match_over = 2;
             g->round_no++;
-            g->round_end = 0; g->no_push = false; g->hit_stop = 0; g->super_pause = 0;
+            g->round_end = 0; g->round_start = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
             g->timer_sec = 99; g->timer_sub = 25; g->cam_x = 100;
         }
     }
@@ -787,7 +873,7 @@ static void draw_hud(osc_game *g)
     }
 }
 
-void osc_game_render(osc_game *g)
+void osc_fight_render(osc_game *g)
 {
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
