@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "tables_gen.h"
@@ -24,6 +25,19 @@ static int osc_random(osc_game *g, int n)
 static int iround(double v) { return (int)floor(v + 0.5); }
 
 static osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->p[1] ? &g->p[2] : &g->p[1]; }
+
+static void play_snd(osc_game *g, int idx)
+{
+    if (idx >= 0 && idx < g->n_sounds && g->sounds[idx].buf) osc_audio_play(&g->sounds[idx], false);
+}
+
+/* AI probability helper: Random(round(C * k)) == 0 (05 "AI difficulty"). */
+static bool chance(osc_game *g, double c, double k)
+{
+    int n = iround(c * k);
+    if (n < 1) n = 1;
+    return osc_random(g, n) == 0;
+}
 
 /* ---- table lookups ---------------------------------------------------------- */
 static const osc_move_row *find_move(int ch, int move, int state)
@@ -84,6 +98,54 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
     if (r->meter10 && f->meter < OSC_METER_MAX) f->meter += k_meter_unit * r->meter10 / 10.0;
     if (r->strength) f->hit_level = r->strength;
     if (move == 8 || move == 9) f->attacking = false;
+    if (r->snd >= 0) play_snd(g, r->snd);
+}
+
+/* ---- CPU opponent (cpu 0x4931ac / defendergolpe CPU part), generic rules ----------
+ * The per-character special-move choices of the original are approximated with
+ * the same distance bands (see 04 and 99); the walk/normals/block logic is exact. */
+static void cpu_think(osc_game *g, osc_fighter *f)
+{
+    osc_fighter *o = opp(g, f);
+    double k = 6.1 - 0.7 * g->fight_no;      /* cpu() */
+    double kb = 8.4 - 1.0 * g->fight_no;     /* defendergolpe() */
+    int dist = abs(iround(f->x) - iround(o->x));
+    f->in = 0;
+
+    /* preferred distance re-rolled with chance 1/13 */
+    static const int pref[6] = {100, 150, 200, 250, 300, 350};
+    if (osc_random(g, 13) == 0) f->ai_pref = pref[osc_random(g, 6)];
+    if (abs(dist - f->ai_pref) < 51) f->ai_pref = dist;
+
+    bool busy = !(f->state == 1 || f->state == 2 || f->state == 7);
+    if (!busy) {
+        bool toward = dist >= f->ai_pref;   /* cpu(): pref <= dist -> walk toward */
+        bool right = (f->x < o->x) == toward;
+        f->in |= right ? OSC_IN_RIGHT : OSC_IN_LEFT;
+    }
+    /* blocking: opponent attacking within range */
+    if (o->attacking && !busy && dist <= 161) {
+        if (chance(g, 0.5, kb)) {
+            f->in &= (uint8_t)~(OSC_IN_LEFT | OSC_IN_RIGHT);
+            f->in |= (f->x < o->x) ? OSC_IN_LEFT : OSC_IN_RIGHT;   /* hold back */
+            if (o->state == 9 || o->state == 11 || o->y > OSC_GROUND_Y - 20) f->in |= OSC_IN_DOWN;
+        } else if (chance(g, 2.5, kb) && f->state != 12) {
+            f->in |= OSC_IN_UP;                                      /* jump away */
+        }
+    }
+    if (!busy && dist <= 80) {
+        int moves[4] = {3, 4, 5, 6};
+        for (int i = 0; i < 4; i++)
+            if (chance(g, 40, k)) f->in |= (uint8_t)(OSC_IN_B1 << (moves[i] - 3));
+        if (chance(g, 30, k)) f->in |= OSC_IN_DOWN;
+    }
+    if (!busy && !o->attacking) {
+        if (dist > 120 && chance(g, 40, k)) set_move(g, f, 16 + osc_random(g, 2));
+        else if (dist < 200 && chance(g, 30, k)) set_move(g, f, 18 + osc_random(g, 2));
+        else if (dist < 150 && o->y < OSC_GROUND_Y && chance(g, 20, k)) set_move(g, f, 20 + osc_random(g, 2));
+        else if (dist < 200 && chance(g, 30, k)) set_move(g, f, 22 + osc_random(g, 2));
+        else if (dist < 150 && f->stocks > 0 && chance(g, 20, k)) set_move(g, f, 24);
+    }
 }
 
 /* ---- frame selector (0x47d21c) + boxes ------------------------------------- */
@@ -244,13 +306,15 @@ static void resolve_hits(osc_game *g, osc_fighter *a)
 
     if (v->blocking) {
         v->anim_timer = 1;
+        play_snd(g, 10);
         if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
         if (!g->no_push) v->health -= a->chip * k_damage_level;
-        if (v->health <= 0.0) set_move(g, v, 10);
+        if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
         a->attacking = false;
         if (v->health > 0.0) g->hit_stop = osc_random(g, 4) + (a->hit_level == 2 ? 4 : 2);
         return;
     }
+    play_snd(g, a->hit_level >= 3 ? 9 : a->hit_level == 2 ? 8 : 7);
     v->facing = v->x < a->x ? 1 : 2;
     if (a->human && v->health > 0.0) a->score += 5;
     if (a->meter < OSC_METER_MAX) a->meter += k_meter_unit * 2.0;
@@ -260,7 +324,7 @@ static void resolve_hits(osc_game *g, osc_fighter *a)
     a->combo_timer = 44;
     if (a->hits > a->max_combo) a->max_combo = a->hits;
     if (!g->no_push) v->health -= a->damage * k_damage_level;
-    if (v->health <= 0.0) set_move(g, v, 10);
+    if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
     bool heavy = a->state == 4 || a->state == 6 || a->state == 8 || a->state == 9 || a->state == 10;
     set_move(g, v, heavy ? 9 : 8);
     if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
@@ -299,6 +363,7 @@ static void advance(osc_game *g, osc_fighter *f)
             move_x(g, f, f->x < o->x ? -f->hitstun : f->hitstun);
             if (f->y >= OSC_GROUND_Y) {
                 set_move(g, f, 11);
+                play_snd(g, 12);
                 f->y = OSC_GROUND_Y - 10;
                 return;
             }
@@ -325,7 +390,11 @@ static bool load_path(char *dst, size_t n, const char *dir, const char *rel)
     return r > 0 && (size_t)r < n;
 }
 
-static void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
+void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);
+static void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip) { osc_reset_fighter(f, ch, p, strip); }
+
+/* zerardados: per-round reset of one fighter. */
+void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
 {
     memset(f, 0, sizeof *f);
     f->char_id = ch;
@@ -343,7 +412,9 @@ static void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int char1, int char2)
 {
+    bool ai_p2 = g->ai_p2;
     memset(g, 0, sizeof *g);
+    g->ai_p2 = ai_p2;
     g->ren = ren;
     g->rng = (uint32_t)SDL_GetTicksNS();
     SDL_strlcpy(g->data_dir, data_dir, sizeof g->data_dir);
@@ -371,11 +442,25 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int cha
     }
     g->cam_x = 100;
     g->timer_sec = 99; g->timer_sub = 25;
+    g->round_no = 1; g->fight_no = 1; g->rounds_to_win = 2;
+    g->p[2].human = !g->ai_p2;
+    g->p[1].ai_pref = g->p[2].ai_pref = 200;
 
-    load_path(path, sizeof path, data_dir, "Musicas/Musica-01.wav");
-    if (osc_audio_open() && osc_wav_load(path, &g->music)) {
-        g->has_music = true;
-        osc_audio_play(&g->music, true);
+    if (osc_audio_open()) {
+        load_path(path, sizeof path, data_dir, "Musicas/Musica-01.wav");
+        if (osc_wav_load(path, &g->music)) {
+            g->has_music = true;
+            osc_audio_play(&g->music, true);
+        }
+        /* Sons/Som-NN.wav in order; a missing file ends the list like FormCreate does */
+        for (int n = 1; n <= 80; n++) {
+            char rel[32];
+            snprintf(rel, sizeof rel, "Sons/Som-%02d.wav", n);
+            load_path(path, sizeof path, data_dir, rel);
+            if (!osc_wav_load(path, &g->sounds[g->n_sounds])) break;
+            g->n_sounds++;
+        }
+        SDL_Log("%d sounds loaded", g->n_sounds);
     }
     return true;
 }
@@ -389,13 +474,53 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
 
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
-        if (!frozen && f->human && !g->no_push) input_dispatch(g, f);
+        if (!f->human && !frozen && !g->no_push) cpu_think(g, f);
+        if (!frozen && !g->no_push) input_dispatch(g, f);
         sequences(g, f);
-        if (!frozen && !g->no_push) defend(g, f);
+        if (!frozen && !g->no_push && f->human) defend(g, f);
     }
     for (int i = 1; i <= 2; i++) { advance(g, &g->p[i]); select_frame(&g->p[i]); }
     for (int i = 1; i <= 2; i++) resolve_hits(g, &g->p[i]);
-    for (int i = 1; i <= 2; i++) g->p[i].in_prev = g->p[i].in;
+    for (int i = 1; i <= 2; i++) {
+        osc_fighter *f = &g->p[i];
+        f->in_prev = f->in;
+        /* meter 102 -> stock (main loop 4572) */
+        if (f->meter >= OSC_METER_MAX && f->stocks < 3) { f->stocks++; f->meter = 0; play_snd(g, 13); }
+        if (f->meter > OSC_METER_MAX) f->meter = OSC_METER_MAX;
+    }
+
+    /* round end: KO or time over (simplified sequence, 05 "Round flow") */
+    bool ko = g->p[1].health <= 0.0 || g->p[2].health <= 0.0;
+    if ((ko || g->timer_sec == 0) && g->round_end == 0) {
+        g->round_end = 1;
+        g->hit_stop = 30;
+        if (!ko) play_snd(g, 4);
+    }
+    if (g->round_end > 0) {
+        g->no_push = true;
+        g->round_end++;
+        if (g->round_end == 2) {
+            osc_fighter *w = NULL;
+            if (g->p[1].health > g->p[2].health) w = &g->p[1];
+            else if (g->p[2].health > g->p[1].health) w = &g->p[2];
+            if (w) { w->wins++; if (w->human) w->score += 1000; }
+        }
+        if (g->round_end > 230) {
+            /* next round (state 6 -> 7 init) */
+            for (int i = 1; i <= 2; i++) {
+                osc_fighter *f = &g->p[i];
+                int wins = f->wins, ch = f->char_id, st = f->stocks, score = f->score; bool human = f->human;
+                const osc_strip *s = f->strip;
+                extern void osc_reset_fighter(osc_fighter *, int, int, const osc_strip *);
+                osc_reset_fighter(f, ch, i, s);
+                f->wins = wins; f->stocks = st; f->score = score; f->human = human;
+                if (g->p[1].wins >= g->rounds_to_win || g->p[2].wins >= g->rounds_to_win) f->wins = 0;
+            }
+            g->round_no++;
+            g->round_end = 0; g->no_push = false; g->hit_stop = 0; g->super_pause = 0;
+            g->timer_sec = 99; g->timer_sub = 25; g->cam_x = 100;
+        }
+    }
 
     /* camera: midpoint rule, clamped to the stage */
     if (!g->no_push) {
@@ -496,6 +621,7 @@ void osc_game_render(osc_game *g)
 void osc_game_shutdown(osc_game *g)
 {
     if (g->has_music) osc_wav_free(&g->music);
+    for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
     osc_audio_close();
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     if (g->stage) SDL_DestroyTexture(g->stage);

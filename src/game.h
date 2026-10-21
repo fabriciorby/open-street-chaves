@@ -55,6 +55,7 @@ typedef struct {
     bool blocking;       /* +0x93 */
     int hits, combo_timer, max_combo;
     int seq_state, seq_timer, down_hold, back_hold, mash_p, mash_k;
+    int ai_pref;         /* +0x1c preferred distance */
     bool human;
     uint8_t in, in_prev; /* input bits this tick / last tick */
     int wins;
@@ -77,7 +78,12 @@ typedef struct {
     uint32_t rng;        /* Delphi RandSeed */
     osc_wav music;
     bool has_music;
+    osc_wav sounds[80];   /* DXWaveListSnd[k] = Sons/Som-(k+1).wav */
+    int n_sounds;
     int round_start, round_end;
+    int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
+    int rounds_to_win;
+    bool ai_p2;
 } osc_game;
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int char1, int char2);

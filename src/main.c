@@ -54,7 +54,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     long max_frames = 0;
     const char *screenshot = NULL;
     int c1 = 1, c2 = 2;
-    bool demo = false, boxes = false;
+    bool demo = false, boxes = false, two_players = false;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
@@ -64,6 +64,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--p2") == 0 && i + 1 < argc) c2 = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--demo") == 0) demo = true;
         else if (strcmp(argv[i], "--boxes") == 0) boxes = true;
+        else if (strcmp(argv[i], "--2p") == 0) two_players = true;
         else if (strcmp(argv[i], "--help") == 0) {
             SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--p1 N] [--p2 N] [--frames N] [--screenshot f.bmp] [--demo] [--boxes]");
             return SDL_APP_SUCCESS;
@@ -90,6 +91,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderLogicalPresentation(a->ren, OSC_SCREEN_W, OSC_SCREEN_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderVSync(a->ren, 1);
 
+    a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
     a->loaded = osc_game_init(&a->game, a->ren, data, c1, c2);
     a->game.debug_boxes = boxes;
     if (!a->loaded)
