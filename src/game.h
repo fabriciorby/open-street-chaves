@@ -80,6 +80,8 @@ typedef struct {
     int loop_at;
 } osc_effect;
 
+typedef struct { char name[4]; int char_id; int score; } osc_record;   /* g_records (10 x 12 bytes) */
+
 typedef struct {
     SDL_Renderer *ren;
     char data_dir[1024];
@@ -120,9 +122,19 @@ typedef struct {
     int face_big_w[16], face_big_h[16];
     bool p1_in, p2_in;       /* humans who joined */
     int first_hit_given;
+
+    /* coin-op flow (01, 07): attract, demo fight, records */
+    int credits;
+    int demo;                 /* g_demo countdown while the attract demo fight runs */
+    int menu_cam;             /* g_camY as the attract / records scroll offset */
+    bool key_coin, key_start1, key_start2;   /* '5' '1' '2' edge events from main.c, consumed each tick */
+    SDL_Texture *abertura[16]; int abertura_w[16], abertura_h[16], n_abertura;   /* DXImageListAbertura (from the exe) */
+    SDL_Texture *icone[14];    int icone_w[14], icone_h[14], n_icone;            /* DXImageListIcone */
+    osc_record records[10];
 } osc_game;
 
-enum { OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7, OSC_SCREEN_CONTINUE = 9 };
+enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,
+       OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9 };
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
 /* Start a fight: characters 1..15, stage 1..12 (0 = by opponent), round 1. */
@@ -134,6 +146,11 @@ void osc_game_shutdown(osc_game *g);
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_fight_render(osc_game *g);
 void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered);
+/* TForm1.texto: align 'c' centred, 'e' right-aligned, else left; size in points of the original font. */
+void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b);
+int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
+void osc_play_snd(osc_game *g, int idx);
+void osc_go_attract(osc_game *g, int tick);
 void osc_make_ladder(osc_game *g, int char_id);
 int osc_stage_for(osc_game *g, int opponent);
 

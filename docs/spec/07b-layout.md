@@ -76,25 +76,44 @@ animated to −120 at round end) — the second block uses `0x4b44d4`.
 - Continue (`state8_9.txt`): `MemoTexto[0x18]` ("CONTINUE ?") and the
   countdown digit at size `25·timerA` (grows as it counts down), then
   `MemoTexto[0x17]` ("FIM DO JOGO").
-- Records (state 8): title `MemoTexto[0x15]` and `[6]`, 10 rows `"n -"`,
-  name, `Retrato[(char−1)·5]`, score, scrolling up by `g_camY` after tick
-  80 (`−5` per tick, floor −320).
+- Records (state 8): title line 20 ("OS 10 MELHORES LUTADORES") at (200,5)
+  while `g_ciclo` < 18, line 5 ("INSIRA FICHAS") at (200,240) while < 10;
+  10 rows at y = 60i − 350 − `g_camY`: `"i -"` at x 50, name at x 100,
+  `Retrato[(char−1)·5]` at x 160, score at x 230 (row 1 blinks); scrolling
+  up after tick 80 (−5 per tick, floor −320), black after tick 240, state 1
+  after tick 280. Defaults (FormCreate): CHV 10000, SMD 8000, CHQ 7500,
+  QUI 7000, DFL 6500, PGR 6000, SBR 5500, B71 5000, PTY 4500, NHO 4000,
+  portraits 1..10. The gradient colours and the text sizes of the rows were
+  not recovered from the code [approx].
 - Name entry (`state11_12_tail.txt`): the 3 letters of `players[p].name`
   with the active one blinking, `MemoTexto[0x19/0x1a/0x1f]` credits lines
   in state 11.
 
-## Attract / intro (`state1_attract.txt`) [decomp]
+## Attract / intro (`state1_attract.txt`) [objdump, verified against the x86 code]
 
-Timeline on `g_ciclo2` (ticks):
+`texto(x, y, s, align, size, colour)` draws Comic Sans MS at `size` points
+with a black shadow at (+1,+1); `align` `'c'` centres on x, `'e'` right-
+aligns. Text line numbers below are the 0-based `MemoTexto` lines of
+`07a`/`07d` (the code's `Lines.Get(n)` is one higher). Timeline on
+`g_ciclo2` = c, scroll `camY` (0 at c = 100, −2 per tick after c > 235,
+floor −200); `g_ciclo` wraps at 20 here:
 
-| ticks | what |
+| c | what |
 |---|---|
-| < 100 | `MemoTexto[13]` ("VENCEU"?) card [infer: a title card] |
-| 100–370 | city: 5 rows × 16 `Abertura` tiles (`Predio-01/02`, 39 px apart, 0x71 base), 8 columns of `Folhagem` (50 px apart), 9 `Pessoa-0n` walkers (50 px apart, bobbing with `g_ciclo`), scrolled by `g_camY` which starts at 0 and decreases 2 per tick after tick 235 (floor −200) |
-| 200 | sound 9 (crowd?) and `Chaves dando soco` / `Seu Madruga caindo` slide in (`4·(t−200)` px) |
-| 400–437 | logo zoom: `Logo - PORTUGUES/ESPANHOL` stretched into `(205 − k, −100 − camY − k) → (205 + k, −100 − camY + k)` with `k` growing from 4 to 33 then settling at 2 (pulsing) |
-| ≥ 441 | `MemoTexto[0x16]` ("INSIRA FICHAS"/"ENTRE AGORA") blinking every other tick until 500, steady after; `MemoTexto[0x1a]`, `[0x1f]` footer lines (credits/version) |
-| 650 | demo fight (state 7 with `g_demo = 600`) |
+| < 100 | screen filled RGB(120,120,250); `Abertura[14]` (Vencedores) at (110,10); line 12 ("VENCEDORES NÃO USAM DROGAS") centred at (200,210), size 16, RGB(250,200,0) |
+| 100–370 | sky: 21 bars `(0, 15i)–(400, 15i+15)` RGB(120+2i, 120+2i, 200); `Abertura[2]` at (50, 50−camY/2), (350, 150−camY/2), (300, 180−camY/2); `[3]` at (50, 47j+73−camY/2), (350, 47j+173−camY/2), (300, 47j+203−camY/2) for j 0..4; `[0]` at (100, 80j−200−camY) and (305, 80j−200−camY) for j 0..6; `[1]` at (39i+113, 32j−200−camY) for i 0..4, j 0..15; black bar (147, −155−camY)–(270, −48−camY) with a white rectangle (149, −153−camY)–(268, −50−camY); `[4]` (Folhagem) at (50i, 220−camY) for i 0..7; people `[7]` at (50i, 245−camY+b), `[5]` at (50i−15, …), `[6]` at (50i+15, …) for i 0..8 with b = 4 while `g_ciclo` < 10; c < 200: `[8]` Chaves at (210, 185+b2−camY) and `[9]` Seu Madruga at (50, 178+b2−camY), b2 = 5 while `g_ciclo` > 10; c = 200: sound 9; c ≥ 200: `[11]` Seu Madruga caindo at (60−4(c−200), 180+2(c−200)−camY) and `[10]` Chaves dando soco at (100, 190−camY) |
+| any | logo zoom factor k: 4 while c < 400, c−396 for 400..420, 440−c for 420..438, then 2; `Logo - PORTUGUES/ESPANHOL` (`[12]`/`[13]` by language) stretched to (205−round(223/k), −100−camY−round(117/k))–(205+…, −100−camY+…) |
+| > 440 | the version string "V1.5A" left-aligned at (320,140), size 8, white; line 21 ("O LUTADOR DA VILA") size 12 RGB(90,90,255) sliding in: x = 200+4(500−c) on even ticks, 200−4(500−c) on odd ticks, fixed at 200 from c = 500 |
+| any | `Abertura[15]` (Cybergamba) at (5,280); line 25 (CRIADO POR …) at (200,253) and line 30 (VERSÃO EM ESPANHOL …) at (200,267), size 8, white; while `g_ciclo` < 12: line 5 ("INSIRA FICHAS") or line 6 ("ENTRE AGORA" with credits) at (200,235) |
+| tick | with credits: c := 500, camY := −200 (title held); c > 650: demo fight (state 7, `g_demo` = 600, both CPU, stage round(Random(120)/10)+1 clamped 1..12, characters round(Random(150)/10)+1 clamped 1..15) |
+
+Demo fight: the clock stays at the configured time, both healths are reset to
+125 every tick, "INSIRA FICHAS" blinks at (200,240) while `g_ciclo` < 20,
+`Icone[11]`/`[12]` (Logo Transparente) sits at (390−w, 280−h) once `g_demo`
+< 500, the screen is black for the last 40 ticks and at `g_demo` < 6 the
+game goes to state 8 (records). Keys: `5` adds a credit (sound 0; during
+the demo or on the records screen it also jumps to the title), `1`/`2`
+with a credit start that player at state 4 (fight 1, select timer 30 s).
 
 ## Stage animations (`stage_animations.txt`, `desenhaanimacoes`) [decomp]
 

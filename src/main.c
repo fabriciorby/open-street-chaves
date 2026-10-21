@@ -74,7 +74,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     const char *screenshot = NULL;
     int c1 = 1, c2 = 2;
     bool demo = false, boxes = false, two_players = false, autofire = false, direct = false;
-    int lang = 0, stage = 0;
+    int lang = 0, stage = 0, start_tick = 0, start_screen = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
@@ -89,8 +89,10 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--fight") == 0) direct = true;
         else if (strcmp(argv[i], "--stage") == 0 && i + 1 < argc) stage = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--es") == 0) lang = 1;
+        else if (strcmp(argv[i], "--tick") == 0 && i + 1 < argc) start_tick = (int)SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--screen") == 0 && i + 1 < argc) start_screen = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--help") == 0) {
-            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--p1 N] [--p2 N] [--frames N] [--screenshot f.bmp] [--demo] [--boxes]");
+            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N] [--tick N] [--screen N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
             return SDL_APP_SUCCESS;
         }
     }
@@ -128,6 +130,8 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         a->game.p[1].char_id = c1; a->game.p[2].char_id = c2;
         a->loaded = osc_fight_start(&a->game, c1, c2, stage);
     }
+    if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
     a->game.debug_boxes = boxes;
     if (!a->loaded)
         SDL_Log("Could not load the game data from '%s'. Pass --data <folder containing Chaves.exe>.", data);
@@ -142,6 +146,9 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
     case SDL_EVENT_QUIT:
         return SDL_APP_SUCCESS;
     case SDL_EVENT_KEY_DOWN:
+        if (e->key.scancode == SDL_SCANCODE_5 || e->key.scancode == SDL_SCANCODE_KP_5) a->game.key_coin = true;
+        if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.key_start1 = true;
+        if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.key_start2 = true;
         if (e->key.key == SDLK_ESCAPE) return SDL_APP_SUCCESS;
         if (e->key.key == SDLK_P && !e->key.repeat) a->game.paused = !a->game.paused;
         if (e->key.key == SDLK_B && !e->key.repeat) a->game.debug_boxes = !a->game.debug_boxes;

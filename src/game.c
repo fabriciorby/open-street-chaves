@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "exetext.h"
+#include "exeimg.h"
 #include "tables_gen.h"
 
 /* ---- per-character constants (02, 03) ------------------------------------ */
@@ -16,7 +17,7 @@ static const double k_meter_unit = 2.0;
 static const int k_gravity = 4;
 
 /* ---- Delphi System.Random -------------------------------------------------- */
-static int osc_random(osc_game *g, int n)
+int osc_random(osc_game *g, int n)
 {
     g->rng = g->rng * 0x8088405u + 1u;
     if (n <= 0) return 0;
@@ -27,6 +28,7 @@ static int iround(double v) { return (int)floor(v + 0.5); }
 
 static osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->p[1] ? &g->p[2] : &g->p[1]; }
 
+void osc_play_snd(osc_game *g, int idx) ;
 static void play_snd(osc_game *g, int idx)
 {
     if (idx >= 0 && idx < g->n_sounds && g->sounds[idx].buf) osc_audio_play(&g->sounds[idx], false);
@@ -644,8 +646,36 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
         SDL_Log("%d sounds loaded", g->n_sounds);
     }
     osc_text_load(data_dir);
+    /* intro pictures and icons live inside Chaves.exe (03-assets.md) */
+    if (osc_exeimg_load(data_dir)) {
+        g->n_abertura = osc_exeimg_count("Abertura"); if (g->n_abertura > 16) g->n_abertura = 16;
+        for (int i = 0; i < g->n_abertura; i++) {
+            osc_image img;
+            if (!osc_exeimg_get("Abertura", i, &img)) continue;
+            g->abertura[i] = osc_texture_from_image(ren, &img); g->abertura_w[i] = img.w; g->abertura_h[i] = img.h;
+            osc_image_free(&img);
+        }
+        g->n_icone = osc_exeimg_count("Icone"); if (g->n_icone > 14) g->n_icone = 14;
+        for (int i = 0; i < g->n_icone; i++) {
+            osc_image img;
+            if (!osc_exeimg_get("Icone", i, &img)) continue;
+            g->icone[i] = osc_texture_from_image(ren, &img); g->icone_w[i] = img.w; g->icone_h[i] = img.h;
+            osc_image_free(&img);
+        }
+        osc_exeimg_free();
+    }
+    /* default high-score table (FormCreate: criarecorde 1..10) */
+    {
+        static const char *names[10] = {"CHV", "SMD", "CHQ", "QUI", "DFL", "PGR", "SBR", "B71", "PTY", "NHO"};
+        for (int i = 0; i < 10; i++) {
+            memcpy(g->records[i].name, names[i], 4);
+            g->records[i].char_id = i + 1;
+            g->records[i].score = i == 0 ? 10000 : 8500 - 500 * i;
+        }
+    }
     g->rounds_to_win = 2;
-    g->screen = OSC_SCREEN_SELECT;
+    g->screen = OSC_SCREEN_ATTRACT;
+    g->screen_tick = 0;
     g->sel[1] = 1; g->sel[2] = 2;
     g->sel_timer = 30 * 25;
     g->p1_in = true;
@@ -749,6 +779,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
     if (g->paused) return;
+    if (g->demo > 0) { g->timer_sec = 99; g->timer_sub = 25; }   /* attract demo: clock frozen */
     g->p[1].in = in1; g->p[2].in = in2;
     bool frozen = g->hit_stop || g->super_pause;
 
@@ -766,6 +797,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     }
     for (int i = 1; i <= 2; i++) resolve_hits(g, &g->p[i]);
     update_fx(g);
+    if (g->demo > 0) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;   /* nobody falls in the demo */
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
         f->in_prev = f->in;
@@ -961,5 +993,9 @@ void osc_game_shutdown(osc_game *g)
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     for (int i = 0; i < g->n_fx_tex; i++) if (g->fx_tex[i]) SDL_DestroyTexture(g->fx_tex[i]);
     if (g->stage) SDL_DestroyTexture(g->stage);
+    for (int i = 0; i < 16; i++) if (g->abertura[i]) SDL_DestroyTexture(g->abertura[i]);
+    for (int i = 0; i < 14; i++) if (g->icone[i]) SDL_DestroyTexture(g->icone[i]);
     memset(g, 0, sizeof *g);
 }
+
+void osc_play_snd(osc_game *g, int idx) { play_snd(g, idx); }

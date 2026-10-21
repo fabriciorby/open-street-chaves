@@ -32,6 +32,10 @@ faithful port.
    the right language).
 9. ~~Per-character CPU special choices~~ — resolved: table in `05d`
    (constants read from the float literals of `cpu`).
+10. ~~Attract timeline~~ — transcribed from the code (07b); still
+    approximate in the port: the font (Comic Sans MS replaced by SDL's
+    debug font scaled by size), the records-screen gradient and row sizes,
+    the "join" prompt shown over a one-player fight.
 
 ## Verification plan (needs Wine or a Windows VM)
 

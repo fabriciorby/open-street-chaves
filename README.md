@@ -32,14 +32,18 @@ open-street-chaves --data /path/to/StreetChaves
 
 ### Status
 
-Playable fight prototype: any two of the 15 fighters (`--p1 N --p2 N`),
-walking, jumping, crouching, the four normals standing/crouching/jumping,
-blocking (high/low rules), hit, knockdown and lie-down states, hit boxes,
-damage, hit-stop, combos, super meter and stocks, command parser for the
-special moves (quarter circles, charges, mash) with their frames, hit boxes
-and projectiles/effects, a CPU opponent with the original's probability
-model, round timer and KO/time-over flow, sounds and music. All numeric
-data is generated from `docs/spec` by `tools/gen_tables.py`.
+Playable arcade flow: attract/title cinematic (the pictures are read from
+inside your `Chaves.exe`, like all the game text), demo fight, coins and
+start buttons, character select, VS ladder, fights, continue, top-10
+records. The fight engine has walking, jumping, crouching, the four normals
+standing/crouching/jumping, blocking (high/low rules), hit, knockdown and
+lie-down states, hit boxes, damage, hit-stop, combos, super meter and
+stocks, the command parser for the special moves (quarter circles, charges,
+mash) with their frames, hit boxes and projectiles/effects, a CPU opponent
+with the original's per-character decision table, round timer and KO/time-
+over flow, stage animations, sounds and music. All numeric data is
+generated from `docs/spec` by `tools/gen_tables.py`. Not yet: endings,
+name entry, the F1/F2 menus, the original font.
 
 Not there yet: menus and screens (title, select, VS, continue, records,
 endings), stage animations, exact per-move projectile offsets, the
@@ -67,10 +71,14 @@ push (see the *Actions* tab → artifacts).
 
 ### Controls (current)
 
-P1: arrows + `Z` `X` `C` `V` (weak punch, weak kick, strong punch, strong
-kick — the original layout). P2 (`--2p`): `W` `A` `S` `D` + `F` `G` `H` `J`.
-`P` pauses, `B` shows hit/hurt boxes, `Esc` quits. Without `--2p` the
-second fighter is the CPU.
+Arcade keys as in the original: `5` inserts a coin, `1` / `2` start that
+player (on the title screen the first button also inserts a coin and
+starts). P1: arrows + `Z` `X` `C` `V` (weak punch, weak kick, strong punch,
+strong kick). P2: `W` `A` `S` `D` + `F` `G` `H` `J`, or a gamepad (d-pad or
+left stick, `X` `A` `Y` `B` for the four attacks; the first pad goes to P2
+like the original's joystick, a second pad to P1). `P` pauses, `B` shows
+hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
+fight (`--2p` makes P2 human).
 
 ### Credits and license
 
@@ -113,11 +121,18 @@ open-street-chaves --data /caminho/para/StreetChaves
 
 ### Estado atual
 
-Esqueleto inicial (marco 1): abre, carrega `Cenarios/Cenario-01.bmp` e a
-tira `Lutadores/C01.bmp`, fatia a tira exatamente como o original (colunas
-separadoras escuras, branco transparente), roda um tick determinístico de
-28 ms e desenha o Chaves parado / andando no cenário com a música original.
-O restante está especificado em `docs/spec` e vai sendo portado.
+Fluxo de arcade jogável: abertura/título (as imagens vêm de dentro do seu
+`Chaves.exe`, como todos os textos), luta de demonstração, fichas e botões
+de start, seleção de personagem, tela VS com a escada de oponentes, lutas,
+continue e recordes. O motor de luta tem andar, pular, agachar, os quatro
+golpes normais em pé/agachado/no ar, defesa (regras alta/baixa), estados
+de acerto, queda e levantar, hit boxes, dano, hit-stop, combos, barra de
+especial e estoques, o leitor de comandos dos especiais (meia-lua, carga,
+repetição) com seus quadros, hit boxes e projéteis/efeitos, CPU com a tabela
+de decisões por personagem do original, relógio do round e fluxo de KO e
+tempo esgotado, animações dos cenários, sons e música. Todos os dados
+numéricos são gerados de `docs/spec` por `tools/gen_tables.py`. Ainda
+faltam: finais, entrada de nome, menus F1/F2, a fonte original.
 
 ### Como compilar
 
@@ -141,9 +156,14 @@ cada push (aba *Actions* → artifacts).
 
 ### Controles (por enquanto)
 
-Setas andam, `P` pausa, `Esc` sai. O layout original (setas + Z X C V para
-soco fraco / chute fraco / soco forte / chute forte, `5` ficha, `1`/`2`
-start) volta conforme o motor de luta for portado.
+Teclas de arcade como no original: `5` insere ficha, `1` / `2` dão start
+naquele jogador (na tela de título o primeiro botão também insere a ficha e
+dá start). P1: setas + `Z` `X` `C` `V` (soco fraco, chute fraco, soco forte,
+chute forte). P2: `W` `A` `S` `D` + `F` `G` `H` `J`, ou um controle (direcional
+ou analógico esquerdo, `X` `A` `Y` `B` para os quatro golpes; o primeiro
+controle vai para o P2 como o joystick do original, um segundo para o P1).
+`P` pausa, `B` mostra as hit boxes, `Esc` sai. `--fight --p1 N --p2 N` vai
+direto para uma luta (`--2p` deixa o P2 humano).
 
 ### Créditos e licença
 
