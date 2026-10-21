@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "exetext.h"
 #include "tables_gen.h"
 
 /* ---- per-character constants (02, 03) ------------------------------------ */
@@ -613,6 +614,9 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int cha
     SDL_Log("%d stage animation sprites loaded", g->n_anim_tex);
     g->stage_id = 1;
 
+    osc_text_load(data_dir);
+    SDL_Log("fight: %s vs %s (%s)", osc_text(OSC_MEMO_NOMES, char1, 0), osc_text(OSC_MEMO_NOMES, char2, 0), osc_text(OSC_MEMO_CENARIOS, 0, 0));
+
     g->cam_x = 100;
     g->timer_sec = 99; g->timer_sub = 25;
     g->round_no = 1; g->fight_no = 1; g->rounds_to_win = 2;
@@ -836,6 +840,7 @@ void osc_game_shutdown(osc_game *g)
 {
     if (g->has_music) osc_wav_free(&g->music);
     for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
+    osc_text_free();
     osc_audio_close();
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     for (int i = 0; i < g->n_fx_tex; i++) if (g->fx_tex[i]) SDL_DestroyTexture(g->fx_tex[i]);

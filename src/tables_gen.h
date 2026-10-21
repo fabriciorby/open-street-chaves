@@ -18,6 +18,11 @@ typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
+/* text index (07d): memo line -> index of the string constant inside Chaves.exe */
+typedef struct { uint8_t memo; uint16_t line; int16_t index; } osc_text_index_row;
+extern const osc_text_index_row osc_text_index[1966];
+#define OSC_N_TEXT_INDEX 1966
+
 /* stage animations (07c): drawn each fight tick after the background */
 typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; } osc_stage_anim_row;
 extern const osc_stage_anim_row osc_stage_anim[127];

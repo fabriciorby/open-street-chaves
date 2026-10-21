@@ -267,6 +267,13 @@ for line in read('07c-stage-animations.txt').split('\n'):
         stage_anim.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), 1 if m.group(4) == 'E' else 0,
                            int(m.group(5)), int(m.group(6)), int(m.group(7)), int(m.group(8))))
 
+# ---------------------------------------------------------------- 07d text index
+text_index = []
+for line in read('07d-text-index.txt').split('\n'):
+    m = re.match(r'(\d+) (\d+) (-?\d+)$', line)
+    if m:
+        text_index.append((int(m.group(1)), int(m.group(2)), int(m.group(3))))
+
 # ---------------------------------------------------------------- emit
 def rows(items):
     return ',\n'.join('    {%s}' % ', '.join(str(v) for v in it) for it in items)
@@ -291,6 +298,11 @@ typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at;
 typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
+
+/* text index (07d): memo line -> index of the string constant inside Chaves.exe */
+typedef struct { uint8_t memo; uint16_t line; int16_t index; } osc_text_index_row;
+extern const osc_text_index_row osc_text_index[%d];
+#define OSC_N_TEXT_INDEX %d
 
 /* stage animations (07c): drawn each fight tick after the background */
 typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, item; int16_t x, y; uint8_t not_char; } osc_stage_anim_row;
@@ -318,7 +330,7 @@ extern const osc_golpe_row osc_golpe[%d];
 #define OSC_N_SEQS %d
 #define OSC_N_GOLPE %d
 #endif
-''' % (len(stage_anim), len(stage_anim), len(fx_types), len(fx_sprites), len(spawns), len(fx_types), len(fx_sprites), len(spawns),
+''' % (len(text_index), len(text_index), len(stage_anim), len(stage_anim), len(fx_types), len(fx_sprites), len(spawns), len(fx_types), len(fx_sprites), len(spawns),
        len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe),
        len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe))
 
@@ -382,10 +394,14 @@ const osc_fx_spawn_row osc_fx_spawns[%d] = {
 const osc_stage_anim_row osc_stage_anim[%d] = {
 %s
 };
+
+const osc_text_index_row osc_text_index[%d] = {
+%s
+};
 ''' % (',\n'.join(off_rows), len(anim), rows(anim), len(hurt), rows(hurt), len(hit), rows(hit),
        len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe),
        len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns),
-       len(stage_anim), rows(stage_anim))
+       len(stage_anim), rows(stage_anim), len(text_index), rows(text_index))
 
 with open(OUT_H, 'w') as f:
     f.write(h)
