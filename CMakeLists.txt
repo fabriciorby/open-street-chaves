@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(open_street_chaves C)
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
 option(OSC_FETCH_SDL3 "Download and build SDL3 with FetchContent" ON)
 
 if(OSC_FETCH_SDL3)
@@ -32,6 +28,8 @@ add_executable(open-street-chaves
   src/wav.c
   src/game.c
 )
+# Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.
+set_target_properties(open-street-chaves PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
 target_include_directories(open-street-chaves PRIVATE src)
 target_link_libraries(open-street-chaves PRIVATE SDL3::SDL3)
 
