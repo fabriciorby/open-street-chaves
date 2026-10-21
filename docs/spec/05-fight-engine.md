@@ -178,6 +178,16 @@ Jogo" (`g_cfg0`, 1..8) is **not read anywhere in the gameplay code**: it is
 only clamped, saved and displayed as "NIVEL-n" — a cosmetic setting (or an
 unfinished feature) in 1.5A. A runtime test should confirm this (see 99).
 
+### cpu() decision order [objdump]
+
+The full per-tick procedure (preferred distance, walking, close-range
+normals, crouch, and the 86 per-character special/super checks with their
+`C` constants, distance tests and projectile/airborne conditions) is
+transcribed as a table in `05d-cpu-table.txt`. The projectile test looks for
+any effect slot with `type != 0`, `owner != me` and "has hit box" (+0x31);
+some characters counter an incoming projectile that is still more than 140 px
+away, others only act when none is live.
+
 ## Round flow inside state 7 [decomp]
 
 - Round init (state 6 → 7): timer per config, `g_camX = 100`,

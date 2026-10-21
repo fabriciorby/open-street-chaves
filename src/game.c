@@ -107,11 +107,24 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
  * the same distance bands (see 04 and 99); the walk/normals/block logic is exact. */
 static void cpu_think(osc_game *g, osc_fighter *f)
 {
+    /* TForm1.cpu, transcribed from the x86 code (docs/spec/05d-cpu-table.txt). */
     osc_fighter *o = opp(g, f);
+    int me = (f == &g->p[1]) ? 1 : 2;
     double k = 6.1 - 0.7 * g->fight_no;      /* cpu() */
     double kb = 8.4 - 1.0 * g->fight_no;     /* defendergolpe() */
     int dist = abs(iround(f->x) - iround(o->x));
     f->in = 0;
+
+    /* a hostile effect with a hit box is live (projectile incoming) */
+    bool proj = false;
+    int pd = 0;
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        const osc_effect *e = &g->fx[i];
+        if (e->type && e->owner != me && e->has_hitbox) {
+            proj = true;
+            pd = abs(iround(e->x) - iround(f->x));
+        }
+    }
 
     /* preferred distance re-rolled with chance 1/13 */
     static const int pref[6] = {100, 150, 200, 250, 300, 350};
@@ -119,12 +132,12 @@ static void cpu_think(osc_game *g, osc_fighter *f)
     if (abs(dist - f->ai_pref) < 51) f->ai_pref = dist;
 
     bool busy = !(f->state == 1 || f->state == 2 || f->state == 7);
-    if (!busy) {
-        bool toward = dist >= f->ai_pref;   /* cpu(): pref <= dist -> walk toward */
+    if (!f->blocking && !proj && !busy) {
+        bool toward = dist >= f->ai_pref;   /* aiPrefDist <= dist -> walk toward */
         bool right = (f->x < o->x) == toward;
         f->in |= right ? OSC_IN_RIGHT : OSC_IN_LEFT;
     }
-    /* blocking: opponent attacking within range */
+    /* defendergolpe(): opponent attacking within range */
     if (o->attacking && !busy && dist <= 161) {
         if (chance(g, 0.5, kb)) {
             f->in &= (uint8_t)~(OSC_IN_LEFT | OSC_IN_RIGHT);
@@ -134,18 +147,35 @@ static void cpu_think(osc_game *g, osc_fighter *f)
             f->in |= OSC_IN_UP;                                      /* jump away */
         }
     }
-    if (!busy && dist <= 80) {
-        int moves[4] = {3, 4, 5, 6};
-        for (int i = 0; i < 4; i++)
-            if (chance(g, 40, k)) f->in |= (uint8_t)(OSC_IN_B1 << (moves[i] - 3));
-        if (chance(g, 30, k)) f->in |= OSC_IN_DOWN;
+    /* close range: normals, crouch, crouching normals */
+    if (!f->blocking && !proj && dist <= 80) {
+        if (chance(g, 8, k)) set_move(g, f, 3);
+        if (chance(g, 8, k)) set_move(g, f, 4);
+        if (chance(g, 9, k)) set_move(g, f, 5);
+        if (chance(g, 9, k)) set_move(g, f, 6);
+        if (chance(g, 4, k)) {
+            set_move(g, f, 7);
+            if (chance(g, 2, k)) set_move(g, f, 3);
+            if (chance(g, 2, k)) set_move(g, f, 4);
+            if (chance(g, 3, k)) set_move(g, f, 5);
+            if (chance(g, 3, k)) set_move(g, f, 6);
+        }
     }
-    if (!busy && !o->attacking) {
-        if (dist > 120 && chance(g, 40, k)) set_move(g, f, 16 + osc_random(g, 2));
-        else if (dist < 200 && chance(g, 30, k)) set_move(g, f, 18 + osc_random(g, 2));
-        else if (dist < 150 && o->y < OSC_GROUND_Y && chance(g, 20, k)) set_move(g, f, 20 + osc_random(g, 2));
-        else if (dist < 200 && chance(g, 30, k)) set_move(g, f, 22 + osc_random(g, 2));
-        else if (dist < 150 && f->stocks > 0 && chance(g, 20, k)) set_move(g, f, 24);
+    /* per-character specials and supers */
+    if (!f->blocking) {
+        for (int i = 0; i < OSC_N_CPU; i++) {
+            const osc_cpu_row *r = &osc_cpu[i];
+            if (r->ch != f->char_id) continue;
+            if ((r->cond & 1) && proj) continue;
+            if ((r->cond & 2) && !proj) continue;
+            if ((r->cond & 4) && !(o->y < OSC_GROUND_Y)) continue;
+            if ((r->cond & 8) && !(f->y < OSC_GROUND_Y - 100)) continue;
+            if ((r->cond & 16) && !(f->y < OSC_GROUND_Y - 50)) continue;
+            int v = (r->cond & 2) ? pd : dist;
+            if (r->greater ? !(v > r->thr) : !(v < r->thr)) continue;
+            if (!chance(g, r->c, k)) continue;
+            set_move(g, f, r->move + (r->n > 1 ? osc_random(g, r->n) : 0));
+        }
     }
 }
 

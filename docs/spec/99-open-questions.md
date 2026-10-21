@@ -30,6 +30,8 @@ faithful port.
    transition style 1..4); `0x4b58a2/a3` (sound/music counts).
 8. Language 2 fill order of the memos (verify that constant indices pick
    the right language).
+9. ~~Per-character CPU special choices~~ — resolved: table in `05d`
+   (constants read from the float literals of `cpu`).
 
 ## Verification plan (needs Wine or a Windows VM)
 

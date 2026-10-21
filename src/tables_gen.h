@@ -9,6 +9,7 @@ typedef struct { uint8_t ch, state, timer, p4, dmg, level, atk; int16_t b, r, t,
 typedef struct { uint8_t ch, move; uint32_t from_mask; uint8_t state, dur, meter10; int8_t snd; uint8_t flags, needs_fx, strength; } osc_move_row;
 typedef struct { uint8_t ch, req, forb, down_hold, on_ground, from, to; } osc_seq_row;  /* bit0 BAIXO 1 FRENTE 2 TRAS 3 CIMA */
 typedef struct { uint8_t ch, btn; int8_t seq; uint8_t extra, move; } osc_golpe_row;     /* extra: 1 backHold>5 2 downHold>5 4 airborne */
+typedef struct { uint8_t ch, cond, greater; int16_t thr; uint8_t c, move, n; } osc_cpu_row;  /* cond bits: 1 NOPROJ 2 PROJ(pd) 4 OPPAIR 8 SELFAIR100 16 SELFAIR50 */
 
 enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MOVE_WALK = 8 };
 
@@ -42,10 +43,12 @@ extern const osc_hit_row osc_hit[358];
 extern const osc_move_row osc_moves[177];
 extern const osc_seq_row osc_seqs[187];
 extern const osc_golpe_row osc_golpe[186];
+extern const osc_cpu_row osc_cpu[86];
 #define OSC_N_ANIM 379
 #define OSC_N_HURT 184
 #define OSC_N_HIT 358
 #define OSC_N_MOVES 177
 #define OSC_N_SEQS 187
 #define OSC_N_GOLPE 186
+#define OSC_N_CPU 86
 #endif
