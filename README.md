@@ -32,17 +32,17 @@ open-street-chaves --data /path/to/StreetChaves
 
 ### Status
 
-Playable arcade flow: attract/title cinematic (the pictures are read from
+Complete arcade flow: attract/title cinematic (the pictures are read from
 inside your `Chaves.exe`, like all the game text), demo fight, coins and
 start buttons, character select, VS ladder, fights, continue, top-10
-records. The fight engine has walking, jumping, crouching, the four normals
+records, the 15 endings with their dialogues and the credits. The fight engine has walking, jumping, crouching, the four normals
 standing/crouching/jumping, blocking (high/low rules), hit, knockdown and
 lie-down states, hit boxes, damage, hit-stop, combos, super meter and
 stocks, the command parser for the special moves (quarter circles, charges,
 mash) with their frames, hit boxes and projectiles/effects, a CPU opponent
 with the original's per-character decision table, round timer and KO/time-
 over flow, stage animations, sounds and music. All numeric data is
-generated from `docs/spec` by `tools/gen_tables.py`. Not yet: the endings.
+generated from `docs/spec` by `tools/gen_tables.py`.
 
 Not there yet: menus and screens (title, select, VS, continue, records,
 endings), stage animations, exact per-move projectile offsets, the
@@ -126,18 +126,17 @@ open-street-chaves --data /caminho/para/StreetChaves
 
 ### Estado atual
 
-Fluxo de arcade jogável: abertura/título (as imagens vêm de dentro do seu
+Fluxo de arcade completo: abertura/título (as imagens vêm de dentro do seu
 `Chaves.exe`, como todos os textos), luta de demonstração, fichas e botões
 de start, seleção de personagem, tela VS com a escada de oponentes, lutas,
-continue e recordes. O motor de luta tem andar, pular, agachar, os quatro
+continue, recordes, os 15 finais com seus diálogos e os créditos. O motor de luta tem andar, pular, agachar, os quatro
 golpes normais em pé/agachado/no ar, defesa (regras alta/baixa), estados
 de acerto, queda e levantar, hit boxes, dano, hit-stop, combos, barra de
 especial e estoques, o leitor de comandos dos especiais (meia-lua, carga,
 repetição) com seus quadros, hit boxes e projéteis/efeitos, CPU com a tabela
 de decisões por personagem do original, relógio do round e fluxo de KO e
 tempo esgotado, animações dos cenários, sons e música. Todos os dados
-numéricos são gerados de `docs/spec` por `tools/gen_tables.py`. Ainda
-faltam: os finais.
+numéricos são gerados de `docs/spec` por `tools/gen_tables.py`.
 
 ### Como compilar
 

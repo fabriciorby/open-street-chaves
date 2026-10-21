@@ -6,6 +6,7 @@ Inputs (all derived from the original executable's code, no assets/text):
   05b-move-setup.txt    move id -> new state, duration, meter, sound, gates
   05c-frame-offsets.txt horizontal draw offset per frame
   05d-cpu-table.txt     CPU special-move decision table
+  07e-endings.txt       ending scripts (state 10)
   04a-move-tables.txt   command-parser transitions and button -> move map
 
 Run from the repository root:  python3 tools/gen_tables.py
@@ -288,6 +289,19 @@ for line in read('05d-cpu-table.txt').split('\n'):
     cpu_rows.append((int(m.group(1)), cond, 1 if m.group(4) == '>' else 0, int(m.group(5)),
                      int(m.group(6)), int(m.group(7)), int(m.group(8))))
 
+# ---------------------------------------------------------------- 07e endings
+end_rows = []
+END_OPS = {'STAGE': 1, 'CHAR': 2, 'FIGHTER': 3, 'SHADOW': 4, 'FINAL': 5, 'BLACK': 6, 'FLASH': 7, 'SPAWN': 8}
+for line in read('07e-endings.txt').split('\n'):
+    m = re.match(r'(\d+) (\d+) (\d+) ([A-Z]+)((?: -?\d+)*)\s*(P1/(\d+))?\s*(OR)?\s*$', line)
+    if not m or 'None' in line:
+        continue
+    args = [int(v) for v in m.group(5).split()]
+    while len(args) < 5:
+        args.append(0)
+    end_rows.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), END_OPS[m.group(4)],
+                     args[0], args[1], args[2], args[3], args[4], int(m.group(7) or 0), 1 if m.group(8) else 0))
+
 # ---------------------------------------------------------------- emit
 def rows(items):
     return ',\n'.join('    {%s}' % ', '.join(str(v) for v in it) for it in items)
@@ -304,7 +318,9 @@ typedef struct { uint8_t ch, state, timer, p4, dmg, level, atk; int16_t b, r, t,
 typedef struct { uint8_t ch, move; uint32_t from_mask; uint8_t state, dur, meter10; int8_t snd; uint8_t flags, needs_fx, strength; } osc_move_row;
 typedef struct { uint8_t ch, req, forb, down_hold, on_ground, from, to; } osc_seq_row;  /* bit0 BAIXO 1 FRENTE 2 TRAS 3 CIMA */
 typedef struct { uint8_t ch, btn; int8_t seq; uint8_t extra, move; } osc_golpe_row;     /* extra: 1 backHold>5 2 downHold>5 4 airborne */
-typedef struct { uint8_t ch, cond, greater; int16_t thr; uint8_t c, move, n; } osc_cpu_row;  /* cond bits: 1 NOPROJ 2 PROJ(pd) 4 OPPAIR 8 SELFAIR100 16 SELFAIR50 */
+typedef struct { uint8_t ch, cond, greater; int16_t thr; uint8_t c, move, n; } osc_cpu_row;
+typedef struct { uint8_t ch; int16_t from, to; uint8_t op; int16_t a, b, c, d, e; uint8_t chance, alt; } osc_ending_row; /* 07e */
+enum { OSC_END_STAGE = 1, OSC_END_CHAR, OSC_END_FIGHTER, OSC_END_SHADOW, OSC_END_FINAL, OSC_END_BLACK, OSC_END_FLASH, OSC_END_SPAWN };  /* cond bits: 1 NOPROJ 2 PROJ(pd) 4 OPPAIR 8 SELFAIR100 16 SELFAIR50 */
 
 enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MOVE_WALK = 8 };
 
@@ -339,6 +355,7 @@ extern const osc_move_row osc_moves[%d];
 extern const osc_seq_row osc_seqs[%d];
 extern const osc_golpe_row osc_golpe[%d];
 extern const osc_cpu_row osc_cpu[%d];
+extern const osc_ending_row osc_endings[%d];
 #define OSC_N_ANIM %d
 #define OSC_N_HURT %d
 #define OSC_N_HIT %d
@@ -346,10 +363,11 @@ extern const osc_cpu_row osc_cpu[%d];
 #define OSC_N_SEQS %d
 #define OSC_N_GOLPE %d
 #define OSC_N_CPU %d
+#define OSC_N_ENDINGS %d
 #endif
 ''' % (len(text_index), len(text_index), len(stage_anim), len(stage_anim), len(fx_types), len(fx_sprites), len(spawns), len(fx_types), len(fx_sprites), len(spawns),
-       len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows),
-       len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows))
+       len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows), len(end_rows),
+       len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows), len(end_rows))
 
 fx_type_rows = []
 for t in fx_types:
@@ -400,6 +418,10 @@ const osc_cpu_row osc_cpu[%d] = {
 %s
 };
 
+const osc_ending_row osc_endings[%d] = {
+%s
+};
+
 const osc_fx_type osc_fx_types[%d] = {
 %s
 };
@@ -420,7 +442,7 @@ const osc_text_index_row osc_text_index[%d] = {
 %s
 };
 ''' % (',\n'.join(off_rows), len(anim), rows(anim), len(hurt), rows(hurt), len(hit), rows(hit),
-       len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe), len(cpu_rows), rows(cpu_rows),
+       len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe), len(cpu_rows), rows(cpu_rows), len(end_rows), rows(end_rows),
        len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns),
        len(stage_anim), rows(stage_anim), len(text_index), rows(text_index))
 
@@ -428,5 +450,5 @@ with open(OUT_H, 'w') as f:
     f.write(h)
 with open(OUT_C, 'w') as f:
     f.write(c)
-print('cpu %d' % len(cpu_rows))
+print('cpu %d endings %d' % (len(cpu_rows), len(end_rows)))
 print('anim %d hurt %d hit %d moves %d seqs %d golpe %d fxtypes %d fxsprites %d spawns %d' % (len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(fx_types), len(fx_sprites), len(spawns)))

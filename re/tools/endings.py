@@ -98,10 +98,10 @@ for f, ch, cond in dcalls:
 
 def rng(cond):
     lo, hi = 0, 2200
-    exact = re.findall(r"\(short\)g_counterC == (0x[0-9a-f]+|\d+)", cond)
+    exact = re.findall(r"\(?short\)g_counterC == (0x[0-9a-f]+|\d+)", cond)
     if exact: v = int(exact[0], 0); return v, v, ''
     for m in re.finditer(r"(0x[0-9a-f]+|\d+) < \(short\)g_counterC", cond): lo = max(lo, int(m.group(1), 0) + 1)
-    for m in re.finditer(r"\(short\)g_counterC < (0x[0-9a-f]+|\d+)", cond): hi = min(hi, int(m.group(1), 0) - 1)
+    for m in re.finditer(r"\(?short\)g_counterC < (0x[0-9a-f]+|\d+)", cond): hi = min(hi, int(m.group(1), 0) - 1)
     extra = ''
     if 'Random(' in cond:
         m = re.search(r'Random\((0x[0-9a-f]+|\d+)\)', cond); extra = 'P1/%d' % int(m.group(1), 0)

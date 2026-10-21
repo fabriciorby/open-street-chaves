@@ -20,11 +20,10 @@ faithful port.
 5. **Select / VS / continue / records layouts** — same status (dumps +
    summary in 07b); exact pixel values for the parts shown as `{…}`
    expressions should be evaluated once when porting.
-6. **Intro cinematic** (state 1) and the 15 **ending choreographies**
-   (state 10): dumped with conditions (`state1_attract.txt`,
-   `state10_endings.txt`); turning them into per-tick scripts is a
-   port-time task. `desenhaanimacoes` turned out to be the **stage
-   animation** routine (dump: `stage_animations.txt`).
+6. ~~Intro cinematic and the 15 ending choreographies~~ — transcribed
+   (07b "Attract", `07e-endings.txt` via `re/tools/endings.py`). Open:
+   whether the ending fighters animate (the port shows the scripted
+   state/timer frame), and the exact spawn boxes of the fireworks.
 7. `healthShown` (+0x48), +0x50, +0x14, +0x7c, +0xac..+0xaf of the player
    record; `Energeticos.dat`, `Mentecapto.dat`; `0x4b449d` (round-end
    transition style 1..4); `0x4b58a2/a3` (sound/music counts).

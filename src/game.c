@@ -662,6 +662,13 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
             g->icone[i] = osc_texture_from_image(ren, &img); g->icone_w[i] = img.w; g->icone_h[i] = img.h;
             osc_image_free(&img);
         }
+        g->n_final = osc_exeimg_count("Final"); if (g->n_final > 11) g->n_final = 11;
+        for (int i = 0; i < g->n_final; i++) {
+            osc_image img;
+            if (!osc_exeimg_get("Final", i, &img)) continue;
+            g->final_tex[i] = osc_texture_from_image(ren, &img); g->final_w[i] = img.w; g->final_h[i] = img.h;
+            osc_image_free(&img);
+        }
         osc_exeimg_free();
     }
     /* default high-score table (FormCreate: criarecorde 1..10) */
@@ -934,6 +941,24 @@ static void draw_hud(osc_game *g)
     }
 }
 
+void osc_fx_render(osc_game *g)
+{
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        const osc_effect *e = &g->fx[i];
+        if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
+        if (e->done && (g->tick & 1)) continue;
+        float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
+        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->top_anchor ? e->y : e->y - h) - g->cam_y), w, h};
+        SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
+                                 e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+        if (g->debug_boxes && e->has_hitbox) {
+            SDL_FRect hb = {(float)(e->x + e->hb_l - g->cam_x), (float)(e->y + e->hb_t - g->cam_y), (float)(e->hb_r - e->hb_l), (float)(e->hb_b - e->hb_t)};
+            SDL_SetRenderDrawColor(g->ren, 255, 200, 0, 255);
+            SDL_RenderRect(g->ren, &hb);
+        }
+    }
+}
+
 void osc_fight_render(osc_game *g)
 {
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
@@ -966,20 +991,7 @@ void osc_fight_render(osc_game *g)
     /* the player who attacked last is drawn on top; simple rule: P2 then P1 */
     draw_fighter(g, &g->p[2]);
     draw_fighter(g, &g->p[1]);
-    for (int i = 0; i < OSC_MAX_FX; i++) {
-        const osc_effect *e = &g->fx[i];
-        if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
-        if (e->done && (g->tick & 1)) continue;
-        float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
-        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->top_anchor ? e->y : e->y - h) - g->cam_y), w, h};
-        SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
-                                 e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-        if (g->debug_boxes && e->has_hitbox) {
-            SDL_FRect hb = {(float)(e->x + e->hb_l - g->cam_x), (float)(e->y + e->hb_t - g->cam_y), (float)(e->hb_r - e->hb_l), (float)(e->hb_b - e->hb_t)};
-            SDL_SetRenderDrawColor(g->ren, 255, 200, 0, 255);
-            SDL_RenderRect(g->ren, &hb);
-        }
-    }
+    osc_fx_render(g);
     draw_hud(g);
 }
 
@@ -995,6 +1007,7 @@ void osc_game_shutdown(osc_game *g)
     if (g->stage) SDL_DestroyTexture(g->stage);
     for (int i = 0; i < 16; i++) if (g->abertura[i]) SDL_DestroyTexture(g->abertura[i]);
     for (int i = 0; i < 14; i++) if (g->icone[i]) SDL_DestroyTexture(g->icone[i]);
+    for (int i = 0; i < 11; i++) if (g->final_tex[i]) SDL_DestroyTexture(g->final_tex[i]);
     memset(g, 0, sizeof *g);
 }
 
@@ -1008,3 +1021,43 @@ void osc_play_music(osc_game *g, int n)
     load_path(path, sizeof path, g->data_dir, rel);
     if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_play(&g->music, true); }
 }
+
+/* ---- helpers for the ending scripts (endings.c) ---------------------------- */
+bool osc_load_fighter(osc_game *g, int slot, int ch)
+{
+    char rel[64], path[1200];
+    osc_image img;
+    osc_strip_free(&g->strips[slot - 1]);
+    snprintf(rel, sizeof rel, "Lutadores/C%02d.bmp", ch);
+    load_path(path, sizeof path, g->data_dir, rel);
+    if (!osc_bmp_load(path, true, &img)) return false;
+    bool ok = osc_strip_build(g->ren, &img, &g->strips[slot - 1]);
+    osc_image_free(&img);
+    if (!ok) return false;
+    osc_fighter *f = &g->p[slot];
+    f->char_id = ch; f->strip = &g->strips[slot - 1];
+    f->facing = slot == 1 ? 1 : 2; f->rot = 0; f->state = 1; f->anim_timer = 0;
+    return true;
+}
+
+bool osc_load_stage(osc_game *g, int stage)
+{
+    char rel[64];
+    if (g->stage) { SDL_DestroyTexture(g->stage); g->stage = NULL; }
+    snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
+    g->stage_id = stage;
+    return load_image_tex(g, rel, false, &g->stage, &g->stage_w, &g->stage_h);
+}
+
+void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer)
+{
+    osc_fighter *f = &g->p[slot];
+    if (!f->strip || !f->strip->count) return;
+    f->x = x; f->y = y; f->state = state; f->anim_timer = timer; f->in_air = false; f->rot = 0;
+    f->sprite_h = k_sprite_h[f->char_id];
+    select_frame(f);
+    draw_fighter(g, f);
+}
+
+void osc_spawn_fx(osc_game *g, int type, int x, int y) { spawn_fx(g, type, 0, 1, x, y); }
+void osc_fx_tick(osc_game *g) { update_fx(g); }

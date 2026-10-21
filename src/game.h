@@ -130,6 +130,7 @@ typedef struct {
     bool key_coin, key_start1, key_start2;   /* '5' '1' '2' edge events from main.c, consumed each tick */
     SDL_Texture *abertura[16]; int abertura_w[16], abertura_h[16], n_abertura;   /* DXImageListAbertura (from the exe) */
     SDL_Texture *icone[14];    int icone_w[14], icone_h[14], n_icone;            /* DXImageListIcone */
+    SDL_Texture *final_tex[11]; int final_w[11], final_h[11], n_final;          /* DXImageListFinal */
     osc_record records[10];
     /* name entry (state 12) */
     char name[3][4];          /* players' 3-letter names, 'AAA' on entry */
@@ -146,10 +147,12 @@ typedef struct {
     SDL_Scancode keymap[2][8];
     SDL_Scancode last_key;    /* last key pressed (F2 menu assigns it) */
     bool key_f1, key_f2;
+    int ending_char;          /* state 10: whose ending */
 } osc_game;
 
 enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,
-       OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9, OSC_SCREEN_NAME = 12 };
+       OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9, OSC_SCREEN_ENDING = 10, OSC_SCREEN_CREDITS = 11,
+       OSC_SCREEN_NAME = 12 };
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
 /* Start a fight: characters 1..15, stage 1..12 (0 = by opponent), round 1. */
@@ -167,6 +170,18 @@ int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
 void osc_play_snd(osc_game *g, int idx);
 void osc_go_attract(osc_game *g, int tick);
 void osc_play_music(osc_game *g, int n);   /* Musicas/Musica-0n.wav */
+/* endings.c */
+void osc_ending_start(osc_game *g, int ch);
+void osc_ending_seek(osc_game *g, int tick);
+void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
+void osc_ending_render(osc_game *g);
+/* game.c helpers for the scripts */
+bool osc_load_fighter(osc_game *g, int slot, int ch);
+bool osc_load_stage(osc_game *g, int stage);
+void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);
+void osc_spawn_fx(osc_game *g, int type, int x, int y);
+void osc_fx_tick(osc_game *g);
+void osc_fx_render(osc_game *g);
 /* menu.c */
 void osc_config_load(osc_game *g);
 void osc_config_save(osc_game *g);

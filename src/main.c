@@ -128,6 +128,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     }
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
     if (a->loaded && !(direct || demo) && (start_screen == OSC_SCREEN_MENU_F1 || start_screen == OSC_SCREEN_MENU_F2)) osc_menu_enter(&a->game, start_screen);
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_ENDING) { osc_ending_start(&a->game, c1); osc_ending_seek(&a->game, start_tick); }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
         osc_game *g = &a->game;

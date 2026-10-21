@@ -402,6 +402,7 @@ static void insert_record(osc_game *g, int p)
 static void leave_name_entry(osc_game *g)
 {
     for (int p = 1; p <= 2; p++) if (g->name_active[p]) { insert_record(g, p); g->name_active[p] = false; }
+    if (g->name_after == OSC_SCREEN_ENDING) { osc_ending_start(g, g->p[1].char_id); return; }
     g->screen = g->name_after; g->screen_tick = 0; g->ciclo = 0; g->menu_cam = 0;
     if (g->screen == OSC_SCREEN_CONTINUE) { g->timer_sec = 9; g->timer_sub = 25; }
     if (g->screen == OSC_SCREEN_RECORDS) { g->p1_in = g->p2_in = false; }
@@ -410,7 +411,7 @@ static void leave_name_entry(osc_game *g)
 /* A human finished (lost, or won the ladder): name entry if the score beats the table. */
 static void finish_player(osc_game *g, int p, bool won)
 {
-    int after = won ? OSC_SCREEN_RECORDS /* ending (state 10) not ported yet */ : OSC_SCREEN_CONTINUE;
+    int after = won ? OSC_SCREEN_ENDING : OSC_SCREEN_CONTINUE;
     if (g->p[p].human && g->p[p].score > g->records[9].score) {
         memcpy(g->name[p], "AAA", 4);
         g->name_pos[p] = 1;
@@ -534,6 +535,7 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
     case OSC_SCREEN_RECORDS: records_tick(g); break;
     case OSC_SCREEN_NAME: name_tick(g, in1, in2); break;
     case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_tick(g, in1, in2); break;
+    case OSC_SCREEN_ENDING: case OSC_SCREEN_CREDITS: osc_ending_tick(g, in1, in2); break;
     case OSC_SCREEN_SELECT: select_tick(g, in1, in2); break;
     case OSC_SCREEN_VS: vs_tick(g, in1, in2); break;
     case OSC_SCREEN_CONTINUE: continue_tick(g, in1, in2); break;
@@ -594,6 +596,7 @@ static void osc_game_render_screen(osc_game *g)
     case OSC_SCREEN_RECORDS: records_render(g); break;
     case OSC_SCREEN_NAME: name_render(g); break;
     case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_render(g); break;
+    case OSC_SCREEN_ENDING: case OSC_SCREEN_CREDITS: osc_ending_render(g); break;
     default:
         osc_fight_render(g);
         if (g->demo > 0) {
