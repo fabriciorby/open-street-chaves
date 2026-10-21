@@ -42,8 +42,8 @@ stocks, the command parser for the special moves (quarter circles, charges,
 mash) with their frames, hit boxes and projectiles/effects, a CPU opponent
 with the original's per-character decision table, round timer and KO/time-
 over flow, stage animations, sounds and music. All numeric data is
-generated from `docs/spec` by `tools/gen_tables.py`. Not yet: endings,
-name entry, the F1/F2 menus, the original font.
+generated from `docs/spec` by `tools/gen_tables.py`. Not yet: endings and
+the original font.
 
 Not there yet: menus and screens (title, select, VS, continue, records,
 endings), stage animations, exact per-move projectile offsets, the
@@ -76,8 +76,9 @@ player (on the title screen the first button also inserts a coin and
 starts). P1: arrows + `Z` `X` `C` `V` (weak punch, weak kick, strong punch,
 strong kick). P2: `W` `A` `S` `D` + `F` `G` `H` `J`, or a gamepad (d-pad or
 left stick, `X` `A` `Y` `B` for the four attacks; the first pad goes to P2
-like the original's joystick, a second pad to P1). `P` pauses, `B` shows
-hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
+like the original's joystick, a second pad to P1). `F1` opens the configuration menu and `F2` the key
+configuration on the title screen (saved in SDL's preferences folder, never
+in your game folder). `P` pauses, `B` shows hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
 fight (`--2p` makes P2 human).
 
 ### Credits and license
@@ -132,7 +133,7 @@ repetição) com seus quadros, hit boxes e projéteis/efeitos, CPU com a tabela
 de decisões por personagem do original, relógio do round e fluxo de KO e
 tempo esgotado, animações dos cenários, sons e música. Todos os dados
 numéricos são gerados de `docs/spec` por `tools/gen_tables.py`. Ainda
-faltam: finais, entrada de nome, menus F1/F2, a fonte original.
+faltam: finais e a fonte original.
 
 ### Como compilar
 
@@ -162,6 +163,8 @@ dá start). P1: setas + `Z` `X` `C` `V` (soco fraco, chute fraco, soco forte,
 chute forte). P2: `W` `A` `S` `D` + `F` `G` `H` `J`, ou um controle (direcional
 ou analógico esquerdo, `X` `A` `Y` `B` para os quatro golpes; o primeiro
 controle vai para o P2 como o joystick do original, um segundo para o P1).
+`F1` abre o menu de configuração e `F2` a configuração de teclas na tela de
+título (salvas na pasta de preferências do SDL, nunca na pasta do jogo).
 `P` pausa, `B` mostra as hit boxes, `Esc` sai. `--fight --p1 N --p2 N` vai
 direto para uma luta (`--2p` deixa o P2 humano).
 

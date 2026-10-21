@@ -137,9 +137,18 @@ typedef struct {
     bool name_active[3];
     int name_after;           /* screen after the names: continue, records (ending) */
     int level;                /* g_cfg0 "Nível do Jogo" (display only) */
+    /* F1 settings (01 "Config file") and F2 key map */
+    int cfg_time_mode;        /* 1..4 = 30/60/90/99 s */
+    int cfg_power;            /* 1 normal, 2 P1 max, 3 P2 max, 4 both */
+    double damage_level;      /* 0.3..2.0 */
+    bool cfg_blood, cfg_flash, show_level, show_credits;
+    int snd_test, mus_test, menu_cursor;
+    SDL_Scancode keymap[2][8];
+    SDL_Scancode last_key;    /* last key pressed (F2 menu assigns it) */
+    bool key_f1, key_f2;
 } osc_game;
 
-enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,
+enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,
        OSC_SCREEN_RECORDS = 8, OSC_SCREEN_CONTINUE = 9, OSC_SCREEN_NAME = 12 };
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
@@ -157,6 +166,14 @@ void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int s
 int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
 void osc_play_snd(osc_game *g, int idx);
 void osc_go_attract(osc_game *g, int tick);
+void osc_play_music(osc_game *g, int n);   /* Musicas/Musica-0n.wav */
+/* menu.c */
+void osc_config_load(osc_game *g);
+void osc_config_save(osc_game *g);
+int osc_round_time(const osc_game *g);
+void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
+void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
+void osc_menu_render(osc_game *g);
 void osc_make_ladder(osc_game *g, int char_id);
 int osc_stage_for(osc_game *g, int opponent);
 

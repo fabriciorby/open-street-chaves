@@ -480,6 +480,11 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
         if (p1 & OSC_IN_B1) { if (g->credits == 0) g->key_coin = true; g->key_start1 = true; }
         if (p2 & OSC_IN_B1) { if (g->credits == 0) g->key_coin = true; g->key_start2 = true; }
     }
+    if (g->key_f1 || g->key_f2) {
+        bool f1 = g->key_f1;
+        g->key_f1 = g->key_f2 = false;
+        if (g->screen == OSC_SCREEN_ATTRACT) { osc_menu_enter(g, f1 ? 2 : 3); return; }
+    }
     if (g->key_coin) {
         g->key_coin = false;
         if (g->credits < 99) {
@@ -519,6 +524,7 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
     case OSC_SCREEN_ATTRACT: attract_tick(g); break;
     case OSC_SCREEN_RECORDS: records_tick(g); break;
     case OSC_SCREEN_NAME: name_tick(g, in1, in2); break;
+    case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_tick(g, in1, in2); break;
     case OSC_SCREEN_SELECT: select_tick(g, in1, in2); break;
     case OSC_SCREEN_VS: vs_tick(g, in1, in2); break;
     case OSC_SCREEN_CONTINUE: continue_tick(g, in1, in2); break;
@@ -552,17 +558,21 @@ static void osc_game_render_screen(osc_game *g);
 static void footer(osc_game *g)
 {
     char buf[32];
-    snprintf(buf, sizeof buf, "%s%d", osc_text(OSC_MEMO_TEXTO, 17, g->lang), g->level);   /* NIVEL-n */
-    osc_text_ex(g, 200, 285, buf, 'c', 8, 255, 255, 255);
-    osc_text_ex(g, 300, 285, osc_text(OSC_MEMO_TEXTO, 18, g->lang), 'c', 8, 255, 255, 255);   /* CREDITOS */
-    snprintf(buf, sizeof buf, "%d", g->credits);
-    osc_text_ex(g, 395, 285, buf, 'e', 8, 255, 255, 255);
+    if (g->show_level) {
+        snprintf(buf, sizeof buf, "%s%d", osc_text(OSC_MEMO_TEXTO, 17, g->lang), g->level);   /* NIVEL-n */
+        osc_text_ex(g, 200, 285, buf, 'c', 8, 255, 255, 255);
+    }
+    if (g->show_credits) {
+        osc_text_ex(g, 300, 285, osc_text(OSC_MEMO_TEXTO, 18, g->lang), 'c', 8, 255, 255, 255);   /* CREDITOS */
+        snprintf(buf, sizeof buf, "%d", g->credits);
+        osc_text_ex(g, 395, 285, buf, 'e', 8, 255, 255, 255);
+    }
 }
 
 void osc_game_render(osc_game *g)
 {
     osc_game_render_screen(g);
-    footer(g);
+    if (g->screen != OSC_SCREEN_MENU_F1 && g->screen != OSC_SCREEN_MENU_F2) footer(g);
 }
 
 static void osc_game_render_screen(osc_game *g)
@@ -574,6 +584,7 @@ static void osc_game_render_screen(osc_game *g)
     case OSC_SCREEN_ATTRACT: attract_render(g); break;
     case OSC_SCREEN_RECORDS: records_render(g); break;
     case OSC_SCREEN_NAME: name_render(g); break;
+    case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_render(g); break;
     default:
         osc_fight_render(g);
         if (g->demo > 0) {

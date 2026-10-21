@@ -12,7 +12,6 @@
 /* ---- per-character constants (02, 03) ------------------------------------ */
 static const int k_sprite_h[16] = {0, 156, 162, 147, 149, 144, 190, 160, 160, 150, 155, 155, 165, 155, 160, 165};
 static const double k_speed[16] = {0, 8, 8, 8.5, 8, 8, 7.5, 7.5, 8, 8.5, 7.5, 8, 8, 7.5, 7.5, 8};
-static const double k_damage_level = 0.9; /* config line 3 default */
 static const double k_meter_unit = 2.0;
 static const int k_gravity = 4;
 
@@ -400,7 +399,7 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
         play_snd(g, 10);
         spawn_fx(g, 14, 0, 0, h->x, h->y);
         if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
-        if (!g->no_push) v->health -= h->chip * k_damage_level;
+        if (!g->no_push) v->health -= h->chip * g->damage_level;
         if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
         if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 4 : 2) : 2;
         return;
@@ -415,7 +414,7 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
     a->hits++;
     a->combo_timer = h->attacker ? 44 : 50;
     if (a->hits > a->max_combo) a->max_combo = a->hits;
-    if (!g->no_push) v->health -= h->damage * k_damage_level;
+    if (!g->no_push) v->health -= h->damage * g->damage_level;
     if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
     set_move(g, v, h->heavy ? 9 : 8);
     if (h->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
@@ -673,10 +672,9 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
             g->records[i].score = i == 0 ? 10000 : 8500 - 500 * i;
         }
     }
-    g->rounds_to_win = 2;
+    osc_config_load(g);
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
-    g->level = 4;
     g->sel[1] = 1; g->sel[2] = 2;
     g->sel_timer = 30 * 25;
     g->p1_in = true;
@@ -755,14 +753,10 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     }
     if (stage == 12) music = 6;
     if (!music) music = osc_random(g, 5) + 1;
-    if (g->has_music) { osc_wav_free(&g->music); g->has_music = false; }
-    snprintf(rel, sizeof rel, "Musicas/Musica-%02d.wav", music);
-    load_path(path, sizeof path, g->data_dir, rel);
-    osc_audio_close();
-    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_play(&g->music, true); }
+    osc_play_music(g, music);
 
     g->cam_x = 100; g->cam_y = 20;
-    g->timer_sec = 99; g->timer_sub = 25;
+    g->timer_sec = osc_round_time(g); g->timer_sub = 25;
     g->round_no = 1;
     if (g->fight_no < 1) g->fight_no = 1;
     g->round_start = 0; g->round_end = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
@@ -799,6 +793,8 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     for (int i = 1; i <= 2; i++) resolve_hits(g, &g->p[i]);
     update_fx(g);
     if (g->demo > 0) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;   /* nobody falls in the demo */
+    if (g->cfg_power == 2 || g->cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */
+    if (g->cfg_power == 3 || g->cfg_power == 4) g->p[2].stocks = 3;
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
         f->in_prev = f->in;
@@ -849,7 +845,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             else if (g->p[2].wins >= g->rounds_to_win) g->match_over = 2;
             g->round_no++;
             g->round_end = 0; g->round_start = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
-            g->timer_sec = 99; g->timer_sub = 25; g->cam_x = 100;
+            g->timer_sec = osc_round_time(g); g->timer_sub = 25; g->cam_x = 100;
         }
     }
 
@@ -1000,3 +996,12 @@ void osc_game_shutdown(osc_game *g)
 }
 
 void osc_play_snd(osc_game *g, int idx) { play_snd(g, idx); }
+
+void osc_play_music(osc_game *g, int n)
+{
+    char rel[64], path[1200];
+    if (g->has_music) { osc_wav_free(&g->music); g->has_music = false; }
+    snprintf(rel, sizeof rel, "Musicas/Musica-%02d.wav", n);
+    load_path(path, sizeof path, g->data_dir, rel);
+    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_play(&g->music, true); }
+}

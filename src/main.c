@@ -62,10 +62,6 @@ static uint8_t pad_input(SDL_Gamepad *gp)
     return in;
 }
 
-static const SDL_Scancode k_p1[8] = {SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
-                                     SDL_SCANCODE_Z, SDL_SCANCODE_X, SDL_SCANCODE_C, SDL_SCANCODE_V};
-static const SDL_Scancode k_p2[8] = {SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_A, SDL_SCANCODE_D,
-                                     SDL_SCANCODE_F, SDL_SCANCODE_G, SDL_SCANCODE_H, SDL_SCANCODE_J};
 
 SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
 {
@@ -119,8 +115,8 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderVSync(a->ren, 1);
 
     a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
-    a->game.lang = lang;
     a->loaded = osc_game_init(&a->game, a->ren, data);
+    if (lang) a->game.lang = lang;
     if (a->loaded && (direct || demo)) {
         a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
         a->game.fight_no = 1;
@@ -131,6 +127,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         a->loaded = osc_fight_start(&a->game, c1, c2, stage);
     }
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
+    if (a->loaded && !(direct || demo) && (start_screen == OSC_SCREEN_MENU_F1 || start_screen == OSC_SCREEN_MENU_F2)) osc_menu_enter(&a->game, start_screen);
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
         osc_game *g = &a->game;
@@ -152,6 +149,9 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
     case SDL_EVENT_QUIT:
         return SDL_APP_SUCCESS;
     case SDL_EVENT_KEY_DOWN:
+        if (e->key.scancode == SDL_SCANCODE_F1) a->game.key_f1 = true;
+        if (e->key.scancode == SDL_SCANCODE_F2) a->game.key_f2 = true;
+        if (!e->key.repeat) a->game.last_key = e->key.scancode;
         if (e->key.scancode == SDL_SCANCODE_5 || e->key.scancode == SDL_SCANCODE_KP_5) a->game.key_coin = true;
         if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.key_start1 = true;
         if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.key_start2 = true;
@@ -214,8 +214,8 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (a->acc_ns > TICK_NS * 5) a->acc_ns = TICK_NS * 5;
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
-            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, k_p1) | pad_input(a->pads[0]));
-            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, k_p2) | pad_input(a->pads[1]));
+            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
+            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[1]) | pad_input(a->pads[1]));
             osc_game_tick(&a->game, in1, in2);
         }
         a->acc_ns -= TICK_NS;
