@@ -1,0 +1,4 @@
+
+# State 11 (credits) after c > 2200: black; MemoTexto line 24 ("OBRIGADO POR JOGAR") centred at (200,50) size 15;
+# Logo PT/ES (Abertura[12]/[13]) at (89,80); line 25 at (200,240) and line 30 at (200,260) size 10; after 200 ticks -> state 9 (continue).
+# Fixed-up by hand: "FINAL None ..." for char 2 is the stage draw (ignore); char 4 fighters are drawn when c < 1400 or c > 1599 (OR).
