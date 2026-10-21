@@ -57,6 +57,10 @@ for line in read('05a-anim-tables.txt').split('\n'):
         continue
 
 # ---------------------------------------------------------------- 05b moves
+def mid_first_fix(ids, state):
+    return ids[0] in (3, 6) and state in (3, 6)
+
+
 moves = []
 char = 0
 for line in read('05b-move-setup.txt').split('\n'):
@@ -88,6 +92,10 @@ for line in read('05b-move-setup.txt').split('\n'):
         flags |= 8
     needs = re.search(r'needs(\d+)', extra)
     needs = int(needs.group(1)) if needs else 0
+    # The first standing LP/HK rows lost their state list in the dump; the
+    # pseudocode (05) shows them gated on states 1, 2 and 21 like the others.
+    if char == 0 and froms == 0 and mid_first_fix(ids, state):
+        froms = (1 << 1) | (1 << 2) | (1 << 21)
     for i, mid in enumerate(ids):
         strength = (i + 1) if len(ids) == 2 else 0
         moves.append((char, mid, froms, state, dur, meter, snd, flags, needs, strength))
@@ -142,6 +150,115 @@ for line in golpe_part.split('\n'):
         extra |= 4
     golpe.append((char, int(m.group(1)), seq, extra, int(m.group(3))))
 
+# ---------------------------------------------------------------- 06a effects
+fx_init = {}   # type -> dict
+fx_sprites = []  # (type, phase or -1, sprite)
+fx_loop = {}   # type -> phase at which phase resets to 0
+fx_done = {}   # type -> phase threshold at which done=1 (approx, '*' ignored)
+part_sprites, part_init = read('06a-effects.txt').split('# FUN_00476a04', 1)
+cur = None
+for line in part_sprites.split('\n'):
+    m = re.match(r'## effect type (\d+)', line)
+    if m:
+        cur = int(m.group(1))
+        continue
+    m = re.match(r'  phase (\*|\d+|[<>]\d+)\s+(.*)$', line)
+    if not m or cur is None:
+        continue
+    ph, what = m.groups()
+    phase = -1 if ph == '*' or ph[0] in '<>' else int(ph)
+    s = re.match(r'sprite=(\d+)$', what)
+    if s:
+        fx_sprites.append((cur, phase, int(s.group(1))))
+    elif what == 'phase=0' and phase >= 0:
+        fx_loop[cur] = phase
+cur_types = []
+for line in part_init.split('\n'):
+    m = re.match(r'## type ([\d/]+)', line)
+    if m:
+        cur_types = [int(x) for x in m.group(1).split('/')]
+        for t in cur_types:
+            fx_init.setdefault(t, {'life': 0, 'speedA': 0, 'speedB': 0, 'damage': 0, 'hitbox': (0, 0, 0, 0),
+                                   'flags': 0, 'vy': 0, 'c5': 0})
+        variant = None
+        continue
+    if not cur_types:
+        continue
+    s = line.strip()
+    m = re.match(r'LStrCmp\(local_c,\(uint \*\)"([AB])"\)', s)
+    if m:
+        variant = m.group(1)
+        continue
+    hb = re.match(r'hitbox l=(-?\d+) t=(-?\d+) r=(-?\d+) b=(-?\d+)', s)
+    if hb:
+        for t in cur_types:
+            fx_init[t]['hitbox'] = tuple(int(x) for x in hb.groups())
+        continue
+    m = re.match(r'(\w+) = (.*)$', s)
+    if not m:
+        continue
+    key, val = m.groups()
+    v = 0
+    rnd = re.match(r'rand\+(\d+)', val)
+    if rnd:
+        v = int(rnd.group(1))
+    elif re.match(r'-?\d+$', val):
+        v = int(val)
+    for t in cur_types:
+        d = fx_init[t]
+        if key == 'life':
+            d['life'] = v
+        elif key == 'speed':
+            if variant == 'B':
+                d['speedB'] = v
+            else:
+                d['speedA'] = v
+                if variant is None:
+                    d['speedB'] = v
+        elif key == 'damage':
+            d['damage'] = v
+        elif key == 'hasHitbox' and v:
+            d['flags'] |= 1
+        elif key == 'f8' and v:
+            d['flags'] |= 2      # anchored at the top
+        elif key == 'f9' and v:
+            d['flags'] |= 4      # falls with gravity
+        elif key == 'flagA' and v:
+            d['flags'] |= 8
+        elif key == 'flagB' and v:
+            d['flags'] |= 16     # unbreakable / persistent
+        elif key == 'hb_dx':
+            d['vy'] = v
+        elif key == 'c5':
+            d['c5'] = v
+    hb = re.match(r'hitbox l=(-?\d+) t=(-?\d+) r=(-?\d+) b=(-?\d+)', s)
+    if hb:
+        for t in cur_types:
+            fx_init[t]['hitbox'] = tuple(int(x) for x in hb.groups())
+for t in fx_init:
+    if fx_init[t]['speedB'] == 0:
+        fx_init[t]['speedB'] = fx_init[t]['speedA']
+
+# spawns from the frame selector: (char, state, timer, type, variant)
+CT = {'\\a': 7, '\\b': 8, '\\t': 9, '\\n': 10, '\\v': 11, '\\f': 12, '\\r': 13}
+spawns = set()
+char = None
+for line in read('05a-anim-tables.txt').split('\n'):
+    m = re.match(r'## char (\d+)', line)
+    if m:
+        char = int(m.group(1))
+        continue
+    m = re.match(r"  state\s+(\d+) timer\s+(\*|\d+)\s*: FUN_00476a04\('([^']+)',\(uint \*\)(\"([AB])\"|0x0),", line)
+    if not m:
+        continue
+    lit = m.group(3)
+    typ = CT.get(lit, int(lit[2:], 16) if lit.startswith('\\x') else ord(lit[-1]))
+    variant = m.group(5)
+    spawns.add((char, int(m.group(1)), -1 if m.group(2) == '*' else int(m.group(2)), typ,
+                0 if variant is None else (1 if variant == 'A' else 2)))
+spawns = sorted(spawns)
+fx_types = sorted(fx_init)
+
 # ---------------------------------------------------------------- emit
 def rows(items):
     return ',\n'.join('    {%s}' % ', '.join(str(v) for v in it) for it in items)
@@ -161,6 +278,19 @@ typedef struct { uint8_t ch, btn; int8_t seq; uint8_t extra, move; } osc_golpe_r
 
 enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MOVE_WALK = 8 };
 
+/* effects (06): per type init, (phase -> sprite) rows, spawns from the frame selector */
+typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
+typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
+typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
+enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
+
+extern const osc_fx_type osc_fx_types[%d];
+extern const osc_fx_sprite_row osc_fx_sprites[%d];
+extern const osc_fx_spawn_row osc_fx_spawns[%d];
+#define OSC_N_FX_TYPES %d
+#define OSC_N_FX_SPRITES %d
+#define OSC_N_FX_SPAWNS %d
+
 extern const int8_t osc_frame_offset[16][64];
 extern const osc_anim_row osc_anim[%d];
 extern const osc_hurt_row osc_hurt[%d];
@@ -175,8 +305,15 @@ extern const osc_golpe_row osc_golpe[%d];
 #define OSC_N_SEQS %d
 #define OSC_N_GOLPE %d
 #endif
-''' % (len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe),
+''' % (len(fx_types), len(fx_sprites), len(spawns), len(fx_types), len(fx_sprites), len(spawns),
+       len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe),
        len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe))
+
+fx_type_rows = []
+for t in fx_types:
+    d = fx_init[t]
+    fx_type_rows.append((t, d['life'] & 0xff, d['speedA'], d['speedB'], d['damage'], d['flags'], d['c5'],
+                         fx_loop.get(t, 0), d['vy'], d['hitbox'][0], d['hitbox'][1], d['hitbox'][2], d['hitbox'][3]))
 
 off_rows = []
 for c in range(16):
@@ -216,11 +353,24 @@ const osc_seq_row osc_seqs[%d] = {
 const osc_golpe_row osc_golpe[%d] = {
 %s
 };
+
+const osc_fx_type osc_fx_types[%d] = {
+%s
+};
+
+const osc_fx_sprite_row osc_fx_sprites[%d] = {
+%s
+};
+
+const osc_fx_spawn_row osc_fx_spawns[%d] = {
+%s
+};
 ''' % (',\n'.join(off_rows), len(anim), rows(anim), len(hurt), rows(hurt), len(hit), rows(hit),
-       len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe))
+       len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe),
+       len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns))
 
 with open(OUT_H, 'w') as f:
     f.write(h)
 with open(OUT_C, 'w') as f:
     f.write(c)
-print('anim %d hurt %d hit %d moves %d seqs %d golpe %d' % (len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe)))
+print('anim %d hurt %d hit %d moves %d seqs %d golpe %d fxtypes %d fxsprites %d spawns %d' % (len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(fx_types), len(fx_sprites), len(spawns)))

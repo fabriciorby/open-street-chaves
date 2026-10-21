@@ -148,6 +148,72 @@ static void cpu_think(osc_game *g, osc_fighter *f)
     }
 }
 
+/* ---- effects (06) -------------------------------------------------------------- */
+static const osc_fx_type *fx_type(int t)
+{
+    for (int i = 0; i < OSC_N_FX_TYPES; i++)
+        if (osc_fx_types[i].type == t) return &osc_fx_types[i];
+    return NULL;
+}
+
+/* FUN_00476a04: take the first free slot and apply the per-type defaults. */
+static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, double x, double y)
+{
+    const osc_fx_type *t = fx_type(type);
+    if (!t) return NULL;
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        osc_effect *e = &g->fx[i];
+        if (e->type) continue;
+        memset(e, 0, sizeof *e);
+        e->type = type; e->x = x; e->y = y; e->owner = owner;
+        e->dir = owner ? g->p[owner].facing : 1;
+        e->speed = variant == 2 ? t->speedB : t->speedA;
+        e->damage = t->damage;
+        e->life = t->life;
+        if (type == 24) e->life = 15 + osc_random(g, 15);
+        e->has_hitbox = t->flags & OSC_FX_HITBOX;
+        e->top_anchor = t->flags & OSC_FX_TOP;
+        e->gravity = t->flags & OSC_FX_GRAVITY;
+        e->persist = t->flags & OSC_FX_PERSIST;
+        e->vy = t->vy;
+        e->c5 = t->c5;
+        e->loop_at = t->loop_at;
+        e->hb_l = t->l; e->hb_t = t->t; e->hb_r = t->r; e->hb_b = t->b;
+        if (type == 21) { e->dir = 1 + osc_random(g, 2); e->speed = osc_random(g, 10); }
+        if (SDL_getenv("OSC_DEBUG")) SDL_Log("spawn fx type %d var %d owner %d at %.0f,%.0f speed %d dmg %d box %d,%d,%d,%d tick %u", type, variant, owner, x, y, e->speed, e->damage, e->hb_l, e->hb_t, e->hb_r, e->hb_b, g->tick);
+        return e;
+    }
+    return NULL;
+}
+
+static int fx_sprite(const osc_effect *e)
+{
+    int s = e->sprite;
+    for (int i = 0; i < OSC_N_FX_SPRITES; i++) {
+        const osc_fx_sprite_row *r = &osc_fx_sprites[i];
+        if (r->type != e->type) continue;
+        if (r->phase < 0 || r->phase == e->phase) s = r->sprite;
+    }
+    return s;
+}
+
+/* spawn the effects the frame selector produces for (char, state, timer) */
+static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
+{
+    for (int i = 0; i < OSC_N_FX_SPAWNS; i++) {
+        const osc_fx_spawn_row *r = &osc_fx_spawns[i];
+        if (r->ch != f->char_id || r->state != f->state) continue;
+        if (r->timer >= 0 ? r->timer != f->anim_timer : f->anim_timer != 0) continue;
+        if (r->variant && f->hit_level && r->variant != f->hit_level) continue;
+        if (r->variant == 2 && !f->hit_level) continue;
+        /* the original's per-move offsets could not be recovered textually (99):
+         * projectiles start a body width ahead at chest height, dust at the feet */
+        double dx = f->facing == 1 ? 40.0 : -40.0;
+        double y = r->type == 2 ? f->y : f->y - f->sprite_h * 0.55;
+        spawn_fx(g, r->type, r->variant, pidx, f->x + dx, y);
+    }
+}
+
 /* ---- frame selector (0x47d21c) + boxes ------------------------------------- */
 static void select_frame(osc_fighter *f)
 {
@@ -291,6 +357,41 @@ static void defend(osc_game *g, osc_fighter *f)
     if (held(f, "TRAS") && o->attacking) set_move(g, f, held(f, "BAIXO") ? 13 : 12);
 }
 
+/* ---- hit application shared by body attacks and projectiles --------------------------- */
+typedef struct { int damage, chip, level; bool heavy, knockdown; double x, y; int attacker; } osc_hitinfo;
+
+static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hitinfo *h)
+{
+    if (v->blocking) {
+        v->anim_timer = 1;
+        play_snd(g, 10);
+        spawn_fx(g, 14, 0, 0, h->x, h->y);
+        if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
+        if (!g->no_push) v->health -= h->chip * k_damage_level;
+        if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
+        if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 4 : 2) : 2;
+        return;
+    }
+    play_snd(g, h->level >= 3 ? 9 : h->level == 2 ? 8 : 7);
+    spawn_fx(g, 1, 0, 0, h->x, h->y);
+    v->facing = v->x < a->x ? 1 : 2;
+    if (a->human && v->health > 0.0) a->score += h->attacker ? 5 : 10;
+    if (a->meter < OSC_METER_MAX) a->meter += k_meter_unit * (h->attacker ? 2.0 : 1.0);
+    if (v->meter < OSC_METER_MAX && h->attacker) v->meter += k_meter_unit;
+    if (a->combo_timer < 36) a->hits = 0;
+    a->hits++;
+    a->combo_timer = h->attacker ? 44 : 50;
+    if (a->hits > a->max_combo) a->max_combo = a->hits;
+    if (!g->no_push) v->health -= h->damage * k_damage_level;
+    if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
+    set_move(g, v, h->heavy ? 9 : 8);
+    if (h->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
+    v->hitstun = h->attacker ? 4 : 8;
+    v->blocking = false;
+    if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 7 : 5) : 5;
+    select_frame(v);
+}
+
 /* ---- collision + hit resolution (main loop 5175-5470) ---------------------------- */
 static void resolve_hits(osc_game *g, osc_fighter *a)
 {
@@ -304,35 +405,80 @@ static void resolve_hits(osc_game *g, osc_fighter *a)
     if ((a->state == 9 || a->state == 11) && v->state == 21) v->blocking = false;
     if (a->state >= 13 && a->state <= 16 && v->state == 22) v->blocking = false;
 
-    if (v->blocking) {
-        v->anim_timer = 1;
-        play_snd(g, 10);
-        if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
-        if (!g->no_push) v->health -= a->chip * k_damage_level;
-        if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
-        a->attacking = false;
-        if (v->health > 0.0) g->hit_stop = osc_random(g, 4) + (a->hit_level == 2 ? 4 : 2);
-        return;
-    }
-    play_snd(g, a->hit_level >= 3 ? 9 : a->hit_level == 2 ? 8 : 7);
-    v->facing = v->x < a->x ? 1 : 2;
-    if (a->human && v->health > 0.0) a->score += 5;
-    if (a->meter < OSC_METER_MAX) a->meter += k_meter_unit * 2.0;
-    if (v->meter < OSC_METER_MAX) v->meter += k_meter_unit;
-    if (a->combo_timer < 36) a->hits = 0;
-    a->hits++;
-    a->combo_timer = 44;
-    if (a->hits > a->max_combo) a->max_combo = a->hits;
-    if (!g->no_push) v->health -= a->damage * k_damage_level;
-    if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
-    bool heavy = a->state == 4 || a->state == 6 || a->state == 8 || a->state == 9 || a->state == 10;
-    set_move(g, v, heavy ? 9 : 8);
-    if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
-    v->hitstun = 4;
-    v->blocking = false;
+    osc_hitinfo h = {a->damage, a->chip, a->hit_level,
+                 a->state == 4 || a->state == 6 || a->state == 8 || a->state == 9 || a->state == 10,
+                 a->knockdown, a->facing == 1 ? ar : al, at, a == &g->p[1] ? 1 : 2};
     a->attacking = false;
-    if (v->health > 0.0) g->hit_stop = osc_random(g, 4) + (a->hit_level == 2 ? 7 : 5);
-    select_frame(v);
+    apply_hit(g, a, v, &h);
+}
+
+/* ---- effects update: motion, collisions, drawing data (desenhaefeitos) ------------- */
+static void update_fx(osc_game *g)
+{
+    bool frozen = g->hit_stop || g->super_pause;
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        osc_effect *e = &g->fx[i];
+        if (!e->type) continue;
+        e->sprite = fx_sprite(e);
+        if (!frozen) {
+            /* motion rules (06) */
+            if (e->dir == 1) e->x += e->speed; else if (e->dir == 2) e->x -= e->speed;
+            if (e->type == 19) e->y += e->speed;
+            if (e->type == 20) e->y -= 7 + osc_random(g, 13);
+            if (e->type == 2) e->y -= 1.0;
+            if (e->type == 5) e->y -= 5.0;
+            if (e->gravity) {
+                e->y += e->vy; e->vy += 4;
+                if (e->y > OSC_GROUND_Y - 5) {
+                    e->y = OSC_GROUND_Y - 5; e->speed = 0; e->vy = 0; e->gravity = false;
+                    if (e->type == 22) { e->done = true; e->has_hitbox = false; }
+                }
+            }
+            if (e->type == 30 && g->p[e->owner].state != 26) e->type = 0;
+            if ((e->type == 31 || e->type == 32) && g->p[e->owner].state != 29) e->type = 0;
+            if (e->type == 34 && e->phase > 13) e->has_hitbox = false;
+            if (!e->type) continue;
+        }
+        /* effect vs effect: hostile projectiles from different owners cancel */
+        if (e->has_hitbox && e->damage > 0 && e->owner) {
+            for (int j = 0; j < OSC_MAX_FX; j++) {
+                osc_effect *o = &g->fx[j];
+                if (j == i || !o->type || !o->has_hitbox || o->damage <= 0 || !o->owner || o->owner == e->owner) continue;
+                if (e->x + e->hb_l < o->x + o->hb_r && o->x + o->hb_l < e->x + e->hb_r &&
+                    e->y + e->hb_t < o->y + o->hb_b && o->y + o->hb_t < e->y + e->hb_b) {
+                    spawn_fx(g, 1, 0, 0, e->x, e->y);
+                    if (!e->persist) e->type = 0;
+                    if (!o->persist) o->type = 0;
+                    break;
+                }
+            }
+            if (!e->type) continue;
+        }
+        /* effect vs player */
+        if (e->has_hitbox && e->damage > 0 && e->owner && !frozen) {
+            for (int p = 1; p <= 2; p++) {
+                if (p == e->owner) continue;
+                osc_fighter *v = &g->p[p], *a = &g->p[e->owner];
+                double vl = v->x + v->hurt_l, vt = v->y - v->sprite_h + v->hurt_t, vr = v->x + v->hurt_r, vb = v->y - v->sprite_h + v->hurt_b;
+                if (!(e->x + e->hb_l < vr && vl < e->x + e->hb_r && e->y + e->hb_t < vb && vt < e->y + e->hb_b)) continue;
+                if (v->invuln && !v->blocking) continue;
+                osc_hitinfo h = {e->damage, (int)(e->damage / 4), e->damage >= 20 ? 2 : 1, true,
+                             e->type == 8 || e->type == 20, e->x, e->y, 0};
+                apply_hit(g, a, v, &h);
+                if (!e->persist) e->type = 0;
+                e->has_hitbox = false;
+                break;
+            }
+            if (!e->type) continue;
+        }
+        if (!frozen) {
+            if (e->life != 99) e->phase++;
+            if (e->loop_at && e->phase >= e->loop_at) e->phase = 0;
+            if (e->c5 && ++e->c4 >= e->c5) e->has_hitbox = true;
+            if (e->life != 99 && e->phase > e->life) e->type = 0;
+            if (e->x < g->cam_x - 200 || e->x > g->cam_x + 600) e->type = 0;
+        }
+    }
 }
 
 /* ---- per-tick timers, physics ---------------------------------------------------- */
@@ -365,6 +511,8 @@ static void advance(osc_game *g, osc_fighter *f)
                 set_move(g, f, 11);
                 play_snd(g, 12);
                 f->y = OSC_GROUND_Y - 10;
+                for (int k = 0; k < 5; k++)
+                    spawn_fx(g, 2, 0, 0, f->x - 20 + osc_random(g, 40), f->y + osc_random(g, 10));
                 return;
             }
         }
@@ -440,6 +588,19 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir, int cha
         SDL_Log("%s: %d frames, height %d", rel, g->strips[i].count, g->strips[i].h);
         init_fighter(&g->p[i + 1], chars[i], i + 1, &g->strips[i]);
     }
+    /* Efeitos/Efeito-NNN.bmp -> DXImageListEfeitos[NNN-1]; a missing file ends the list */
+    for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
+        char rel[48];
+        snprintf(rel, sizeof rel, "Efeitos/Efeito-%03d.bmp", n);
+        load_path(path, sizeof path, data_dir, rel);
+        if (!osc_bmp_load(path, true, &img)) break;
+        g->fx_tex[n - 1] = osc_texture_from_image(ren, &img);
+        g->fx_w[n - 1] = img.w; g->fx_h[n - 1] = img.h;
+        osc_image_free(&img);
+        g->n_fx_tex = n;
+    }
+    SDL_Log("%d effect sprites loaded", g->n_fx_tex);
+
     g->cam_x = 100;
     g->timer_sec = 99; g->timer_sub = 25;
     g->round_no = 1; g->fight_no = 1; g->rounds_to_win = 2;
@@ -479,8 +640,13 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
         sequences(g, f);
         if (!frozen && !g->no_push && f->human) defend(g, f);
     }
-    for (int i = 1; i <= 2; i++) { advance(g, &g->p[i]); select_frame(&g->p[i]); }
+    for (int i = 1; i <= 2; i++) {
+        advance(g, &g->p[i]);
+        select_frame(&g->p[i]);
+        if (!frozen) fx_spawns_for(g, &g->p[i], i);
+    }
     for (int i = 1; i <= 2; i++) resolve_hits(g, &g->p[i]);
+    update_fx(g);
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
         f->in_prev = f->in;
@@ -612,9 +778,30 @@ void osc_game_render(osc_game *g)
         SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->stage_w, (float)g->stage_h};
         SDL_RenderTexture(g->ren, g->stage, NULL, &dst);
     }
+    /* fighter shadows: Efeito-001 under the feet (desenhalutador) */
+    for (int i = 1; i <= 2; i++) {
+        if (g->n_fx_tex < 1) break;
+        const osc_fighter *f = &g->p[i];
+        SDL_FRect d = {(float)(f->x - 35 - g->cam_x), (float)(OSC_GROUND_Y - 12 - g->cam_y), (float)g->fx_w[0], (float)g->fx_h[0]};
+        SDL_RenderTexture(g->ren, g->fx_tex[0], NULL, &d);
+    }
     /* the player who attacked last is drawn on top; simple rule: P2 then P1 */
     draw_fighter(g, &g->p[2]);
     draw_fighter(g, &g->p[1]);
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        const osc_effect *e = &g->fx[i];
+        if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
+        if (e->done && (g->tick & 1)) continue;
+        float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
+        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->top_anchor ? e->y : e->y - h) - g->cam_y), w, h};
+        SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
+                                 e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+        if (g->debug_boxes && e->has_hitbox) {
+            SDL_FRect hb = {(float)(e->x + e->hb_l - g->cam_x), (float)(e->y + e->hb_t - g->cam_y), (float)(e->hb_r - e->hb_l), (float)(e->hb_b - e->hb_t)};
+            SDL_SetRenderDrawColor(g->ren, 255, 200, 0, 255);
+            SDL_RenderRect(g->ren, &hb);
+        }
+    }
     draw_hud(g);
 }
 
@@ -624,6 +811,7 @@ void osc_game_shutdown(osc_game *g)
     for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
     osc_audio_close();
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
+    for (int i = 0; i < g->n_fx_tex; i++) if (g->fx_tex[i]) SDL_DestroyTexture(g->fx_tex[i]);
     if (g->stage) SDL_DestroyTexture(g->stage);
     memset(g, 0, sizeof *g);
 }

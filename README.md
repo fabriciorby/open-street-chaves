@@ -32,11 +32,19 @@ open-street-chaves --data /path/to/StreetChaves
 
 ### Status
 
-Early skeleton (milestone 1): boots, loads `Cenarios/Cenario-01.bmp` and the
-`Lutadores/C01.bmp` strip, slices the strip exactly like the original
-(dark separator columns, white colour key), runs a deterministic 28 ms tick
-and draws Chaves idle / walking on the stage with the original music.
-Everything else is specified in `docs/spec` and being ported.
+Playable fight prototype: any two of the 15 fighters (`--p1 N --p2 N`),
+walking, jumping, crouching, the four normals standing/crouching/jumping,
+blocking (high/low rules), hit, knockdown and lie-down states, hit boxes,
+damage, hit-stop, combos, super meter and stocks, command parser for the
+special moves (quarter circles, charges, mash) with their frames, hit boxes
+and projectiles/effects, a CPU opponent with the original's probability
+model, round timer and KO/time-over flow, sounds and music. All numeric
+data is generated from `docs/spec` by `tools/gen_tables.py`.
+
+Not there yet: menus and screens (title, select, VS, continue, records,
+endings), stage animations, exact per-move projectile offsets, the
+per-character AI special choices (approximated), text rendering with the
+original font, joystick input, and the web build's data loading.
 
 ### Building
 
@@ -59,9 +67,10 @@ push (see the *Actions* tab → artifacts).
 
 ### Controls (current)
 
-Arrow keys walk, `P` pauses, `Esc` quits. The original layout (arrows +
-Z X C V for weak punch / weak kick / strong punch / strong kick, `5` coin,
-`1`/`2` start) will be restored as the fight engine lands.
+P1: arrows + `Z` `X` `C` `V` (weak punch, weak kick, strong punch, strong
+kick — the original layout). P2 (`--2p`): `W` `A` `S` `D` + `F` `G` `H` `J`.
+`P` pauses, `B` shows hit/hurt boxes, `Esc` quits. Without `--2p` the
+second fighter is the CPU.
 
 ### Credits and license
 

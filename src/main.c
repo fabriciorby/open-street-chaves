@@ -30,7 +30,8 @@ typedef struct {
     long max_frames;
     long frames;
     const char *screenshot;
-    bool demo; /* scripted P2 for headless tests */
+    bool demo;     /* scripted P2 for headless tests */
+    bool autofire; /* scripted P1 fireballs for headless tests */
 } app;
 
 static const Uint64 TICK_NS = (Uint64)OSC_TICK_MS * 1000000ull;
@@ -54,7 +55,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     long max_frames = 0;
     const char *screenshot = NULL;
     int c1 = 1, c2 = 2;
-    bool demo = false, boxes = false, two_players = false;
+    bool demo = false, boxes = false, two_players = false, autofire = false;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
@@ -65,6 +66,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--demo") == 0) demo = true;
         else if (strcmp(argv[i], "--boxes") == 0) boxes = true;
         else if (strcmp(argv[i], "--2p") == 0) two_players = true;
+        else if (strcmp(argv[i], "--autofire") == 0) autofire = true;
         else if (strcmp(argv[i], "--help") == 0) {
             SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--p1 N] [--p2 N] [--frames N] [--screenshot f.bmp] [--demo] [--boxes]");
             return SDL_APP_SUCCESS;
@@ -83,6 +85,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     a->max_frames = max_frames;
     a->screenshot = screenshot;
     a->demo = demo;
+    a->autofire = autofire;
     if (!SDL_CreateWindowAndRenderer("open-street-chaves", OSC_SCREEN_W * 2, OSC_SCREEN_H * 2,
                                      SDL_WINDOW_RESIZABLE, &a->win, &a->ren)) {
         SDL_Log("window/renderer failed: %s", SDL_GetError());
@@ -134,6 +137,19 @@ static uint8_t demo_input(const osc_game *g)
     return in;
 }
 
+/* --autofire: P1 performs down, down-forward, forward + punch every 60 ticks (QCF+P). */
+static uint8_t autofire_input(const osc_game *g)
+{
+    int t = (int)(g->tick % 60);
+    const osc_fighter *p1 = &g->p[1];
+    uint8_t fwd = p1->facing == 1 ? OSC_IN_RIGHT : OSC_IN_LEFT;
+    if (t < 3) return OSC_IN_DOWN;
+    if (t < 6) return OSC_IN_DOWN | fwd;
+    if (t < 8) return fwd;
+    if (t == 8) return fwd | OSC_IN_B1;
+    return 0;
+}
+
 SDL_AppResult SDL_AppIterate(void *state)
 {
     app *a = state;
@@ -143,7 +159,7 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (a->acc_ns > TICK_NS * 5) a->acc_ns = TICK_NS * 5;
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
-            uint8_t in1 = read_input(a->keys, k_p1);
+            uint8_t in1 = a->autofire ? autofire_input(&a->game) : read_input(a->keys, k_p1);
             uint8_t in2 = a->demo ? demo_input(&a->game) : read_input(a->keys, k_p2);
             osc_game_tick(&a->game, in1, in2);
         }

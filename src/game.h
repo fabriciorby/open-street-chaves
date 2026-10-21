@@ -63,12 +63,32 @@ typedef struct {
     int slot_base;       /* 0 for P1, 50 for P2 in the original; unused here */
 } osc_fighter;
 
+#define OSC_MAX_FX 80
+#define OSC_MAX_FX_SPRITES 128
+
+/* one slot of the effects table (06) */
+typedef struct {
+    int type;            /* 0 = free */
+    double x, y;
+    int dir;             /* 1 right, 2 left */
+    int speed, damage, owner;
+    int phase, life, sprite;
+    int c4, c5;
+    int vy;              /* gravity-driven effects */
+    int hb_l, hb_t, hb_r, hb_b;
+    bool has_hitbox, done, persist, top_anchor, gravity;
+    int loop_at;
+} osc_effect;
+
 typedef struct {
     SDL_Renderer *ren;
     char data_dir[1024];
     SDL_Texture *stage;
     int stage_w, stage_h;
     osc_strip strips[2];
+    SDL_Texture *fx_tex[OSC_MAX_FX_SPRITES];
+    int fx_w[OSC_MAX_FX_SPRITES], fx_h[OSC_MAX_FX_SPRITES], n_fx_tex;
+    osc_effect fx[OSC_MAX_FX];
     osc_fighter p[3];    /* 1-based like the original */
     int cam_x, cam_y;
     unsigned tick;

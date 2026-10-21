@@ -12,6 +12,19 @@ typedef struct { uint8_t ch, btn; int8_t seq; uint8_t extra, move; } osc_golpe_r
 
 enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MOVE_WALK = 8 };
 
+/* effects (06): per type init, (phase -> sprite) rows, spawns from the frame selector */
+typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
+typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
+typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B */
+enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
+
+extern const osc_fx_type osc_fx_types[36];
+extern const osc_fx_sprite_row osc_fx_sprites[125];
+extern const osc_fx_spawn_row osc_fx_spawns[61];
+#define OSC_N_FX_TYPES 36
+#define OSC_N_FX_SPRITES 125
+#define OSC_N_FX_SPAWNS 61
+
 extern const int8_t osc_frame_offset[16][64];
 extern const osc_anim_row osc_anim[379];
 extern const osc_hurt_row osc_hurt[184];
