@@ -30,6 +30,7 @@ typedef struct {
     long max_frames;
     long frames;
     const char *screenshot;
+    SDL_Gamepad *pads[2];
     bool demo;     /* scripted P2 for headless tests */
     bool autofire; /* scripted P1 fireballs for headless tests */
 } app;
@@ -41,6 +42,23 @@ static uint8_t read_input(const bool *k, const SDL_Scancode *map)
     uint8_t in = 0;
     for (int i = 0; i < 8; i++)
         if (k[map[i]]) in |= (uint8_t)(1 << i);
+    return in;
+}
+
+/* Gamepad -> DelphiX bits: d-pad/left stick, A B X Y = weak punch, weak kick, strong punch, strong kick. */
+static uint8_t pad_input(SDL_Gamepad *gp)
+{
+    if (!gp) return 0;
+    uint8_t in = 0;
+    Sint16 ax = SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFTX), ay = SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFTY);
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_UP) || ay < -16000) in |= OSC_IN_UP;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_DOWN) || ay > 16000) in |= OSC_IN_DOWN;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_LEFT) || ax < -16000) in |= OSC_IN_LEFT;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_RIGHT) || ax > 16000) in |= OSC_IN_RIGHT;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_WEST)) in |= OSC_IN_B1;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_SOUTH)) in |= OSC_IN_B2;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_NORTH)) in |= OSC_IN_B3;
+    if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_EAST)) in |= OSC_IN_B4;
     return in;
 }
 
@@ -80,7 +98,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     if (c2 < 1 || c2 > 15) c2 = 2;
 
     SDL_SetAppMetadata("open-street-chaves", "0.0.2", "org.openstreetchaves.game");
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -132,6 +150,15 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
     case SDL_EVENT_KEY_UP:
         if (e->key.scancode < SDL_SCANCODE_COUNT) a->keys[e->key.scancode] = false;
         break;
+    case SDL_EVENT_GAMEPAD_ADDED:
+        /* first pad -> P2 (the original's joystick 0), second pad -> P1 */
+        for (int i = 1; i >= 0; i--)
+            if (!a->pads[i]) { a->pads[i] = SDL_OpenGamepad(e->gdevice.which); break; }
+        break;
+    case SDL_EVENT_GAMEPAD_REMOVED:
+        for (int i = 0; i < 2; i++)
+            if (a->pads[i] && SDL_GetGamepadID(a->pads[i]) == e->gdevice.which) { SDL_CloseGamepad(a->pads[i]); a->pads[i] = NULL; }
+        break;
     default:
         break;
     }
@@ -174,8 +201,8 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (a->acc_ns > TICK_NS * 5) a->acc_ns = TICK_NS * 5;
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
-            uint8_t in1 = a->autofire ? autofire_input(&a->game) : read_input(a->keys, k_p1);
-            uint8_t in2 = a->demo ? demo_input(&a->game) : read_input(a->keys, k_p2);
+            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, k_p1) | pad_input(a->pads[0]));
+            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, k_p2) | pad_input(a->pads[1]));
             osc_game_tick(&a->game, in1, in2);
         }
         a->acc_ns -= TICK_NS;
@@ -212,6 +239,7 @@ void SDL_AppQuit(void *state, SDL_AppResult result)
     (void)result;
     app *a = state;
     if (!a) return;
+    for (int i = 0; i < 2; i++) if (a->pads[i]) SDL_CloseGamepad(a->pads[i]);
     if (a->loaded) osc_game_shutdown(&a->game);
     if (a->ren) SDL_DestroyRenderer(a->ren);
     if (a->win) SDL_DestroyWindow(a->win);
