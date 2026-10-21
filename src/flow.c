@@ -21,6 +21,7 @@ void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered)
     }
     buf[n] = 0;
     if (centered) x -= (float)(n * 8) / 2.f;
+    SDL_SetRenderDrawColor(g->ren, 255, 255, 255, 255);
     SDL_RenderDebugText(g->ren, x, y, buf);
 }
 
@@ -114,7 +115,7 @@ static void select_render(osc_game *g)
             SDL_FRect d = {p == 1 ? 10.f : 390.f - (float)g->face_big_w[c], 50, (float)g->face_big_w[c], (float)g->face_big_h[c]};
             SDL_RenderTexture(g->ren, g->face_big[c], NULL, &d);
         }
-        osc_text_at(g, p == 1 ? 58.f : 342.f, 150, osc_text(OSC_MEMO_NOMES, c, g->lang), true);
+        osc_text_at(g, p == 1 ? 58.f : 342.f, 50.f + (float)g->face_big_h[c] + 4.f, osc_text(OSC_MEMO_NOMES, c, g->lang), true);
     }
 }
 
