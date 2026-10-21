@@ -22,6 +22,9 @@ typedef struct {
     Uint64 acc_ns;
     bool keys[SDL_SCANCODE_COUNT];
     bool loaded;
+    long max_frames;   /* --frames N: quit after N presented frames (smoke tests) */
+    long frames;
+    const char *screenshot; /* --screenshot file.bmp: save the last frame before quitting */
 } app;
 
 static const Uint64 TICK_NS = (Uint64)OSC_TICK_MS * 1000000ull;
@@ -29,11 +32,15 @@ static const Uint64 TICK_NS = (Uint64)OSC_TICK_MS * 1000000ull;
 SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
 {
     const char *data = "StreetChaves";
+    long max_frames = 0;
+    const char *screenshot = NULL;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
+        else if (strcmp(argv[i], "--frames") == 0 && i + 1 < argc) max_frames = SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--screenshot") == 0 && i + 1 < argc) screenshot = argv[++i];
         else if (strcmp(argv[i], "--help") == 0) {
-            SDL_Log("usage: open-street-chaves --data <path to Street Chaves 1.5A folder>");
+            SDL_Log("usage: open-street-chaves --data <path to Street Chaves 1.5A folder> [--frames N]");
             return SDL_APP_SUCCESS;
         }
     }
@@ -45,6 +52,8 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     }
     app *a = SDL_calloc(1, sizeof *a);
     *state = a;
+    a->max_frames = max_frames;
+    a->screenshot = screenshot;
     if (!SDL_CreateWindowAndRenderer("open-street-chaves", OSC_SCREEN_W * 2, OSC_SCREEN_H * 2,
                                      SDL_WINDOW_RESIZABLE, &a->win, &a->ren)) {
         SDL_Log("window/renderer failed: %s", SDL_GetError());
@@ -100,7 +109,22 @@ SDL_AppResult SDL_AppIterate(void *state)
         SDL_SetRenderDrawColor(a->ren, 255, 255, 255, 255);
         SDL_RenderDebugText(a->ren, 20, 140, "Game data not found. Run with --data <Street Chaves folder>");
     }
+    a->frames++;
+    if (a->max_frames > 0 && a->frames >= a->max_frames && a->screenshot) {
+        /* Grab the logical 400x300 frame before presenting it. */
+        SDL_Rect logical = {0, 0, OSC_SCREEN_W, OSC_SCREEN_H};
+        SDL_Surface *shot = SDL_RenderReadPixels(a->ren, &logical);
+        if (shot) {
+            SDL_SaveBMP(shot, a->screenshot);
+            SDL_DestroySurface(shot);
+        }
+    }
     SDL_RenderPresent(a->ren);
+    if (a->max_frames > 0 && a->frames >= a->max_frames) {
+        SDL_Log("frames=%ld ticks=%u loaded=%d p1.x=%.1f frame=%d", a->frames, a->game.tick, a->loaded,
+                a->game.p1.x, a->game.p1.frame);
+        return a->loaded ? SDL_APP_SUCCESS : SDL_APP_FAILURE;
+    }
     return SDL_APP_CONTINUE;
 }
 
