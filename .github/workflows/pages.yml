@@ -1,0 +1,50 @@
+# Deploys the web build to GitHub Pages together with the original freeware
+# game data from fabriciorby/open-street-chaves-data (zipped next to the page).
+# To stop distributing the game data: delete that repository and re-run this
+# workflow; the page then falls back to the folder picker.
+name: pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+      - name: Configure and build
+        run: |
+          emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-web --parallel
+      - name: Assemble the site
+        run: |
+          mkdir -p site
+          cp build-web/open-street-chaves.html site/index.html
+          cp build-web/open-street-chaves.js build-web/open-street-chaves.wasm site/
+      - name: Fetch the game data (optional)
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/fabriciorby/open-street-chaves-data data
+          rm -rf data/.git
+          (cd data && zip -qr ../site/game.zip . -x '*.rar' -x '.DS_Store' -x 'Thumbs.db' -x 'README.md')
+          ls -la site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

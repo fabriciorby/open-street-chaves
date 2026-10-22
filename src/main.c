@@ -36,6 +36,8 @@ typedef struct {
     long frames;
     const char *screenshot;
     SDL_Gamepad *pads[2];
+    int n_press; long press_tick[16]; SDL_Scancode press_key[16];   /* --press T:key test input */
+    long ticks_run;
     bool demo;     /* scripted P2 for headless tests */
     bool autofire; /* scripted P1 fireballs for headless tests */
 } app;
@@ -76,6 +78,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     int c1 = 1, c2 = 2;
     bool demo = false, boxes = false, two_players = false, autofire = false, direct = false;
     int lang = 0, stage = 0, start_tick = 0, start_screen = 0;
+    int n_press = 0; long press_tick[16]; SDL_Scancode press_key[16];
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--data") == 0 && i + 1 < argc) data = argv[++i];
         else if (strncmp(argv[i], "--data=", 7) == 0) data = argv[i] + 7;
@@ -92,6 +95,10 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--es") == 0) lang = 1;
         else if (strcmp(argv[i], "--tick") == 0 && i + 1 < argc) start_tick = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--screen") == 0 && i + 1 < argc) start_screen = (int)SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--press") == 0 && i + 1 < argc && n_press < 16) {   /* --press 60:5 (tick:key name) */
+            const char *spec = argv[++i], *colon = strchr(spec, ':');
+            if (colon) { press_tick[n_press] = SDL_strtol(spec, NULL, 10); press_key[n_press] = SDL_GetScancodeFromName(colon + 1); n_press++; }
+        }
         else if (strcmp(argv[i], "--help") == 0) {
             SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N] [--tick N] [--screen N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
             return SDL_APP_SUCCESS;
@@ -108,6 +115,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     app *a = SDL_calloc(1, sizeof *a);
     *state = a;
     a->max_frames = max_frames;
+    a->n_press = n_press; memcpy(a->press_tick, press_tick, sizeof press_tick); memcpy(a->press_key, press_key, sizeof press_key);
     a->screenshot = screenshot;
     a->demo = demo;
     a->autofire = autofire;
@@ -148,8 +156,10 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         g->name_after = OSC_SCREEN_CONTINUE; g->screen = OSC_SCREEN_NAME;
     }
     a->game.debug_boxes = boxes;
+#ifndef __EMSCRIPTEN__
     if (!a->loaded)
         SDL_Log("Could not load the game data from '%s'. Pass --data <folder containing Chaves.exe>.", data);
+#endif
     a->last_ns = SDL_GetTicksNS();
     return SDL_APP_CONTINUE;
 }
@@ -236,6 +246,11 @@ SDL_AppResult SDL_AppIterate(void *state)
         if (a->loaded) {
             uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
             uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[1]) | pad_input(a->pads[1]));
+            for (int i = 0; i < a->n_press; i++) {   /* scripted key taps for headless tests */
+                if (a->press_tick[i] == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_DOWN; ev.key.scancode = a->press_key[i]; SDL_AppEvent(a, &ev); }
+                if (a->press_tick[i] + 3 == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_UP; ev.key.scancode = a->press_key[i]; SDL_AppEvent(a, &ev); }
+            }
+            a->ticks_run++;
             osc_game_tick(&a->game, in1, in2);
         }
         a->acc_ns -= TICK_NS;

@@ -68,7 +68,18 @@ folder to be provided (loading from the user's disk is not wired yet).
 Pre-built binaries for every platform are produced by GitHub Actions on each
 push (see the *Actions* tab → artifacts). The web build asks for your game
 folder (or its `.zip`, by picker or drag and drop); the files are read in the
-browser only and cached in its IndexedDB storage, never uploaded or hosted.
+browser only and cached in its IndexedDB storage.
+
+### Web build on GitHub Pages
+
+`.github/workflows/pages.yml` publishes the web build. Because *Street
+Chaves* is freeware ("proibido ser comercializado"), the deployment also
+fetches the original game folder from the separate repository
+[open-street-chaves-data](https://github.com/fabriciorby/open-street-chaves-data)
+and places it next to the page as `game.zip`, so the page starts without
+asking for anything. That data is not part of this repository. **To stop
+distributing it**, delete that repository (or empty it) and re-run the
+`pages` workflow: the page then falls back to the folder picker.
 
 ### Controls (current)
 

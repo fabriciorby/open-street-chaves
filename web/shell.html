@@ -30,7 +30,7 @@
 <p>Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
 <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
 <script>
-  var status = function (t) { document.getElementById('status').textContent = t; };
+  var setStatus = function (t) { document.getElementById('status').textContent = t; };
   var Module = {
     canvas: document.getElementById('canvas'),
     onRuntimeInitialized: function () {
@@ -38,11 +38,16 @@
       FS.mount(IDBFS, {}, '/data');
       FS.syncfs(true, function (err) {
         if (!err && exists('/data/Chaves.exe')) { start('from this browser’s storage'); return; }
-        status('waiting for the game folder');
+        tryBundled();
       });
       wire();
     }
   };
+  /* a deployment may put the freeware game next to the page as game.zip (see README "Web build") */
+  function tryBundled() {
+    fetch('game.zip', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('no bundle'); setStatus('loading the bundled game\u2026'); return r.arrayBuffer(); })
+      .then(readZip).then(finish).catch(function () { setStatus('waiting for the game folder'); });
+  }
   function exists(p) { try { FS.stat(p); return true; } catch (e) { return false; } }
   function mkdirs(dir) {
     var parts = dir.split('/').filter(Boolean), cur = '';
@@ -67,12 +72,12 @@
   function finish(entries) {
     entries = normalise(entries);
     entries.forEach(function (e) { putFile(e.path, e.bytes); });
-    if (!exists('/data/Chaves.exe')) { status('Chaves.exe not found in what you gave me'); return; }
-    status('saving in the browser…');
+    if (!exists('/data/Chaves.exe')) { setStatus('Chaves.exe not found in what you gave me'); return; }
+    setStatus('saving in the browser…');
     FS.syncfs(false, function () { start('loaded'); });
   }
   function start(how) {
-    status(how);
+    setStatus(how);
     document.getElementById('picker').style.display = 'none';
     Module.ccall('osc_web_data_ready', null, [], []);
     Module.canvas.focus();
@@ -118,12 +123,12 @@
     var picker = document.getElementById('picker');
     document.getElementById('pickFolder').onclick = function () { document.getElementById('folder').click(); };
     document.getElementById('pickZip').onclick = function () { document.getElementById('zip').click(); };
-    document.getElementById('folder').onchange = function (ev) { status('reading…'); readFiles(Array.from(ev.target.files), finish); };
+    document.getElementById('folder').onchange = function (ev) { setStatus('reading…'); readFiles(Array.from(ev.target.files), finish); };
     document.getElementById('zip').onchange = function (ev) { handleZip(ev.target.files[0]); };
     function handleZip(f) {
       if (!f) return;
-      status('unpacking ' + f.name + '…');
-      f.arrayBuffer().then(readZip).then(finish).catch(function (e) { status('could not read the archive: ' + e.message); });
+      setStatus('unpacking ' + f.name + '…');
+      f.arrayBuffer().then(readZip).then(finish).catch(function (e) { setStatus('could not read the archive: ' + e.message); });
     }
     picker.addEventListener('dragover', function (e) { e.preventDefault(); picker.classList.add('over'); });
     picker.addEventListener('dragleave', function () { picker.classList.remove('over'); });
@@ -133,7 +138,7 @@
       var entries = items.map(function (it) { return it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; }).filter(Boolean);
       if (entries.length === 1 && entries[0].isFile && /\.zip$/i.test(entries[0].name)) { handleZip(e.dataTransfer.files[0]); return; }
       if (!entries.length) return;
-      status('reading…');
+      setStatus('reading…');
       var files = [], pending = 0;
       function walk(entry, prefix) {
         if (entry.isFile) { pending++; entry.file(function (f) { f.relpath = prefix + f.name; files.push(f); if (--pending === 0) readFiles(files, finish); }); }

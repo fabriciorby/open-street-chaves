@@ -689,7 +689,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->screen_tick = 0;
     g->sel[1] = 1; g->sel[2] = 2;
     g->sel_timer = 30 * 25;
-    g->p1_in = true;
+    g->p1_in = false;   /* nobody has joined until a start button */
     g->p2_in = !g->ai_p2;
     return true;
 }
