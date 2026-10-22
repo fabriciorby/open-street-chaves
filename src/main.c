@@ -76,6 +76,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     long max_frames = 0;
     const char *screenshot = NULL;
     int c1 = 1, c2 = 2;
+    int battle = 1;   /* --battle N: fight N of the ladder (8 has the dialogue) */
     bool demo = false, boxes = false, two_players = false, autofire = false, direct = false;
     int lang = 0, stage = 0, start_tick = 0, start_screen = 0;
     int n_press = 0; long press_tick[16]; SDL_Scancode press_key[16];
@@ -94,13 +95,14 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--stage") == 0 && i + 1 < argc) stage = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--es") == 0) lang = 1;
         else if (strcmp(argv[i], "--tick") == 0 && i + 1 < argc) start_tick = (int)SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--battle") == 0 && i + 1 < argc) battle = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--screen") == 0 && i + 1 < argc) start_screen = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--press") == 0 && i + 1 < argc && n_press < 16) {   /* --press 60:5 (tick:key name) */
             const char *spec = argv[++i], *colon = strchr(spec, ':');
             if (colon) { press_tick[n_press] = SDL_strtol(spec, NULL, 10); press_key[n_press] = SDL_GetScancodeFromName(colon + 1); n_press++; }
         }
         else if (strcmp(argv[i], "--help") == 0) {
-            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N] [--tick N] [--screen N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
+            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N --battle N] [--tick N] [--screen N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
             return SDL_APP_SUCCESS;
         }
     }
@@ -138,7 +140,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     if (lang) a->game.lang = lang;
     if (a->loaded && (direct || demo)) {
         a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
-        a->game.fight_no = 1;
+        a->game.fight_no = battle;
         osc_make_ladder(&a->game, c1);
         a->game.sel[1] = c1; a->game.sel[2] = c2;
         a->game.p[1].human = true; a->game.p[2].human = !a->game.ai_p2;

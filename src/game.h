@@ -62,6 +62,7 @@ typedef struct {
     int seq_state, seq_timer, down_hold, back_hold, mash_p, mash_k;
     int ai_pref;         /* +0x1c preferred distance */
     bool human;
+    bool on_top;         /* +0x91 drawn over the opponent (the last one who hit) */
     uint8_t in, in_prev; /* input bits this tick / last tick */
     int wins;
     const osc_strip *strip;
@@ -160,6 +161,16 @@ typedef struct {
     bool key_f1, key_f2;
     int ending_char;          /* state 10: whose ending */
     int challenge;            /* g_challengeTimer: a second player joined a 1P fight */
+    /* stage objects (05 "Stage objects") */
+    struct { int x, y, speed, kind, freq; bool active; } mover;   /* 0x4b57c8: crosses stages 1 and 2 */
+    struct { int x, y, r0, b0, r1, b1, icon; } crate;              /* 0x4b57d8: breakable thing on stage 2 */
+    int shake;                /* 0x4b449a: camera shake ticks */
+    int flash;                /* 0x4b449b: red flash ticks */
+    bool flash_on;            /* this frame shows the flash */
+    int snd_pending;          /* g_sndIndexA: the last sound asked for this tick wins */
+    int dialogo;              /* g_dialogo: the last fight's dialogue, 600 ticks */
+    int dialog_speaker, dialog_line;   /* 0x4b4494 and the memo line on screen */
+    bool sp_draw; int sp_off; /* super pause: pattern instead of the stage, scrolled by sp_off */
 } osc_game;
 
 enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,

@@ -58,9 +58,12 @@ static const osc_move_row *find_move(int ch, int move, int state)
     return NULL;
 }
 
+static void move_x(osc_game *g, osc_fighter *f, double dx);
+
 /* ---- setMove (0x4775fc) ------------------------------------------------------- */
 static void set_move(osc_game *g, osc_fighter *f, int move)
 {
+    f->blocking = false;   /* every setMove drops the guard; states 21/22 raise it again */
     /* Moves with hard-coded behaviour in the original (knockdown, lie down). */
     if (move == 10) {
         f->state = 19; f->anim_timer = 0; f->anim_dur = 50; f->vy = -19;
@@ -91,9 +94,10 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
         g->super_pause = 22;
     }
     if (r->flags & OSC_MOVE_WALK) {
-        /* handled by the caller (walk keeps state 2 and moves x) */
-        if (f->state != 2) { f->state = 2; f->anim_timer = 0; }
-        f->anim_dur = 99;
+        /* moves 1/2 (0x477634): step by the walk speed, keep the animation clock */
+        if (f->state != 1 && f->state != 2) return;
+        move_x(g, f, move == 1 ? -f->speed : f->speed);
+        f->state = 2; f->anim_dur = 99;
         return;
     }
     f->state = r->state;
@@ -360,28 +364,29 @@ static void golpe(osc_game *g, osc_fighter *f, int btn)
     }
 }
 
-/* ---- human input dispatch (main loop 4150-4345) -------------------------------- */
+/* ---- input dispatch (DXTimer1Timer 0x4a5aaa): walk, crouch, jump, then all the
+ * button specials (golpe) before all the plain buttons (setMove 3..6) ---------- */
 static void input_dispatch(osc_game *g, osc_fighter *f)
 {
     uint8_t in = f->in, pressed = (uint8_t)(f->in & ~f->in_prev);
     if (!(in & OSC_IN_DOWN)) {
-        if (in & OSC_IN_LEFT) { set_move(g, f, 1); if (f->state == 2) move_x(g, f, -f->speed); }
-        if (in & OSC_IN_RIGHT) { set_move(g, f, 2); if (f->state == 2) move_x(g, f, f->speed); }
+        if (in & OSC_IN_LEFT) set_move(g, f, 1);
+        if (in & OSC_IN_RIGHT) set_move(g, f, 2);
     }
     if (in & OSC_IN_DOWN) set_move(g, f, 7);
     if (!(in & OSC_IN_DOWN) && f->state == 7) f->state = 1;
     if ((in & OSC_IN_UP) && (f->state == 1 || f->state == 2 || f->state == 21 || f->state == 22) &&
         f->vy == 0 && !f->in_air) {
         f->vy = -32; f->in_air = true; f->state = 12; f->anim_timer = 0; f->anim_dur = 99; f->blocking = false;
-        f->jump_dir = (in & OSC_IN_LEFT) ? 2 : (in & OSC_IN_RIGHT) ? 3 : 1;
+        f->jump_dir = 1;
+        if (in & OSC_IN_LEFT) f->jump_dir = 2;
+        if (in & OSC_IN_RIGHT) f->jump_dir = 3;
     }
     if (!(in & (OSC_IN_LEFT | OSC_IN_RIGHT)) && f->state == 2) { f->state = 1; f->anim_timer = 0; }
-    for (int b = 0; b < 4; b++) {
-        if (pressed & (OSC_IN_B1 << b)) {
-            golpe(g, f, b + 1);
-            set_move(g, f, 3 + b);
-        }
-    }
+    for (int b = 0; b < 4; b++)
+        if (pressed & (OSC_IN_B1 << b)) golpe(g, f, b + 1);
+    for (int b = 0; b < 4; b++)
+        if (pressed & (OSC_IN_B1 << b)) set_move(g, f, 3 + b);
     if (pressed & (OSC_IN_B1 | OSC_IN_B3)) f->mash_p += 6;
     if (pressed & (OSC_IN_B2 | OSC_IN_B4)) f->mash_k += 6;
 }
@@ -437,24 +442,121 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
     select_frame(v);
 }
 
-/* ---- collision + hit resolution (main loop 5175-5470) ---------------------------- */
-static void resolve_hits(osc_game *g, osc_fighter *a)
+/* ---- body hits (DXTimer1Timer 0x4a85ec..0x4a9442), attacker a = P1 then P2 ---- */
+static void melee_step(osc_game *g, osc_fighter *a)
 {
     osc_fighter *v = opp(g, a);
-    if (!a->attacking || v->invuln || g->hit_stop || g->super_pause) return;
-    double al = a->x + a->hit_l, at = a->y - a->sprite_h + a->hit_t, ar = a->x + a->hit_r, ab = a->y - a->sprite_h + a->hit_b;
-    double vl = v->x + v->hurt_l, vt = v->y - v->sprite_h + v->hurt_t, vr = v->x + v->hurt_r, vb = v->y - v->sprite_h + v->hurt_b;
-    if (!(al < vr && vl < ar && at < vb && vt < ab)) return;
+    /* states 17/18 slide forward with a trail of dust */
+    if ((a->state == 17 || a->state == 18) && !g->super_pause && !g->hit_stop) {
+        if (a->facing == 1) move_x(g, a, -a->hitstun);
+        if (a->facing == 2) move_x(g, a, a->hitstun);
+        if (osc_random(g, 2) == 0) {
+            int rx = osc_random(g, 40), ry = osc_random(g, 10);
+            spawn_fx(g, 2, 0, 0, a->x - 20 + rx, a->y + ry);
+        }
+    }
+    int al = iround(a->x) + a->hit_l, at = iround(a->y) - a->sprite_h + a->hit_t;
+    int ar = iround(a->x) + a->hit_r, ab = iround(a->y) - a->sprite_h + a->hit_b;
+    int vl = iround(v->x) + v->hurt_l, vt = iround(v->y) - v->sprite_h + v->hurt_t;
+    int vr = iround(v->x) + v->hurt_r, vb = iround(v->y) - v->sprite_h + v->hurt_b;
+    if (!a->attacking || v->invuln || !(al < vr && ar > vl && at < vb && ab > vt) || g->hit_stop || g->super_pause)
+        return;
 
-    /* low attacks break stand block, jump attacks break crouch block */
+    /* low attacks open a standing guard, jump attacks a crouching one */
     if ((a->state == 9 || a->state == 11) && v->state == 21) v->blocking = false;
     if (a->state >= 13 && a->state <= 16 && v->state == 22) v->blocking = false;
+    double cx = a->x + iround((a->hit_l + a->hit_r) / 2.0);
+    double cy = a->y - a->sprite_h + iround((a->hit_t + a->hit_b) / 2.0);
+    bool live = !g->challenge && !g->no_push;
 
-    osc_hitinfo h = {a->damage, a->chip, a->hit_level,
-                 a->state == 4 || a->state == 6 || a->state == 8 || a->state == 9 || a->state == 10,
-                 a->knockdown, a->facing == 1 ? ar : al, at, a == &g->p[1] ? 1 : 2};
-    a->attacking = false;
-    apply_hit(g, a, v, &h);
+    if (v->blocking) {
+        v->anim_timer = 1;
+        g->snd_pending = 10;
+        spawn_fx(g, 14, 0, 0, cx, cy);
+        if (v->facing == 1) move_x(g, v, -10.0);
+        if (v->facing == 2) move_x(g, v, 10.0);
+        if (live) { v->health -= a->chip * g->damage_level; v->trail_delay = 20; }
+        if (v->health <= 0.0) { g->snd_pending = 9; set_move(g, v, 10); }
+        a->attacking = false;
+        if (v->health > 0.0) {
+            if (a->hit_level == 1) g->hit_stop = osc_random(g, 4) + 2;
+            if (a->hit_level == 2) g->hit_stop = osc_random(g, 4) + 4;
+        }
+    }
+    /* a chip KO dropped the guard (setMove 10), so it also lands as a hit */
+    if (!v->blocking) {
+        int ch = a->char_id, st = a->state, t = a->anim_timer;
+        if (v->x < a->x) v->facing = 1;
+        if (v->x >= a->x) v->facing = 2;
+        if (a->human && v->health > 0.0 && !g->hit_stop && !g->super_pause) a->score += 5;
+        if (a->meter < OSC_METER_MAX) a->meter += 2.0 * k_meter_unit;
+        if (v->meter < OSC_METER_MAX) v->meter += 1.0 * k_meter_unit;
+        if (a->combo_timer <= 35) a->hits = 0;
+        a->hits++;
+        a->combo_timer = 44;
+        if (st == 11 || st == 16) a->combo_timer = 50;
+        if (ch == 4 && st == 26) a->combo_timer = 46;
+        if (ch == 4 && st == 27) a->combo_timer = 47;
+        if (ch == 6 && st == 29) a->combo_timer = 50;
+        if (ch == 15 && st == 27) a->combo_timer = 50;
+        if (a->hits > a->max_combo) a->max_combo = a->hits;
+        if (live) { v->health -= a->damage * g->damage_level; v->trail_delay = 20; }
+        if (g->cfg_flash) {
+            if (a->hit_level == 1 && osc_random(g, 5) == 0) g->flash = 6;
+            if (a->hit_level == 2 && osc_random(g, 2) == 0) g->flash = 6;
+        }
+        if (v->health <= 0.0) { g->snd_pending = 8; set_move(g, v, 10); }
+        /* spinning throws: the victim turns 20 degrees a tick */
+        if ((ch == 4 && st == 29) || (ch == 5 && st == 29 && t >= 15) || (ch == 6 && st == 29 && t >= 22) ||
+            (ch == 9 && st == 29 && t >= 14) || (ch == 10 && st == 29 && t >= 15) ||
+            (ch == 11 && st == 29 && t >= 20) || (ch == 12 && st == 28 && t >= 22)) {
+            if (v->facing == 1) v->rot_step = -20;
+            if (v->facing == 2) v->rot_step = 20;
+        }
+        spawn_fx(g, 1, 0, 0, cx, cy);
+        if ((g->cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0))
+            spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
+        set_move(g, v, (st == 4 || st == 6 || st == 8 || st == 9 || st == 10) ? 9 : 8);
+        if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
+        /* how far the victim slides (+0x72) and flies (+0x78) */
+        v->hitstun = 4;
+        if (ch == 1 && st == 26 && a->hit_level == 2) v->hitstun = 20;
+        if (ch == 2 && st == 26 && a->hit_level == 2) v->hitstun = 13;
+        if (ch == 4 && st == 29) v->hitstun = 20;
+        if (ch == 6 && st == 27 && a->hit_level == 2) v->hitstun = 25;
+        if (ch == 7 && st == 27 && a->hit_level == 2) v->hitstun = 18;
+        if (ch == 9 && st == 29 && t >= 15) v->hitstun = 25;
+        if (ch == 10 && st == 28 && a->hit_level == 2) v->hitstun = 13;
+        if (ch == 12 && st == 26 && a->hit_level == 2) v->hitstun = 25;
+        if (ch == 4 && st == 29) v->vy = -30;
+        if (ch == 5 && st == 29 && t >= 15) v->vy = -30;
+        if (ch == 15 && st == 27) v->vy = -26;
+        if (a->hit_level == 1) g->snd_pending = 7;
+        if (a->hit_level == 2) g->snd_pending = 8;
+        if (a->hit_level == 3) g->snd_pending = 9;
+        if (!g->first_hit) {
+            a->msg_index = 1; a->msg_timer = 50;   /* "Primeiro Ataque" */
+            if (a->human && !g->hit_stop && !g->super_pause) a->score += 300;
+            g->first_hit = true;
+        }
+        a->on_top = true; v->on_top = false;
+        a->attacking = false; v->attacking = false;
+        /* multi-hit specials chain into their next part */
+        if (ch == 2 && st == 28) { a->state = 29; a->anim_timer = 0; a->anim_dur = 30; v->attacking = false; }
+        if (ch == 2 && a->state == 30) { a->state = 31; a->anim_timer = 0; a->anim_dur = 40; a->hits++; v->attacking = false; }
+        if (ch == 3 && a->state == 29) { a->state = 30; a->anim_timer = 0; a->anim_dur = 30; v->attacking = false; }
+        if (ch == 7 && a->state == 29) { a->state = 30; a->anim_timer = 0; a->anim_dur = 15; v->attacking = false; }
+        if (v->health > 0.0) {
+            if (a->hit_level == 1) g->hit_stop = osc_random(g, 4) + 5;
+            if (a->hit_level == 2) g->hit_stop = osc_random(g, 4) + 7;
+        }
+        select_frame(v);
+    }
+    /* the attacker bounces off a cornered victim */
+    if (!g->no_push) {
+        if (v->x >= g->cam_x + 370) move_x(g, a, -12.0);
+        if (v->x <= g->cam_x + 30) move_x(g, a, 12.0);
+    }
 }
 
 /* ---- effects update: motion, collisions, drawing data (desenhaefeitos) ------------- */
@@ -526,54 +628,143 @@ static void update_fx(osc_game *g)
     }
 }
 
-/* ---- per-tick timers, physics ---------------------------------------------------- */
-static void advance(osc_game *g, osc_fighter *f)
+/* ---- input-side counters (sequences, mash, combo) ----------------------------- */
+static void counters(osc_game *g, osc_fighter *f)
 {
     bool paused = g->hit_stop || g->super_pause;
-    if (!paused && f->anim_dur != 99) f->anim_timer++;
-    if (f->anim_dur != 99 && f->anim_timer >= f->anim_dur) {
-        f->state = 1; f->attacking = false; f->knockdown = false; f->anim_timer = 0;
-        f->invuln = false; f->blocking = false; f->hit_level = 0; f->anim_dur = 99;
-        if (f->y < OSC_GROUND_Y || f->vy != 0) { f->in_air = true; f->state = 12; }
-    }
     if (f->state == 2 && !paused) { f->anim_timer++; if (f->anim_timer > 16) f->anim_timer = 0; }
     if (f->seq_timer > 0 && !paused) { f->seq_timer--; if (f->seq_timer == 0) f->seq_state = 0; }
     if (f->mash_p) f->mash_p--; if (f->mash_p > 15) f->mash_p = 15;
     if (f->mash_k) f->mash_k--; if (f->mash_k > 15) f->mash_k = 15;
     if (f->combo_timer && !paused) { f->combo_timer--; if (!f->combo_timer) f->hits = 0; }
+}
 
-    if (paused) return;
-    /* jump / knock-up */
-    if (f->in_air) {
+/* ---- move clock (0x4a9459): a finished move falls back to standing or falling ---- */
+static void move_clock(osc_game *g, osc_fighter *f)
+{
+    osc_fighter *o = opp(g, f);
+    if (f->anim_dur != 99 && !g->super_pause && !g->hit_stop) f->anim_timer++;
+    if (f->anim_timer < f->anim_dur) return;
+    f->state = 1; f->attacking = false; f->damage = 0; f->anim_timer = 0;
+    f->invuln = false; f->blocking = false; f->knockdown = false; f->hit_level = 0;
+    if (f->y < OSC_GROUND_Y) { f->in_air = true; f->state = 12; }
+    if (f->x < o->x) f->facing = 1;
+    if (f->x >= o->x) f->facing = 2;
+    if (f->y > OSC_GROUND_Y) f->y = OSC_GROUND_Y;
+    if (f->vy != 0) f->state = 12;
+}
+
+/* five puffs of dust at the feet */
+static void dust(osc_game *g, osc_fighter *f, int n, int spread)
+{
+    for (int k = 0; k < n; k++) {
+        int rx = osc_random(g, 2 * spread), ry = osc_random(g, 10);
+        spawn_fx(g, 2, 0, 0, f->x - spread + rx, f->y + ry);
+    }
+}
+
+/* ---- jumps, knock-ups and landings (0x4a954c..0x4a99d8) ----------------------- */
+static void physics(osc_game *g, osc_fighter *f)
+{
+    osc_fighter *o = opp(g, f);
+    if (f->in_air && !g->super_pause && !g->hit_stop) {
         f->y += f->vy;
         f->vy += k_gravity;
-        if (f->jump_dir == 2) move_x(g, f, -f->speed);
-        if (f->jump_dir == 3) move_x(g, f, f->speed);
-        if (f->state == 19) {
-            osc_fighter *o = opp(g, f);
-            move_x(g, f, f->x < o->x ? -f->hitstun : f->hitstun);
+        if (f->jump_dir == 2) move_x(g, f, -8.0);
+        if (f->jump_dir == 3) move_x(g, f, 8.0);
+        if (f->state == 19) {                       /* knocked into the air */
+            if (f->facing == 1) f->x -= f->hitstun;
+            if (f->facing == 2) f->x += f->hitstun;
             if (f->y >= OSC_GROUND_Y) {
                 set_move(g, f, 11);
-                play_snd(g, 12);
                 f->y = OSC_GROUND_Y - 10;
-                for (int k = 0; k < 5; k++)
-                    spawn_fx(g, 2, 0, 0, f->x - 20 + osc_random(g, 40), f->y + osc_random(g, 10));
-                return;
+                f->rot = 0; f->rot_step = 0;
+                g->snd_pending = 12;
+                if (f->char_id == 7 || f->char_id == 10) {   /* the heavy ones shake the street */
+                    g->shake = 20;
+                    dust(g, f, 20, 30);
+                }
+                dust(g, f, 5, 20);
             }
         }
-        if (f->y >= OSC_GROUND_Y) {
-            f->y = OSC_GROUND_Y; f->vy = 0; f->in_air = false; f->rot = 0; f->rot_step = 0;
-            if (f->state == 20) { f->state = 1; f->invuln = false; }
-            else { f->state = 1; }
-            f->anim_timer = 0; f->anim_dur = 99; f->attacking = false; f->knockdown = false;
+        if (f->state == 20) {                       /* bouncing on the ground */
+            if (f->facing == 1) move_x(g, f, -f->hitstun);
+            if (f->facing == 2) move_x(g, f, f->hitstun);
+            if (g->cfg_blood && osc_random(g, 4) == 0 && f->anim_timer == 5)
+                spawn_fx(g, 10, 0, 0, f->facing == 1 ? f->x - 30 : f->x + 30, f->y - 50);
+            if (f->y > OSC_GROUND_Y) {
+                f->y = OSC_GROUND_Y; f->in_air = false; f->rot = 0; f->rot_step = 0; f->vy = 0; f->hitstun = 0;
+            }
+        }
+        if (f->y > OSC_GROUND_Y) {                  /* landing */
+            f->vy = 0; f->in_air = false; f->y = OSC_GROUND_Y; f->rot = 0; f->rot_step = 0;
+            f->state = 1; f->anim_timer = 0; f->attacking = false; f->damage = 0; f->knockdown = false;
+            f->jump_dir = 0;
+            if (f->x < o->x) f->facing = 1;
+            if (f->x >= o->x) f->facing = 2;
+            dust(g, f, 5, 20);
         }
     }
-    if (f->state == 12 || f->state == 19) f->rot += f->rot_step; else { f->rot = 0; f->rot_step = 0; }
-    /* facing follows the opponent while free */
-    if ((f->state == 1 || f->state == 2 || f->state == 7) && !f->in_air) {
-        osc_fighter *o = opp(g, f);
-        f->facing = f->x < o->x ? 1 : 2;
+    if (f->health > 0.0) {
+        if (f->x < g->cam_x + 30) f->x = g->cam_x + 30;
+        if (f->x > g->cam_x + 370) f->x = g->cam_x + 370;
     }
+}
+
+/* ---- stage objects (0x4a618e..0x4a6622) ------------------------------------------- */
+static void stage_objects(osc_game *g)
+{
+    bool paused = g->hit_stop || g->super_pause;
+    /* something crossing the street on stages 1 and 2 */
+    if ((g->stage_id == 1 || (g->stage_id == 2 && !g->no_push)) && !g->mover.active &&
+        g->cam_x > 40 && g->cam_x < 160 && osc_random(g, g->mover.freq) == 0) {
+        g->mover.x = g->cam_x - 80; g->mover.y = 146; g->mover.speed = 7;
+        g->mover.kind = osc_random(g, 2) + 1;
+        g->mover.active = true;
+    }
+    if (g->mover.active) {
+        if (!paused) g->mover.x += g->mover.speed;
+        if (g->mover.x > g->cam_x + 420) g->mover.active = false;
+        /* ... and dropping something on the way */
+        if (g->mover.kind != 0 && g->mover.x > g->cam_x + 150 && g->mover.x < g->cam_x + 250 &&
+            osc_random(g, 5) == 0 && !g->super_pause && !g->hit_stop && !g->no_push) {
+            spawn_fx(g, g->mover.kind == 1 ? 3 : 4, 0, 0, g->mover.x + 13, g->mover.y - 5);
+            g->mover.kind = 0;
+        }
+    }
+    /* stage 2: a fighter knocked into the breakable thing smashes it */
+    for (int i = 1; i <= 2; i++) {
+        osc_fighter *f = &g->p[i];
+        int l = iround(f->x) + f->hurt_l, t = iround(f->y) - f->sprite_h + f->hurt_t;
+        int r = iround(f->x) + f->hurt_r, b = iround(f->y) - f->sprite_h + f->hurt_b;
+        if (f->state != 19) continue;
+        if (g->crate.x + g->crate.r1 >= l && g->crate.y + g->crate.b1 >= t &&
+            g->crate.x + g->crate.r0 <= r && g->crate.y + g->crate.b0 <= b && g->crate.icon) {
+            g->crate.icon = 0;
+            g->snd_pending = 9;
+            for (int k = 0; k < 30; k++) {
+                int rx = osc_random(g, 40), ry = osc_random(g, 20);
+                spawn_fx(g, 21, 0, 0, g->crate.x + 20 + rx, g->crate.y + 20 + ry);
+            }
+        }
+    }
+}
+
+/* ---- desenhalutador's logic part (0x490bb8): facing, frame, spin ---------------- */
+static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
+{
+    osc_fighter *o = opp(g, f);
+    bool paused = g->hit_stop || g->super_pause;
+    if ((f->state == 1 || f->state == 2 || f->state == 7) && f->vy == 0) {
+        if (f->x < o->x) f->facing = 1;
+        if (f->x >= o->x) f->facing = 2;
+    }
+    if (!paused) {
+        select_frame(f);
+        fx_spawns_for(g, f, pidx);
+        f->rot += f->rot_step;
+    }
+    if (f->state != 12 && f->state != 19) { f->rot = 0; f->rot_step = 0; }
 }
 
 /* ---- public ------------------------------------------------------------------------- */
@@ -801,6 +992,10 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     g->round_start = 0; g->round_end = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
     g->match_over = 0;
     g->p[1].wins = g->p[2].wins = 0;
+    g->p[1].on_top = true; g->p[2].on_top = false;
+    g->mover.active = false; g->mover.freq = 330;
+    g->first_hit = false; g->dialogo = 0; g->shake = 0; g->flash = 0; g->flash_on = false;
+    g->snd_pending = 0; g->sp_draw = false;
     g->p[1].ai_pref = g->p[2].ai_pref = 200;
     g->screen = OSC_SCREEN_FIGHT;
     g->screen_tick = 0;
@@ -826,28 +1021,57 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         return;
     }
     g->p[1].in = in1; g->p[2].in = in2;
-    bool frozen = g->hit_stop || g->super_pause;
 
-    for (int i = 1; i <= 2; i++) {
-        osc_fighter *f = &g->p[i];
-        if (!f->human && !frozen && !g->no_push) cpu_think(g, f);
-        if (!frozen && !g->no_push) input_dispatch(g, f);
-        sequences(g, f);
-        if (!frozen && !g->no_push && f->human) defend(g, f);
+    /* round 1: both fighters jump in from the stage edges (0x4a44cb) */
+    if (g->round_no == 1 && g->round_start == 0) {
+        for (int i = 1; i <= 2; i++) {
+            osc_fighter *f = &g->p[i];
+            f->x = i == 1 ? 0.0 : 600.0;
+            f->jump_dir = i == 1 ? 3 : 2;
+            f->y = OSC_GROUND_Y; f->in_air = true; f->vy = -25; f->frame = 21;
+            f->state = 12; f->anim_timer = 0; f->anim_dur = 99;
+        }
+        g->no_push = true;
+        g->cam_y = iround((g->p[1].y + g->p[2].y) / 8.0) - 55;
     }
-    for (int i = 1; i <= 2; i++) {
-        advance(g, &g->p[i]);
-        select_frame(&g->p[i]);
-        if (!frozen) fx_spawns_for(g, &g->p[i], i);
+    /* the last fight against the CPU opens with a dialogue (0x4a4591) */
+    if (g->fight_no == 8 && g->round_no == 1 && g->round_start == 1 && (!g->p[1].human || !g->p[2].human)) {
+        g->dialogo = 600; g->round_start = 2; g->hud_y = -120; g->hud_y2 = 60;
     }
-    for (int i = 1; i <= 2; i++) resolve_hits(g, &g->p[i]);
-    update_fx(g);
+    if (g->dialogo > 0) g->dialogo--;
+    /* the sound asked for last tick (g_sndIndexA) */
+    if (g->snd_pending) { play_snd(g, g->snd_pending); g->snd_pending = 0; }
+    /* super pause: the stage gives way to a scrolling pattern (0x4a4682) */
+    g->sp_draw = g->super_pause > 0;
+    if (g->super_pause > 0) {
+        g->super_pause--;
+        int sp = g->super_pause;
+        g->sp_off = 0;
+        if (sp % 2 == 0) g->sp_off = 20;
+        if (sp % 3 == 0) g->sp_off = 40;
+        if (sp % 4 == 0) g->sp_off = 60;
+        if (sp % 5 == 0) g->sp_off = 80;
+    }
+    /* camera: midpoint of the fighters, the shake, then the stage limits (0x4a47f1) */
+    if (!g->no_push) {
+        g->cam_x = iround((g->p[1].x + g->p[2].x) / 2.0) - 200;
+        g->cam_y = iround((g->p[1].y + g->p[2].y) / 8.0) - 55;
+    }
+    if (g->shake > 0) {
+        g->shake--;
+        g->cam_x = g->cam_x - 10 + osc_random(g, 20);
+        g->cam_y = g->cam_y - 10 + osc_random(g, 20);
+    }
+    int max_cam = g->stage_w - OSC_SCREEN_W; if (max_cam < 0) max_cam = 0;
+    if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > max_cam) g->cam_x = max_cam;
+    int max_cy = g->stage_h - OSC_SCREEN_H; if (max_cy < 0) max_cy = 0;
+    if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > max_cy) g->cam_y = max_cy;
+    bool frozen = g->hit_stop || g->super_pause;
     if (g->demo > 0) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;   /* nobody falls in the demo */
     if (g->cfg_power == 2 || g->cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */
     if (g->cfg_power == 3 || g->cfg_power == 4) g->p[2].stocks = 3;
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
-        f->in_prev = f->in;
         /* meter 102 -> stock (main loop 4572) */
         if (f->stocks < 0) f->stocks = 0;
         if (f->meter >= OSC_METER_MAX && f->stocks < 3) { f->stocks++; f->meter = 0; play_snd(g, 13); }
@@ -866,9 +1090,34 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (f->combo_timer > 15 && f->hits > 1) f->combo_jitter = osc_random(g, 10);
     }
 
+    /* the clock (0x4a4c66) stops during pauses and while nobody may move */
+    if (!frozen && !g->no_push) g->timer_sub--;
+    if (g->timer_sub <= 0) { g->timer_sub = 25; if (g->timer_sec > 0) g->timer_sec--; }
+
+    /* input (0x4a5a61): humans, then the sequences, then the CPU */
+    if (!frozen && !g->challenge && !g->no_push)
+        for (int i = 1; i <= 2; i++)
+            if (g->p[i].human) input_dispatch(g, &g->p[i]);
+    for (int i = 1; i <= 2; i++) sequences(g, &g->p[i]);
+    if (!frozen && !g->challenge)
+        for (int i = 1; i <= 2; i++) {
+            osc_fighter *f = &g->p[i];
+            if (f->human || g->no_push) continue;
+            cpu_think(g, f);
+            input_dispatch(g, f);
+        }
+    for (int i = 1; i <= 2; i++) counters(g, &g->p[i]);
+    stage_objects(g);
+    /* fighters in drawing order: the one who hit last goes on top */
+    if (g->p[1].on_top) { fighter_frame(g, &g->p[2], 2); fighter_frame(g, &g->p[1], 1); }
+    else { fighter_frame(g, &g->p[1], 1); fighter_frame(g, &g->p[2], 2); }
+    if (!frozen && !g->challenge && !g->no_push)
+        for (int i = 1; i <= 2; i++) defend(g, &g->p[i]);
+    update_fx(g);
+
     /* round intro (DXTimer1Timer 0x4a71d0): g_roundStart counts to 71, the bars
      * fill from tick 6, no input until tick 55 */
-    if (g->round_start <= 70) {
+    if (g->round_start <= 70 && g->dialogo == 0) {   /* the dialogue holds the intro */
         g->round_start++;
         if (g->round_start < 10) g->no_push = true;
         g->hud_y = g->hud_y2 = 0;
@@ -960,27 +1209,34 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             g->round_no++;
             g->round_end = 0; g->round_start = 0; g->hit_stop = 0; g->super_pause = 0;
             g->hud_y = g->hud_y2 = 0; g->first_hit = false;
+            g->p[1].on_top = true; g->p[2].on_top = false; g->mover.active = false;
             g->timer_sec = osc_round_time(g); g->timer_sub = 25; g->cam_x = 100;
         }
         if (decided && g->round_end > 220) g->match_over = g->p[1].wins >= g->rounds_to_win ? 1 : 2;
     }
 
-    /* camera: midpoint rule, clamped to the stage */
-    if (!g->no_push) {
-        g->cam_x = iround((g->p[1].x + g->p[2].x) / 2.0) - 200;
-        g->cam_y = iround((g->p[1].y + g->p[2].y) / 8.0) - 55;
+    /* body hits, then the clocks and the physics (0x4a85ec..0x4a99d8) */
+    for (int i = 1; i <= 2; i++) melee_step(g, &g->p[i]);
+    if (g->hit_stop > 0) g->hit_stop--;
+    for (int i = 1; i <= 2; i++) move_clock(g, &g->p[i]);
+    for (int i = 1; i <= 2; i++) {
+        osc_fighter *f = &g->p[i];
+        if (f->y > OSC_GROUND_Y) {
+            f->y = OSC_GROUND_Y; f->rot = 0; f->rot_step = 0; f->vy = 0; f->in_air = false;
+            f->state = 1; f->anim_timer = 0; f->attacking = false; f->knockdown = false;
+        }
     }
-    int max_cam = g->stage_w - OSC_SCREEN_W; if (max_cam < 0) max_cam = 0;
-    if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > max_cam) g->cam_x = max_cam;
-    int max_cy = g->stage_h - OSC_SCREEN_H; if (max_cy < 0) max_cy = 0;
-    if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > max_cy) g->cam_y = max_cy;
-
-    if (g->hit_stop) g->hit_stop--;
-    if (g->super_pause) g->super_pause--;
-    if (++g->ciclo > 30) g->ciclo = 0;   /* state 7 wraps the blink counter at 31 */
-    /* the clock (0x4a4c66) stops during pauses and while nobody may move */
-    if (!frozen && !g->no_push) g->timer_sub--;
-    if (g->timer_sub <= 0) { g->timer_sub = 25; if (g->timer_sec > 0) g->timer_sec--; }
+    for (int i = 1; i <= 2; i++) physics(g, &g->p[i]);
+    /* dialogue skip: the human's first button hurries it (0x4a9f83) */
+    if (g->dialogo > 0)
+        for (int i = 1; i <= 2; i++)
+            if (g->p[i].human && (g->p[i].in & OSC_IN_B1) && g->dialogo > 10) g->dialogo -= 5;
+    for (int i = 1; i <= 2; i++) g->p[i].in_prev = g->p[i].in;
+    if (!g->super_pause && !g->hit_stop) g->ciclo++;
+    if (g->ciclo > 30) g->ciclo = 0;   /* state 7 wraps the blink counter at 31 */
+    /* red flash on strong hits (0x4aa29a), shown on even ticks */
+    g->flash_on = false;
+    if (g->flash > 0) { g->flash_on = (g->ciclo % 2) == 0; g->flash--; }
     osc_audio_update();
 }
 
@@ -988,6 +1244,11 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 static void draw_fighter(osc_game *g, const osc_fighter *f)
 {
     const osc_strip *s = f->strip;
+    /* shadow (Efeitos[0]), rising a little with the jump */
+    if (g->n_fx_tex > 0) {
+        int sy = OSC_GROUND_Y - 12 - iround((OSC_GROUND_Y - iround(f->y)) / 12.0) - g->cam_y;
+        draw_tex(g, g->fx_tex[0], (float)(iround(f->x) - 35 - g->cam_x), (float)sy, 255, false);
+    }
     if (f->frame < 1 || f->frame > s->count || !s->tex[f->frame]) return;
     int w = s->w[f->frame];
     int off = (f->frame < 64) ? osc_frame_offset[f->char_id][f->frame] : 0;
@@ -1254,43 +1515,80 @@ void osc_fx_render(osc_game *g)
     }
 }
 
+/* ---- the last fight's dialogue (0x4a99de) ------------------------------------------
+ * A is the human, B the CPU; four exchanges of 150 ticks, three lines each, from the
+ * memo the port's text index calls Finais (the form field at 0x300, MemoDialogo). */
+static void draw_dialogue(osc_game *g)
+{
+    int d = g->dialogo;
+    if (d <= 0) return;
+    int a = g->p[1].human ? 1 : 2, b = g->p[1].human ? 2 : 1;
+    int ca = g->p[a].char_id, cb = g->p[b].char_id;
+    barraredonda(g, 5, 165, 290, 215, 20, k_white, k_black);
+    if (ca >= 1 && ca <= 15 && g->face_big[ca])
+        draw_tex(g, g->face_big[ca], (float)(d > 580 ? 15 - (d - 580) * 10 : 15), 85.f, 255, false);
+    barraredonda(g, 110, 220, 395, 270, 20, k_white, k_black);
+    if (cb >= 1 && cb <= 15 && g->face_big[cb])
+        draw_tex(g, g->face_big[cb], (float)(d > 580 ? 288 + (d - 580) * 10 : 288), 140.f, 255, false);
+    /* on the exact boundaries the line and speaker keep their last values */
+    if (d > 450 && d < 600) { g->dialog_line = (ca - 1) * 12; g->dialog_speaker = 1; }
+    if (d > 300 && d < 450) { g->dialog_line = (ca - 1) * 12 + 3; g->dialog_speaker = 2; }
+    if (d > 150 && d < 300) { g->dialog_line = (ca - 1) * 12 + 6; g->dialog_speaker = 1; }
+    if (d > 0 && d < 150) { g->dialog_line = (ca - 1) * 12 + 9; g->dialog_speaker = 2; }
+    for (int k = 0; k < 3; k++) {
+        const char *s = osc_text(OSC_MEMO_FINAIS, g->dialog_line + k, g->lang);
+        if (g->dialog_speaker == 1) texto(g, 115, 168 + 14 * k, s, '-', 10, k_white);
+        if (g->dialog_speaker == 2) texto(g, 120, 223 + 14 * k, s, '-', 10, k_white);
+    }
+}
+
 void osc_fight_render(osc_game *g)
 {
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
-    if (g->stage) {
-        SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->stage_w, (float)g->stage_h};
-        SDL_RenderTexture(g->ren, g->stage, NULL, &dst);
-    }
-    /* stage animations (desenhaanimacoes, table 07c) */
-    for (int i = 0; i < OSC_N_STAGE_ANIM; i++) {
-        const osc_stage_anim_row *r = &osc_stage_anim[i];
-        if (!(r->stage_mask & (1u << g->stage_id))) continue;
-        if (g->ciclo < r->ciclo_lo || g->ciclo > r->ciclo_hi) continue;
-        if (r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char)) continue;
-        SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
-                                      : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
-        if (!t) continue;
-        int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
-        int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
-        int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
-        SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
-        SDL_RenderTexture(g->ren, t, NULL, &d);
+    if (g->sp_draw) {
+        /* super pause: Icone[7] tiled and sliding instead of the stage (0x4a47a0) */
+        if (7 < g->n_icone && g->icone[7])
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < 5; j++)
+                    draw_tex(g, g->icone[7], (float)(100 * i - 80 + g->sp_off), (float)(100 * j), 255, false);
+    } else {
+        if (g->stage) {
+            SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->stage_w, (float)g->stage_h};
+            SDL_RenderTexture(g->ren, g->stage, NULL, &dst);
+        }
+        /* stage animations (desenhaanimacoes, table 07c) */
+        for (int i = 0; i < OSC_N_STAGE_ANIM; i++) {
+            const osc_stage_anim_row *r = &osc_stage_anim[i];
+            if (!(r->stage_mask & (1u << g->stage_id))) continue;
+            if (g->ciclo < r->ciclo_lo || g->ciclo > r->ciclo_hi) continue;
+            if (r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char)) continue;
+            SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
+                                          : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
+            if (!t) continue;
+            int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
+            int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
+            int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
+            SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
+            SDL_RenderTexture(g->ren, t, NULL, &d);
+        }
     }
     draw_hud_top(g);
-    /* fighter shadows: Efeito-001 under the feet (desenhalutador) */
-    for (int i = 1; i <= 2; i++) {
-        if (g->n_fx_tex < 1) break;
-        const osc_fighter *f = &g->p[i];
-        SDL_FRect d = {(float)(f->x - 35 - g->cam_x), (float)(OSC_GROUND_Y - 12 - g->cam_y), (float)g->fx_w[0], (float)g->fx_h[0]};
-        SDL_RenderTexture(g->ren, g->fx_tex[0], NULL, &d);
+    /* something crossing the street (Efeitos[0] shadow under Efeitos[9]) */
+    if (g->mover.active && g->n_fx_tex > 9) {
+        draw_tex(g, g->fx_tex[0], (float)(g->mover.x + 10 - g->cam_x), (float)(g->mover.y + 132 - g->cam_y), 255, false);
+        draw_tex(g, g->fx_tex[9], (float)(g->mover.x - g->cam_x), (float)(g->mover.y - g->cam_y), 255, false);
     }
-    /* the player who attacked last is drawn on top; simple rule: P2 then P1 */
-    draw_fighter(g, &g->p[2]);
-    draw_fighter(g, &g->p[1]);
+    if (g->crate.icon && !g->super_pause && g->crate.icon < g->n_icone && g->icone[g->crate.icon])
+        draw_tex(g, g->icone[g->crate.icon], (float)(g->crate.x - g->cam_x), (float)(g->crate.y - g->cam_y), 255, false);
+    /* the one who hit last is drawn on top */
+    if (g->p[1].on_top) { draw_fighter(g, &g->p[2]); draw_fighter(g, &g->p[1]); }
+    else { draw_fighter(g, &g->p[1]); draw_fighter(g, &g->p[2]); }
     osc_fx_render(g);
     draw_hud_bottom(g);
     draw_round_texts(g);
+    draw_dialogue(g);
+    if (g->flash_on) barra(g, 0, 0, 400, 300, rgb(255, 0, 0));
     if (g->challenge > 0) {
         SDL_FRect box = {80, 100, 240, 70};
         SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255); SDL_RenderFillRect(g->ren, &box);
@@ -1355,6 +1653,9 @@ bool osc_load_stage(osc_game *g, int stage)
     if (g->stage) { SDL_DestroyTexture(g->stage); g->stage = NULL; }
     snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
     g->stage_id = stage;
+    /* carregarcenario: stage 2 has a breakable thing (Icone[6]) */
+    g->crate.icon = 0;
+    if (stage == 2) { g->crate.x = 395; g->crate.y = 195; g->crate.r0 = 25; g->crate.b0 = 25; g->crate.r1 = 110; g->crate.b1 = 90; g->crate.icon = 6; }
     return load_image_tex(g, rel, false, &g->stage, &g->stage_w, &g->stage_h);
 }
 

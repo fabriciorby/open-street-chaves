@@ -96,16 +96,70 @@ stock (`+0x58`), sets `g_superPause = 22`, sound 19.
   px and the mover is placed at the edge of the other's box; both are kept
   inside the band while alive.
 - Jump: while `inAir`, each unpaused tick `y += vy; vy += g_gravity`
-  (`0x4b449c`, "GRAV."; default UNKNOWN until the config/init that sets it
-  is read — FormCreate sets `0x4b449c` to **4**), and x moves by ±`speed`
-  for `dir` 2/3. Landing (`y >= groundY`) resets `y`, `vy`, `inAir`, `rot`,
-  `rotStep`, state := 1, `animTimer` := 0.
-- Knockdown (state 19): x moves by `hitstun` (+0x72) px per tick away
-  from the attacker; on landing → move 11 (state 20), `y = groundY − 10`,
-  sound 12, dust effects (type 2); heavy characters (7 Barriga, 10 Nhonho)
-  also shake the screen (`0x4b449a = 20`) with extra dust.
-- Facing is recomputed each tick when not attacking/blocking so players
-  always face each other.
+  (`0x4b449c`, FormCreate sets **4**), and x moves by **±8.0** (a constant,
+  not the walk speed) for `jumpDir` 2/3. Landing (`y > groundY`) resets `y`,
+  `vy`, `inAir`, `rot`, `rotStep`, `jumpDir`, `attacking`, `damage`,
+  `knockdown`, state := 1, `animTimer` := 0, faces the opponent and drops
+  five dust puffs (type 2 at `x − 20 + Random(40)`, `y + Random(10)`).
+  `animDur` is left alone. [0x4a95a5]
+- Round 1 entrance [0x4a44cb]: while `roundNo == 1 && roundStart == 0`,
+  P1 is put at x 0 with `jumpDir` 3 and P2 at x 600 with `jumpDir` 2, both
+  in the air with `vy = −25`, state 12, frame 21: they jump in from the
+  stage edges (clamped to the band).
+- Walk (moves 1/2, `setMove` 0x477634): only from states 1/2; calls
+  `sub_47648c(∓speed)`, state 2, `animDur` 99, keeps `animTimer`. Every
+  `setMove` first clears `blocking`.
+- Knockdown (state 19): x moves by `hitstun` (+0x72) px per tick, toward
+  the back of the victim's facing, written directly (no push). On landing
+  → move 11 (state 20), `y = groundY − 10`, sound 12, five dust puffs;
+  characters 7 and 10 also set the camera shake (`0x4b449a = 20`, the
+  camera jumps by `−10 + Random(20)` each tick) and 20 more puffs at
+  `x − 30 + Random(60)`.
+- State 20 slides by `hitstun` through `sub_47648c`; with blood on
+  (config 4) `Random(4) == 0` and `animTimer == 5` sprays blood (type 10)
+  30 px behind. States 17/18 slide the same way with dust 1 tick in 2.
+- Facing is set in `desenhalutador` for states 1/2/7 while `vy == 0`, at
+  the end of a move, on landing and when hit.
+
+## Order of a fight tick (state 7) [decomp]
+
+1. Pending sound `g_sndIndexA` from the last tick is played and cleared
+   (the last writer of a tick wins).
+2. Round-1 entrance, last-fight dialogue check, `g_superPause−−` (while it
+   runs the stage is replaced by `Icone[7]` tiled 100 px and shifted by
+   20/40/60/80 when the counter divides by 2/3/4/5), camera (midpoint,
+   then shake, then clamps), HUD and clock.
+3. Input of the humans (walk, crouch, jump, then all `golpe` buttons, then
+   all `setMove 3..6`), `sequenciagolpe` P1, P2, then `cpu` for CPU
+   players.
+4. Stage objects; fighters drawn (frame selector, effect spawns, spin)
+   with the one whose +0x91 flag is set on top; `defendergolpe`;
+   `desenhaefeitos` (effects and projectile hits).
+5. Time over, round intro (held while the dialogue runs), round end.
+6. Body hits for attacker P1 then P2, `g_hitStop−−`, move clocks, ground
+   clamp, physics.
+7. Dialogue box, `g_ciclo++` (not while paused), red flash
+   (`0x4b449b`, full-screen red on even `g_ciclo`).
+
+## Body hits [decomp, 0x4a85ec]
+
+Hit box of the attacker against the hurt box of the victim, both rounded
+to integers, strict overlap, attacker `attacking`, victim not `invuln`, no
+pause. A low attack (state 9/11) opens a standing guard (21), a jump attack
+(13..16) a crouching one (22). Blocked: victim `animTimer = 1`, sound 10,
+spark 14 at the hit-box centre, victim pushed 10 px back, chip × damage
+level, KO → sound 9 + move 10, hit stop 2+Random(4) (level 1) or
+4+Random(4) (level 2). If the guard is down (also after a chip KO): victim
+faces the attacker, +5 score, meter +2/+1 units, combo (reset when the
+timer was ≤ 35, timer 44, 50 for states 11/16 and some specials), damage,
+red flash (config 7) 1 in 5 (level 1) or 1 in 2 (level 2), KO sound 8, spin
+±20 for the throw specials, spark 1, blood 1 in 5 on level 2, move 9 for
+states 4/6/8/9/10 else 8, move 10 if the attack knocks down or the victim
+is airborne, slide `hitstun` 4 (bigger for some specials), hit sound 7/8/9
+by level, first-hit bonus, attacker drawn on top, both `attacking` cleared,
+multi-hit specials chain (char 2: 28→29, 30→31; char 3: 29→30; char 7:
+29→30), hit stop 5+Random(4) / 7+Random(4), frame selector for the victim.
+Afterwards a victim at the band edge pushes the attacker 12 px back.
 
 ## Hit boxes [decomp]
 
@@ -224,10 +278,30 @@ match winner's victory line, b when `Random(200) > 100` (0x4a7c80). Music: `Musi
 
 ## Stage objects [decomp]
 
-- Stages 1 and 2: a moving object (`0x4b57c8` record: x, y = 146, speed 7,
-  type 1/2) crosses from `camX − 80` with probability `1/Random(k)` per
-  tick while `40 < camX < 160`; it can drop an effect (type 3 or 4, which
-  has a hit box) between `camX + 150` and `camX + 250`.
-- Stage 2: a breakable object (rect from `g_4b57d8`, icon
-  `DXImageListIcone[0x4b57f0]`) that a player knocked down (state 19)
-  into destroys: 30 debris effects (type 21), sound 9.
+- Stage 1, or stage 2 while `noPush` is off: when the record at `0x4b57c8`
+  is idle, `40 < camX < 160` and `Random(330) == 0`, a passer-by starts at
+  `x = camX − 80`, `y = 146`, speed 7, kind `Random(2) + 1`. It is drawn as
+  `Efeitos[0]` at `(x + 10, y + 132)` under `Efeitos[9]` at `(x, y)`,
+  moves by its speed when not paused and ends past `camX + 420`. Between
+  `camX + 150` and `camX + 250`, 1 in 5 per tick (no pause, no `noPush`) it
+  drops a pickup, effect 3 (kind 1) or 4 (kind 2), at `(x + 13, y − 5)`,
+  once. The record is reset at every round.
+- Stage 2: `carregarcenario` fills `0x4b57d8` = (395, 195, 25, 25, 110, 90,
+  icon 6). `Icone[6]` is drawn at (395, 195) while the icon is set (not
+  during a super pause). A player in state 19 whose hurt box reaches it
+  (`x + 110 ≥ L`, `y + 90 ≥ T`, `x + 25 ≤ R`, `y + 25 ≤ B`) breaks it: icon
+  0, sound 9, 30 debris effects (type 21) at `(x + 20 + Random(40), y + 20 +
+  Random(20))`.
+
+## Last-fight dialogue [decomp, 0x4a4591 and 0x4a99de]
+
+At fight 8, round 1, `roundStart == 1`, with a CPU player: `g_dialogo =
+600`, `roundStart = 2`, HUD offsets −120 / +60; the round intro waits until
+`g_dialogo` (−1 per tick) is 0. Two rounded boxes, (5, 165)–(290, 215) and
+(110, 220)–(395, 270), white pen, black fill; the human's big portrait
+(`Retrato[(c − 1)·5 + 4]`) at (15, 85) and the CPU's at (288, 140), both
+sliding in 10 px per tick during the first 20 ticks. Four exchanges of 150
+ticks (human, CPU, human, CPU) show three lines of the dialogue memo (form
+field 0x300) from line `(humanChar − 1)·12 + 0/3/6/9`, size 10, at (115,
+168 + 14k) for the human and (120, 223 + 14k) for the CPU. The human's
+first button takes 5 more ticks off while more than 10 are left.
