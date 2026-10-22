@@ -9,7 +9,8 @@ typedef struct {
 } voice;
 
 static SDL_AudioDeviceID g_dev;
-static voice g_voices[OSC_MAX_VOICES];
+static voice g_voices[OSC_MAX_VOICES];   /* one-shot sounds */
+static voice g_music;                     /* the looping track, kept apart so it never takes a sound's slot */
 
 bool osc_wav_load(const char *path, osc_wav *out)
 {
@@ -49,31 +50,13 @@ void osc_audio_close(void)
         if (g_voices[i].stream) SDL_DestroyAudioStream(g_voices[i].stream);
         g_voices[i].stream = NULL;
     }
+    osc_audio_stop_music();
     if (g_dev) SDL_CloseAudioDevice(g_dev);
     g_dev = 0;
 }
 
-bool osc_audio_play(const osc_wav *w, bool loop)
+static bool voice_start(voice *v, const osc_wav *w, bool loop)
 {
-    if (!g_dev || !w->buf) return false;
-    voice *v = NULL;
-    for (int i = 0; i < OSC_MAX_VOICES; i++) {
-        if (!g_voices[i].stream || (!g_voices[i].loop && SDL_GetAudioStreamQueued(g_voices[i].stream) == 0)) {
-            v = &g_voices[i];
-            break;
-        }
-    }
-    if (!v) {
-        /* every voice busy: steal the one-shot voice with the least left to play,
-         * so hits and voices are never dropped (the original's DirectSound did the same) */
-        int least = -1;
-        for (int i = 0; i < OSC_MAX_VOICES; i++) {
-            if (g_voices[i].loop) continue;
-            int q = SDL_GetAudioStreamQueued(g_voices[i].stream);
-            if (!v || q < least) { v = &g_voices[i]; least = q; }
-        }
-        if (!v) return false;
-    }
     if (v->stream) SDL_DestroyAudioStream(v->stream);
     v->stream = SDL_CreateAudioStream(&w->spec, NULL);
     if (!v->stream) return false;
@@ -88,11 +71,36 @@ bool osc_audio_play(const osc_wav *w, bool loop)
     return true;
 }
 
+bool osc_audio_play(const osc_wav *w)
+{
+    if (!g_dev || !w->buf) return false;
+    /* a free voice, or else steal the one with the least left to play,
+     * so hits and voices are never dropped (the original's DirectSound did the same) */
+    voice *v = NULL;
+    int least = 0;
+    for (int i = 0; i < OSC_MAX_VOICES; i++) {
+        int q = g_voices[i].stream ? SDL_GetAudioStreamQueued(g_voices[i].stream) : 0;
+        if (!v || q < least) { v = &g_voices[i]; least = q; }
+        if (q == 0) break;
+    }
+    return voice_start(v, w, false);
+}
+
+bool osc_audio_music(const osc_wav *w)
+{
+    osc_audio_stop_music();
+    if (!g_dev || !w->buf) return false;
+    return voice_start(&g_music, w, true);
+}
+
+void osc_audio_stop_music(void)
+{
+    if (g_music.stream) SDL_DestroyAudioStream(g_music.stream);
+    SDL_zero(g_music);
+}
+
 void osc_audio_update(void)
 {
-    for (int i = 0; i < OSC_MAX_VOICES; i++) {
-        voice *v = &g_voices[i];
-        if (v->stream && v->loop && SDL_GetAudioStreamQueued(v->stream) < (int)v->wav->len / 2)
-            SDL_PutAudioStreamData(v->stream, v->wav->buf, (int)v->wav->len);
-    }
+    if (g_music.stream && SDL_GetAudioStreamQueued(g_music.stream) < (int)g_music.wav->len / 2)
+        SDL_PutAudioStreamData(g_music.stream, g_music.wav->buf, (int)g_music.wav->len);
 }

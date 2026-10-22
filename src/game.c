@@ -31,7 +31,7 @@ static osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->p[1] ? &g
 void osc_play_snd(osc_game *g, int idx) ;
 static void play_snd(osc_game *g, int idx)
 {
-    if (idx >= 0 && idx < g->n_sounds && g->sounds[idx].buf) osc_audio_play(&g->sounds[idx], false);
+    if (idx >= 0 && idx < g->n_sounds && g->sounds[idx].buf) osc_audio_play(&g->sounds[idx]);
 }
 
 /* AI probability helper: Random(round(C * k)) == 0 (05 "AI difficulty"). */
@@ -1028,6 +1028,7 @@ void osc_fight_render(osc_game *g)
 
 void osc_game_shutdown(osc_game *g)
 {
+    osc_audio_stop_music();
     if (g->has_music) osc_wav_free(&g->music);
     for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
     osc_text_free();
@@ -1047,10 +1048,11 @@ void osc_play_snd(osc_game *g, int idx) { play_snd(g, idx); }
 void osc_play_music(osc_game *g, int n)
 {
     char rel[64], path[1200];
+    osc_audio_stop_music();
     if (g->has_music) { osc_wav_free(&g->music); g->has_music = false; }
     snprintf(rel, sizeof rel, "Musicas/Musica-%02d.wav", n);
     load_path(path, sizeof path, g->data_dir, rel);
-    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_play(&g->music, true); }
+    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_music(&g->music); }
 }
 
 /* ---- helpers for the ending scripts (endings.c) ---------------------------- */

@@ -16,8 +16,11 @@ void osc_wav_free(osc_wav *w);
 /* One output device shared by all sounds. */
 bool osc_audio_open(void);
 void osc_audio_close(void);
-/* Queue a sound; `loop` keeps re-queueing it (used for music). */
-bool osc_audio_play(const osc_wav *w, bool loop);
+/* Play a one-shot sound on a free voice. */
+bool osc_audio_play(const osc_wav *w);
+/* Loop `w` as the music track, replacing the current one. Stop it before freeing its wav. */
+bool osc_audio_music(const osc_wav *w);
+void osc_audio_stop_music(void);
 void osc_audio_update(void);
 
 #endif
