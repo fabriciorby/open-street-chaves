@@ -29,6 +29,12 @@ void osc_wav_free(osc_wav *w)
 
 bool osc_audio_open(void)
 {
+    if (g_dev) return true;
+#ifdef __EMSCRIPTEN__
+    /* the browser pulls audio on the main thread, which the game loop also uses:
+     * a bigger device buffer survives slow frames without stuttering */
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "4096");
+#endif
     g_dev = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
     if (!g_dev) {
         SDL_Log("audio: no output device: %s", SDL_GetError());
@@ -57,7 +63,17 @@ bool osc_audio_play(const osc_wav *w, bool loop)
             break;
         }
     }
-    if (!v) return false;
+    if (!v) {
+        /* every voice busy: steal the one-shot voice with the least left to play,
+         * so hits and voices are never dropped (the original's DirectSound did the same) */
+        int least = -1;
+        for (int i = 0; i < OSC_MAX_VOICES; i++) {
+            if (g_voices[i].loop) continue;
+            int q = SDL_GetAudioStreamQueued(g_voices[i].stream);
+            if (!v || q < least) { v = &g_voices[i]; least = q; }
+        }
+        if (!v) return false;
+    }
     if (v->stream) SDL_DestroyAudioStream(v->stream);
     v->stream = SDL_CreateAudioStream(&w->spec, NULL);
     if (!v->stream) return false;

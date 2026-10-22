@@ -241,7 +241,11 @@ SDL_AppResult SDL_AppIterate(void *state)
     Uint64 now = SDL_GetTicksNS();
     a->acc_ns += now - a->last_ns;
     a->last_ns = now;
+#ifdef __EMSCRIPTEN__
+    if (a->acc_ns > TICK_NS * 2) a->acc_ns = TICK_NS * 2;   /* never let a slow frame snowball on the main thread */
+#else
     if (a->acc_ns > TICK_NS * 5) a->acc_ns = TICK_NS * 5;
+#endif
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
             uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
