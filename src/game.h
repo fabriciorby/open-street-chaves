@@ -106,6 +106,7 @@ typedef struct {
     bool has_music;
     osc_wav sounds[80];   /* DXWaveListSnd[k] = Sons/Som-(k+1).wav */
     int n_sounds;
+    osc_wav voices[16][2]; /* DXWaveListVitoria[2(N-1) + {a, b}] = Falas/Fala-NN-a/b.wav */
     int round_start, round_end;
     int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
     int rounds_to_win;

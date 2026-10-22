@@ -218,7 +218,9 @@ Observed uses: 0 coin, 4 time over, 5 light whiff, 6 heavy whiff, 7 light
 hit, 8 heavy hit, 9 KO / level-3 hit, 10 block, 12 land after knockdown,
 13 stock gained, 19 super start, 21/23/24 character specials. Voices:
 `DXWaveListVitoria[2(N−1) + {0: a, 1: b}]` = `Falas/Fala-NN-a/b.wav`,
-N = 1..15. Music: `Musicas/Musica-0N.wav`, N chosen at round init.
+N = 1..15, played once at `g_roundEnd == 95` (no hit stop or super
+pause) for each fighter whose wins reached the rounds-to-win setting: the
+match winner's victory line, b when `Random(200) > 100` (0x4a7c80). Music: `Musicas/Musica-0N.wav`, N chosen at round init.
 
 ## Stage objects [decomp]
 

@@ -647,6 +647,12 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
             g->n_sounds++;
         }
         SDL_Log("%d sounds loaded", g->n_sounds);
+        for (int c = 1; c <= 15; c++)
+            for (int k = 0; k < 2; k++) {
+                snprintf(rel, sizeof rel, "Falas/Fala-%02d-%c.wav", c, 'a' + k);
+                load_path(path, sizeof path, data_dir, rel);
+                osc_wav_load(path, &g->voices[c][k]);
+            }
     }
     osc_text_load(data_dir);
     /* intro pictures and icons live inside Chaves.exe (03-assets.md) */
@@ -854,6 +860,15 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             else if (g->p[2].health > g->p[1].health) w = &g->p[2];
             if (w) { w->wins++; if (w->human) w->score += 1000; }
         }
+        /* the match winner's victory line, a or b at random: Round(Random(200) / 200)
+         * with banker's rounding (DXTimer1Timer 0x4a7c80) */
+        if (g->round_end == 95 && g->hit_stop == 0 && g->super_pause == 0)
+            for (int i = 1; i <= 2; i++) {
+                osc_fighter *f = &g->p[i];
+                if (f->wins < g->rounds_to_win || f->char_id < 1 || f->char_id > 15) continue;
+                const osc_wav *v = &g->voices[f->char_id][osc_random(g, 200) > 100];
+                if (v->buf) osc_audio_play(v);
+            }
         if (g->round_end > 230) {
             /* next round (state 6 -> 7 init) */
             for (int i = 1; i <= 2; i++) {
@@ -1031,6 +1046,7 @@ void osc_game_shutdown(osc_game *g)
     osc_audio_stop_music();
     if (g->has_music) osc_wav_free(&g->music);
     for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
+    for (int c = 0; c < 16; c++) for (int k = 0; k < 2; k++) osc_wav_free(&g->voices[c][k]);
     osc_text_free();
     osc_font_quit();
     osc_audio_close();
