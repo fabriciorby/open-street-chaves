@@ -60,6 +60,7 @@ if(EMSCRIPTEN)
     -sEXPORTED_FUNCTIONS=_main,_osc_web_data_ready
     -lidbfs.js
     -sINITIAL_MEMORY=256MB
+    -sMINIFY_HTML=0
     --shell-file ${CMAKE_SOURCE_DIR}/web/shell.html
     --embed-file ${CMAKE_SOURCE_DIR}/assets/fonts@/fonts)
 endif()

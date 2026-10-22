@@ -92,10 +92,7 @@ static void select_render(osc_game *g)
     SDL_SetRenderDrawColor(g->ren, 20, 20, 60, 255);
     SDL_RenderClear(g->ren);
     float scroll = (float)(g->sel_sub - 300);
-    osc_text_at(g, 200, 20, osc_text(OSC_MEMO_TEXTO, 7, g->lang), true);   /* SELECIONE SEU LUTADOR */
     char buf[32];
-    snprintf(buf, sizeof buf, "%s %d", osc_text(OSC_MEMO_TEXTO, 8, g->lang), g->sel_timer / 25);
-    osc_text_at(g, 200, 36, buf, true);
     for (int i = 0; i < 15; i++) {
         float x, y;
         cell_pos(i, &x, &y);
@@ -112,15 +109,19 @@ static void select_render(osc_game *g)
         if (g->sel_locked[p] || blink)
             rect(g, x - 1, y - 1, x + 51, y + 61, p == 1 ? 255 : 80, p == 1 ? 220 : 160, p == 1 ? 60 : 255);
         snprintf(buf, sizeof buf, "%dP", p);
-        osc_text_at(g, x + 25, y + 63, buf, true);
-        /* big face + name on each side */
+        osc_text_ex(g, x + 3.f + (p == 2 ? 35.f : 0.f), y + 46.f, buf, 'l', 8, 255, 255, 255);   /* label inside the cell (07b: x+3 / +0x23) */
+        /* big portrait Retrato[(id-1)*5+4] at x 52 / 252 and the name at y 130 (07b "Character select") */
         int c = g->sel[p];
         if (g->face_big[c]) {
-            SDL_FRect d = {p == 1 ? 10.f : 390.f - (float)g->face_big_w[c], 50, (float)g->face_big_w[c], (float)g->face_big_h[c]};
+            SDL_FRect d = {p == 1 ? 52.f : 252.f, 2, (float)g->face_big_w[c], (float)g->face_big_h[c]};
             SDL_RenderTexture(g->ren, g->face_big[c], NULL, &d);
         }
-        osc_text_at(g, p == 1 ? 58.f : 342.f, 50.f + (float)g->face_big_h[c] + 4.f, osc_text(OSC_MEMO_NOMES, c, g->lang), true);
+        osc_text_ex(g, p == 1 ? 100.f : 300.f, 130.f, osc_text(OSC_MEMO_NOMES, c, g->lang), 'c', 10, 255, 255, 255);
     }
+    /* texts are drawn after the portraits in the original (state4_select.txt order) */
+    osc_text_ex(g, 200, 15, osc_text(OSC_MEMO_TEXTO, 7, g->lang), 'c', 10, 255, 255, 255);   /* SELECIONE SEU LUTADOR */
+    snprintf(buf, sizeof buf, "%s %d", osc_text(OSC_MEMO_TEXTO, 8, g->lang), g->sel_timer / 25);
+    osc_text_ex(g, 200, 134, buf, 'c', 10, 255, 255, 255);   /* [approx] TEMPO line */
 }
 
 /* ---- VS / ladder ---------------------------------------------------------------- */
