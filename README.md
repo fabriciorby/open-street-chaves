@@ -72,7 +72,8 @@ browser only and cached in its IndexedDB storage.
 
 ### Web build on GitHub Pages
 
-`.github/workflows/pages.yml` publishes the web build. Because *Street
+`.github/workflows/pages.yml` publishes the web build at
+<https://streetchaves.fabriciorby.me>. Because *Street
 Chaves* is freeware ("proibido ser comercializado"), the deployment also
 fetches the original game folder from the separate repository
 [open-street-chaves-data](https://github.com/fabriciorby/open-street-chaves-data)
