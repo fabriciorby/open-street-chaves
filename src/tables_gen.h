@@ -40,16 +40,16 @@ extern const osc_fx_spawn_row osc_fx_spawns[61];
 
 extern const int8_t osc_frame_offset[16][64];
 extern const osc_anim_row osc_anim[379];
-extern const osc_hurt_row osc_hurt[184];
-extern const osc_hit_row osc_hit[358];
+extern const osc_hurt_row osc_hurt[305];
+extern const osc_hit_row osc_hit[379];
 extern const osc_move_row osc_moves[177];
 extern const osc_seq_row osc_seqs[187];
 extern const osc_golpe_row osc_golpe[186];
 extern const osc_cpu_row osc_cpu[86];
 extern const osc_ending_row osc_endings[154];
 #define OSC_N_ANIM 379
-#define OSC_N_HURT 184
-#define OSC_N_HIT 358
+#define OSC_N_HURT 305
+#define OSC_N_HIT 379
 #define OSC_N_MOVES 177
 #define OSC_N_SEQS 187
 #define OSC_N_GOLPE 186

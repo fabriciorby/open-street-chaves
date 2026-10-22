@@ -175,6 +175,13 @@ Defined by the frame selector `0x47d21c` through two helpers:
   p4 (chip/guard damage, see below). A row with all zeros and `attacking =
   0` ends the active window.
 
+Table completeness: the decompiled listing dropped the hurt-box calls whose
+frame is `base + N` with the arguments held in locals (about 120 of 305) and
+all of character 1's hit boxes (21). `05a-anim-tables.txt` now carries every
+`sub_476870` / `FUN_004768f8` call site of the frame selector (15 per-character
+blocks, 305 hurt and 379 hit rows). Frames without a row keep the previous hurt
+box, so a missing standing-frame row left a stale box after any jump or guard.
+
 Box coordinates are offsets from the sprite's top-left corner `(x, y −
 spriteH)`, in sprite pixels (debug overlay: `g_debugBoxes`).
 

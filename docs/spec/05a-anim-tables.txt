@@ -72,14 +72,62 @@
   state 29 timer 9  : FUN_00476a04('\b',(uint *)"A",bVar5,uVar6, *(undefined4 *)((param_1 & 0xff) * 0xb0 + 0x4b4444),SUB84(dVar13,0), (int)((ulonglong)dVar13 >> 0x20));
   state 29 timer 9  : DAT_004b449a = 0x14;
 
+  hurt frame  1: -13,164,19,35
+  hurt frame  2: -13,164,19,35
+  hurt frame  3: -13,164,19,35
+  hurt frame  4: -13,164,19,35
+  hurt frame  6: -13,164,19,35
+  hurt frame  8: -13,164,19,35
+  hurt frame 10: -13,164,19,35
+  hurt frame 12: -13,164,19,65
+  hurt frame 13: -13,164,19,65
+  hurt frame 15: -13,164,19,65
+  hurt frame 17: -13,164,19,65
+  hurt frame 19: -13,164,19,65
+  hurt frame 21: -13,120,19,40
+  hurt frame 28: -20,120,32,70
+  hurt frame 29: -20,150,32,110
+  hurt frame 31: -13,164,19,35
+  hurt frame 32: -13,164,19,65
+  hurt frame 35: -20,164,12,40
+  hurt frame 37: -10,164,45,80
+  hurt frame 39: -30,164,40,70
+  hurt frame 41: 0,150,35,50
+  hurt frame 43: -15,125,22,50
+  hurt frame 45: -15,110,22,50
+  hit  3,2,0,7,1,1,57,63,47,15
+  hit  4,2,0,7,1,1,124,84,84,25
+  hit  5,5,0,14,2,1,58,65,46,25
+  hit  6,5,0,14,2,1,107,83,82,25
+  hit  8,2,0,7,1,1,82,75,67,15
+  hit  9,2,0,7,1,1,155,70,115,10
+  hit  10,5,0,14,2,1,82,70,67,15
+  hit  11,5,0,14,2,1,113,98,95,5
+  hit  13,2,0,7,1,1,94,80,60,15
+  hit  14,2,0,7,1,1,97,75,75,10
+  hit  15,5,0,14,2,1,94,80,60,15
+  hit  16,5,0,14,2,1,97,75,75,10
+  hit  26,6,2,16,0,1,86,100,73,40
+  hit  26,10,3,20,0,1,86,100,73,40
+  hit  27,0,2,10,0,1,125,32,5,-32
+  hit  27,2,2,6,0,1,125,32,5,-32
+  hit  27,4,2,4,0,1,125,32,5,-32
+  hit  27,7,2,2,0,1,125,32,5,-32
+  hit  28,6,3,10,0,1,70,35,10,-30
+  hit  28,9,2,7,0,1,70,35,10,-30
+  hit  28,12,1,5,0,1,100,45,50,-10
 ## char 2
   state 24: 0->12 2->30
   state 25: 0->35 8->36 10->37
   state 26: 0->38 5->39 11->40
   state 27: 0->24 *->25
-  hurt frame  2: -12
-  hurt frame  4: -12
-  hurt frame  8: -12
+  hurt frame  1: -18,170,13,30
+  hurt frame  2: -12,170,20,30
+  hurt frame  3: -12,170,20,30
+  hurt frame  4: -12,170,20,30
+  hurt frame  6: -12,170,20,30
+  hurt frame  8: -12,170,20,30
+  hurt frame 10: -12,170,20,30
   hurt frame 12: -12,170,20,70
   hurt frame 13: -12,170,20,70
   hurt frame 15: -12,170,20,70
@@ -220,9 +268,13 @@
   state 27: 0->43 3->44
   state 28: 0->46 2->47 4->46 6->47 8->46
   state 30: *->50
-  hurt frame  2: -17
-  hurt frame  4: -17
-  hurt frame  8: -17
+  hurt frame  1: -17,155,14,30
+  hurt frame  2: -17,155,14,30
+  hurt frame  3: -17,155,14,30
+  hurt frame  4: -17,155,14,30
+  hurt frame  6: -17,155,14,30
+  hurt frame  8: -17,155,14,30
+  hurt frame 10: -17,155,14,30
   hurt frame 12: -17,155,14,65
   hurt frame 13: -17,155,14,65
   hurt frame 15: -17,155,14,65
@@ -325,9 +377,13 @@
   state 27: 0->12 2->39 6->40 9->41
   state 28: 0->42 2->43 4->44 6->45
   state 29: 0->12 1->39 5->40 9->41
-  hurt frame  2: -17
-  hurt frame  4: -17
-  hurt frame  8: -17
+  hurt frame  1: -17,160,14,20
+  hurt frame  2: -17,160,14,20
+  hurt frame  3: -17,160,14,20
+  hurt frame  4: -17,160,14,20
+  hurt frame  6: -17,160,14,20
+  hurt frame  8: -17,160,14,20
+  hurt frame 10: -17,160,14,60
   hurt frame 12: -17,160,14,65
   hurt frame 13: -17,160,14,65
   hurt frame 15: -17,160,14,65
@@ -392,9 +448,13 @@
   state 26: 0->39 5->40 10->41 15->42 20->12
   state 27: 0->39 2->40 35->40 38->39 *->44
   state 29: 0->7 1->10 2->11 3->6 4->7 5->10 6->11
-  hurt frame  2: -17
-  hurt frame  4: -17
-  hurt frame  8: -17
+  hurt frame  1: -17,150,14,20
+  hurt frame  2: -17,150,14,20
+  hurt frame  3: -17,150,14,20
+  hurt frame  4: -17,150,14,20
+  hurt frame  6: -17,150,14,20
+  hurt frame  8: -17,150,14,20
+  hurt frame 10: -17,150,14,20
   hurt frame 12: -17,150,14,65
   hurt frame 13: -17,150,14,65
   hurt frame 15: -17,150,14,65
@@ -485,9 +545,13 @@
   state 27: 0->41 3->42 9->43
   state 28: 0->41 2->44 7->41
   state 29: 0->41 3->44 7->41 8->41 9->42 25->43
-  hurt frame  2: -5
-  hurt frame  4: -5
-  hurt frame  8: -5
+  hurt frame  1: -5,200,30,40
+  hurt frame  2: -5,200,30,40
+  hurt frame  3: -5,200,30,40
+  hurt frame  4: -5,200,30,40
+  hurt frame  6: -5,200,30,40
+  hurt frame  8: -5,200,30,40
+  hurt frame 10: -5,200,30,40
   hurt frame 12: -10,200,20,97
   hurt frame 13: -10,200,20,97
   hurt frame 15: -10,200,20,97
@@ -584,9 +648,13 @@
   state 27: 0->42 2->43 4->44
   state 28: 0->45 2->46
   state 29: 0->38 *->38
-  hurt frame  2: -12
-  hurt frame  4: -12
-  hurt frame  8: -12
+  hurt frame  1: -12,170,20,35
+  hurt frame  2: -12,170,20,35
+  hurt frame  3: -12,170,20,35
+  hurt frame  4: -12,170,20,35
+  hurt frame  6: -12,170,20,35
+  hurt frame  8: -12,170,20,35
+  hurt frame 10: -12,170,20,35
   hurt frame 12: -18,170,25,73
   hurt frame 13: -18,170,25,73
   hurt frame 15: -18,170,25,73
@@ -690,9 +758,13 @@
   state 26: 0->34 5->37 10->38
   state 27: 0->39 2->40 4->41 6->40 8->41 10->40
   state 28: 9->42 11->43 13->42 15->43 17->42
-  hurt frame  2: -17
-  hurt frame  4: -17
-  hurt frame  8: -17
+  hurt frame  1: -17,170,14,30
+  hurt frame  2: -17,170,14,30
+  hurt frame  3: -17,170,14,30
+  hurt frame  4: -17,170,14,30
+  hurt frame  6: -17,170,14,30
+  hurt frame  8: -17,170,14,30
+  hurt frame 10: -17,170,14,30
   hurt frame 12: -17,170,20,67
   hurt frame 13: -17,170,20,67
   hurt frame 15: -17,170,20,67
@@ -785,9 +857,13 @@
   state 27: 0->40 3->41 5->42 7->43
   state 28: 0->24 3->44
   state 29: 0->35 1->36 2->35 3->36 4->35 5->36 6->35 7->36 8->35 9->36 11->37 12->38
-  hurt frame  2: -17
-  hurt frame  4: -17
-  hurt frame  8: -17
+  hurt frame  1: -17,160,14,30
+  hurt frame  2: -17,160,14,30
+  hurt frame  3: -17,160,14,30
+  hurt frame  4: -17,160,14,30
+  hurt frame  6: -17,160,14,30
+  hurt frame  8: -17,160,14,30
+  hurt frame 10: -17,160,14,70
   hurt frame 12: -17,160,20,70
   hurt frame 13: -17,160,20,70
   hurt frame 15: -17,160,20,70
@@ -890,10 +966,13 @@
   state 27: 0->41 4->42
   state 28: 0->43 6->44
   state 29: 0->38 2->39 4->40 15->41 20->42
-  hurt frame  1: -14
-  hurt frame  2: -14
-  hurt frame  4: -14
-  hurt frame  8: -14
+  hurt frame  1: -14,170,19,30
+  hurt frame  2: -14,170,19,30
+  hurt frame  3: -14,170,19,30
+  hurt frame  4: -14,170,19,30
+  hurt frame  6: -14,170,19,30
+  hurt frame  8: -14,170,19,30
+  hurt frame 10: -14,170,19,30
   hurt frame 12: -20,170,20,65
   hurt frame 13: -20,170,20,65
   hurt frame 15: -20,170,20,65
@@ -982,10 +1061,13 @@
   state 27: *->40
   state 28: 0->41 2->42 4->41 6->42 8->41 10->42 12->41
   state 29: 0->7 2->9 4->7 6->5 8->9 10->5 12->9 14->5 16->9 18->7 20->9 22->7 24->5 26->9 28->11
-  hurt frame  1: -14
-  hurt frame  2: -14
-  hurt frame  4: -14
-  hurt frame  8: -14
+  hurt frame  1: -14,170,19,30
+  hurt frame  2: -14,170,19,30
+  hurt frame  3: -14,170,19,30
+  hurt frame  4: -14,170,19,30
+  hurt frame  6: -14,170,19,30
+  hurt frame  8: -14,170,19,30
+  hurt frame 10: -14,170,19,30
   hurt frame 12: -9,170,24,68
   hurt frame 21: -15,140,19,28
   hurt frame 28: -28,112,36,78
@@ -1071,10 +1153,13 @@
   state 26: 0->38 3->39 8->40
   state 27: 0->41 2->42 4->41 6->43 8->44 10->43 12->41 14->42 16->41
   state 28: 0->38 4->39 8->40 10->38 13->39 25->40
-  hurt frame  1: -8
-  hurt frame  2: -8
-  hurt frame  4: -8
-  hurt frame  8: -8
+  hurt frame  1: -8,175,26,30
+  hurt frame  2: -8,175,26,30
+  hurt frame  3: -8,175,26,30
+  hurt frame  4: -8,175,26,30
+  hurt frame  6: -8,175,26,30
+  hurt frame  8: -8,175,26,30
+  hurt frame 10: -8,175,26,30
   hurt frame 12: -9,170,24,72
   hurt frame 13: -9,170,24,72
   hurt frame 15: -9,170,24,72
@@ -1175,9 +1260,13 @@
   state 27: *->43
   state 28: 1->33
   state 29: *->45
-  hurt frame  2: -12
-  hurt frame  4: -12
-  hurt frame  8: -12
+  hurt frame  1: -12,160,23,25
+  hurt frame  2: -12,160,23,25
+  hurt frame  3: -12,160,23,25
+  hurt frame  4: -12,160,23,25
+  hurt frame  6: -12,160,23,25
+  hurt frame  8: -12,160,23,25
+  hurt frame 10: -12,160,23,25
   hurt frame 12: -12,160,23,55
   hurt frame 13: -12,160,23,55
   hurt frame 15: -12,160,23,55
@@ -1266,9 +1355,13 @@
   state 27: 0->40 1->40 3->41 5->42 7->43
   state 28: 0->44 3->45 5->46 17->21
   state 29: *->47
-  hurt frame  2: -12
-  hurt frame  4: -12
-  hurt frame  8: -12
+  hurt frame  1: -12,160,18,42
+  hurt frame  2: -12,160,18,42
+  hurt frame  3: -12,160,18,42
+  hurt frame  4: -12,160,18,42
+  hurt frame  6: -12,160,18,42
+  hurt frame  8: -12,160,18,42
+  hurt frame 10: -12,160,18,42
   hurt frame 12: -12,160,18,85
   hurt frame 13: -12,160,18,85
   hurt frame 15: -12,160,18,85
@@ -1338,9 +1431,13 @@
   state 27: 0->43 2->44 4->45 7->46 10->47 13->48 16->12
   state 28: *->49
   state 29: *->50
-  hurt frame  2: -8
-  hurt frame  4: -8
-  hurt frame  8: 5
+  hurt frame  1: -8,160,23,28
+  hurt frame  2: -8,160,23,28
+  hurt frame  3: -8,160,23,28
+  hurt frame  4: -8,160,23,28
+  hurt frame  6: -8,160,23,28
+  hurt frame  8: 5,160,35,28
+  hurt frame 10: -8,160,23,28
   hurt frame 12: -12,160,20,64
   hurt frame 13: -12,160,20,64
   hurt frame 15: -12,160,20,64
