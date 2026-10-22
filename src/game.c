@@ -209,6 +209,20 @@ static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, doubl
         e->damage = t->damage;
         e->life = t->life;
         if (type == 24) e->life = 15 + osc_random(g, 15);
+        /* FUN_00476a04 extras the table does not carry */
+        switch (type) {
+        case 7: case 9: case 12: case 13: case 15: case 18: case 19: case 22: case 26: case 29: case 33:
+            e->knock = osc_random(g, 5) == 0; break;       /* 1 in 5 knocks down */
+        case 31: case 32:
+            e->knock = true; osc_random(g, 5); break;
+        case 8: case 23: case 30: case 34: e->knock = true; break;
+        case 20: e->knock = true; e->speed = 10 + osc_random(g, 2); break;
+        default: break;
+        }
+        if (type == 30) e->reflect = true;                  /* bats projectiles back */
+        if (type == 22) { e->vy = variant == 2 ? -17 : -13; e->sprite = 56; }
+        /* chip on guard (+0x23): Round(damage / 4), / 15 for the big ones */
+        e->chip = iround(e->damage / ((type == 8 || type == 31 || type == 32) ? 15.0 : 4.0));
         e->has_hitbox = t->flags & OSC_FX_HITBOX;
         e->top_anchor = t->flags & OSC_FX_TOP;
         e->gravity = t->flags & OSC_FX_GRAVITY;
@@ -217,7 +231,13 @@ static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, doubl
         e->c5 = t->c5;
         e->loop_at = t->loop_at;
         e->hb_l = t->l; e->hb_t = t->t; e->hb_r = t->r; e->hb_b = t->b;
-        if (type == 21) { e->dir = 1 + osc_random(g, 2); e->speed = osc_random(g, 10); }
+        if (type == 21) {                                   /* debris */
+            int r = osc_random(g, 5);
+            e->vy = -23 - 5 * r;
+            e->dir = 1 + osc_random(g, 2);
+            e->speed = osc_random(g, 10);
+            e->sprite = 53 + osc_random(g, 3);
+        }
         if (SDL_getenv("OSC_DEBUG")) SDL_Log("spawn fx type %d var %d owner %d at %.0f,%.0f speed %d dmg %d box %d,%d,%d,%d tick %u", type, variant, owner, x, y, e->speed, e->damage, e->hb_l, e->hb_t, e->hb_r, e->hb_b, g->tick);
         return e;
     }
@@ -399,49 +419,6 @@ static void defend(osc_game *g, osc_fighter *f)
     if (held(f, "TRAS") && o->attacking) set_move(g, f, held(f, "BAIXO") ? 13 : 12);
 }
 
-/* ---- hit application shared by body attacks and projectiles --------------------------- */
-typedef struct { int damage, chip, level; bool heavy, knockdown; double x, y; int attacker; } osc_hitinfo;
-
-static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hitinfo *h)
-{
-    if (v->blocking) {
-        v->anim_timer = 1;
-        play_snd(g, 10);
-        spawn_fx(g, 14, 0, 0, h->x, h->y);
-        if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
-        if (!g->no_push) v->health -= h->chip * g->damage_level;
-        v->trail_delay = 20;
-        if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
-        if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 4 : 2) : 2;
-        return;
-    }
-    play_snd(g, h->level >= 3 ? 9 : h->level == 2 ? 8 : 7);
-    spawn_fx(g, 1, 0, 0, h->x, h->y);
-    v->facing = v->x < a->x ? 1 : 2;
-    if (a->human && v->health > 0.0) a->score += h->attacker ? 5 : 10;
-    if (!g->first_hit) {
-        /* "Primeiro Ataque": +300 for a human (0x4a9221, projectiles 0x490229) */
-        a->msg_index = 1; a->msg_timer = 50;
-        if (a->human && (!h->attacker || (!g->hit_stop && !g->super_pause))) a->score += 300;
-        g->first_hit = true;
-    }
-    if (a->meter < OSC_METER_MAX) a->meter += k_meter_unit * (h->attacker ? 2.0 : 1.0);
-    if (v->meter < OSC_METER_MAX && h->attacker) v->meter += k_meter_unit;
-    if (a->combo_timer < 36) a->hits = 0;
-    a->hits++;
-    a->combo_timer = h->attacker ? 44 : 50;
-    if (a->hits > a->max_combo) a->max_combo = a->hits;
-    if (!g->no_push) v->health -= h->damage * g->damage_level;
-    v->trail_delay = 20;
-    if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
-    set_move(g, v, h->heavy ? 9 : 8);
-    if (h->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
-    v->hitstun = h->attacker ? 4 : 8;
-    v->blocking = false;
-    if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 7 : 5) : 5;
-    select_frame(v);
-}
-
 /* ---- body hits (DXTimer1Timer 0x4a85ec..0x4a9442), attacker a = P1 then P2 ---- */
 static void melee_step(osc_game *g, osc_fighter *a)
 {
@@ -586,38 +563,86 @@ static void update_fx(osc_game *g)
             if (e->type == 34 && e->phase > 13) e->has_hitbox = false;
             if (!e->type) continue;
         }
-        /* effect vs effect: hostile projectiles from different owners cancel */
-        if (e->has_hitbox && e->damage > 0 && e->owner) {
-            for (int j = 0; j < OSC_MAX_FX; j++) {
-                osc_effect *o = &g->fx[j];
-                if (j == i || !o->type || !o->has_hitbox || o->damage <= 0 || !o->owner || o->owner == e->owner) continue;
-                if (e->x + e->hb_l < o->x + o->hb_r && o->x + o->hb_l < e->x + e->hb_r &&
-                    e->y + e->hb_t < o->y + o->hb_b && o->y + o->hb_t < e->y + e->hb_b) {
-                    spawn_fx(g, 1, 0, 0, e->x, e->y);
-                    if (!e->persist) e->type = 0;
-                    if (!o->persist) o->type = 0;
-                    break;
-                }
-            }
-            if (!e->type) continue;
+        /* effect vs effect (0x48fdb2): a reflector takes the other one over, otherwise
+         * effects of different owners cancel, each leaving a spark unless it persists */
+        for (int j = 0; j < OSC_MAX_FX && e->type; j++) {
+            osc_effect *o = &g->fx[j];
+            if (!(e->x + e->hb_r > o->x + o->hb_l && e->x + e->hb_l < o->x + o->hb_r &&
+                  e->y + e->hb_b > o->y + o->hb_t && e->y + e->hb_t < o->y + o->hb_b)) continue;
+            if (!o->has_hitbox || !e->has_hitbox || !o->type || o->damage <= 0 || e->damage <= 0 || j == i) continue;
+            if (e->reflect) { o->owner = e->owner; o->dir = g->p[e->owner].facing; }
+            if (o->reflect) { e->owner = o->owner; e->dir = g->p[o->owner].facing; }
+            if (o->owner == e->owner) continue;
+            if (!e->persist) { spawn_fx(g, 1, 0, 0, e->x, e->y); e->type = 0; }
+            if (!o->persist) { spawn_fx(g, 1, 0, 0, o->x, o->y); o->type = 0; }
         }
-        /* effect vs player */
-        if (e->has_hitbox && e->damage > 0 && e->owner && !frozen) {
-            for (int p = 1; p <= 2; p++) {
-                if (p == e->owner) continue;
-                osc_fighter *v = &g->p[p], *a = &g->p[e->owner];
-                double vl = v->x + v->hurt_l, vt = v->y - v->sprite_h + v->hurt_t, vr = v->x + v->hurt_r, vb = v->y - v->sprite_h + v->hurt_b;
-                if (!(e->x + e->hb_l < vr && vl < e->x + e->hb_r && e->y + e->hb_t < vb && vt < e->y + e->hb_b)) continue;
-                if (v->invuln && !v->blocking) continue;
-                osc_hitinfo h = {e->damage, (int)(e->damage / 4), e->damage >= 20 ? 2 : 1, true,
-                             e->type == 8 || e->type == 20, e->x, e->y, 0};
-                apply_hit(g, a, v, &h);
+        if (!e->type) continue;
+        /* effect vs player (0x48fee7) */
+        for (int p = 1; p <= 2 && e->type; p++) {
+            osc_fighter *v = &g->p[p], *a = opp(g, v);
+            if (!(e->x + e->hb_r > v->x + v->hurt_l && e->x + e->hb_l < v->x + v->hurt_r &&
+                  e->y + e->hb_b > v->y - v->sprite_h + v->hurt_t && e->y + e->hb_t < v->y - v->sprite_h + v->hurt_b))
+                continue;
+            bool live = !g->challenge && !g->no_push;
+            if (v->blocking && e->has_hitbox && e->damage > 0 && e->owner != p) {
+                v->anim_timer = 1;
+                g->snd_pending = 10;
+                spawn_fx(g, 14, 0, 0, e->x, e->y);
+                if (v->facing == 1) move_x(g, v, -10.0);
+                if (v->facing == 2) move_x(g, v, 10.0);
+                if (live) { v->health -= e->chip * g->damage_level; v->trail_delay = 20; }
+                if (v->health <= 0.0) { g->snd_pending = 9; set_move(g, v, 10); }
                 if (!e->persist) e->type = 0;
                 e->has_hitbox = false;
-                break;
+                if (v->health > 0.0) g->hit_stop = 2;
             }
-            if (!e->type) continue;
+            if (e->has_hitbox && e->damage > 0 && !v->invuln && e->owner != p && !v->blocking) {
+                if (v->x < a->x) v->facing = 1;
+                if (v->x >= a->x) v->facing = 2;
+                g->snd_pending = 9;
+                spawn_fx(g, 1, 0, 0, e->x, e->y);
+                if (g->cfg_flash && osc_random(g, 3) == 0) g->flash = 4;
+                if (g->cfg_blood && osc_random(g, 3) == 0) spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
+                if (a->human && v->health > 0.0) a->score += 10;
+                if (a->combo_timer <= 35) a->hits = 0;
+                a->hits++;
+                a->combo_timer = 50;
+                if (a->hits > a->max_combo) a->max_combo = a->hits;
+                if (live) {
+                    v->health -= e->damage * g->damage_level;
+                    if (v->meter < OSC_METER_MAX) v->meter += 1.0 * k_meter_unit;   /* the one hit gains */
+                    v->trail_delay = 20;
+                }
+                if (e->knock || v->vy != 0 || v->health <= 0.0) set_move(g, v, 10);
+                set_move(g, v, 9);
+                v->hitstun = 8;
+                if (!g->first_hit) {
+                    a->msg_index = 1; a->msg_timer = 50;   /* "Primeiro Ataque" */
+                    if (a->human) a->score += 300;
+                    g->first_hit = true;
+                }
+                a->on_top = true; v->on_top = false;
+                if (v->health > 0.0) g->hit_stop = 5;
+                if (e->type == 8) { v->hitstun = 10; v->vy = -60; }
+                if (e->type == 20) { v->vy = -20; v->invuln = false; v->hitstun = 6; }
+                if (e->type == 8 || e->type == 20) {
+                    v->state = 19;
+                    if (v->facing == 1) v->rot_step = -20;
+                    if (v->facing == 2) v->rot_step = 20;
+                }
+                if (!e->persist) e->type = 0;
+                e->has_hitbox = false;
+                select_frame(v);
+            }
+            /* pickups dropped by the passer-by: 20 or 30 health (0x490308) */
+            if ((e->type == 3 || e->type == 4) && e->phase > 13 && v->health > 0.0 && !g->no_push) {
+                if (!g->challenge) v->health += (e->type == 3 ? 20.0 : 30.0) * g->damage_level;
+                g->snd_pending = 11;
+                spawn_fx(g, 5, 0, 0, e->x, e->y);
+                e->type = 0;
+            }
         }
+        if (!e->type) continue;
         if (!frozen) {
             if (e->life != 99) e->phase++;
             if (e->loop_at && e->phase >= e->loop_at) e->phase = 0;

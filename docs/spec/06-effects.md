@@ -30,26 +30,33 @@ Every tick, for each live slot:
    `MemoTexto[5]`) rises; projectiles move `x += ±speed` by `dir`; some
    spawn child effects (type 27 → three type-28 at the end of its life;
    type 19 → spark type 1).
-3. **Effect vs effect**: two hostile effects with hit boxes from different
-   owners that overlap cancel each other (spark type 1 at both, both
-   removed), unless flagged unbreakable (`flagB`).
-4. **Effect vs player** (hostile, has hit box, `damage > 0`, not the
-   owner): rectangles `effect(x+l, y+t, x+r, y+b)` and the player's hurt
+3. **Effect vs effect** (not gated by pause or owner check up front): two
+   effects with hit boxes that overlap. If one has `reflect` (+0x32, type
+   30) it takes the other over: owner, `dir` flipped. Same owner → skip.
+   Otherwise every non-persistent one (`persist` +0x2a clear) gets its own
+   spark (type 1) and is removed.
+4. **Effect vs player** (has hit box, `damage > 0`, not the owner, no pause
+   gate): rectangles `effect(x+l, y+t, x+r, y+b)` and the player's hurt
    box must overlap (strict). Then:
-   - victim `isBlocking == 1` → `animTimer := 1`, sound 10, block spark
-     (type 14), push back, chip `param × damageLevel`, `hitStop = 2`, KO if
-     health ≤ 0 (sound 9, move 10); projectile removed unless `flagB`.
+   - victim blocking → `animTimer := 1`, sound 10, block spark (type 14),
+     push ±10, chip `param` (+0x23 = Round(damage/4), or /15 for types 8,
+     31, 32) × damageLevel, KO if health ≤ 0 (sound 9, move 10); removed
+     unless persistent; hit box off; `hitStop = 2`.
    - else (`invuln == 0`): victim faces the projectile, sound 9, hit spark
-     (type 1), blood (type 10) with config "sangue" (1/3 chance) or
-     `Satanas.dat`, attacker score +10 (human), attacker combo counter,
-     damage `damage × damageLevel`, attacker meter gain, **move 9** (heavy
-     hit) with `hitstun = 8`, first-hit bonus, screen shake flag with config
-     line 8 (1/3), `hitStop = 5`; type 8 and 20 instead knock down (state 19,
-     `vy = −60` / `−20`, `rotStep = ±20`, hitstun 10 / 6). The frame
-     selector is re-run for the victim immediately.
+     (type 1), red flash 4 with config line 8 (1/3), blood with config
+     "sangue" (1/3), attacker score +10, combo timer 50, damage
+     `damage × damageLevel`, the **victim** gains 1 meter unit, move 10
+     when `knock` (+0x29) or vy ≠ 0 or health ≤ 0, else move 9, with
+     `hitstun = 8`; first-hit bonus; drawn on top; `hitStop = 5`. Type 8
+     and 20 instead force state 19 (`vy = −60` / `−20`, `rotStep = ±20`,
+     hitstun 10 / 6, type 20 also clears invuln). Removed unless
+     persistent; hit box off; frame selector re-run for the victim.
+   - `knock` at spawn: 1 in 5 (`Random(5) == 0`) for types 7, 9, 12, 13,
+     15, 18, 19, 22, 26, 29, 33; always for 8, 20, 23, 30, 31, 32, 34.
    - types 3 and 4 (stage pickups, from the passing object on stages 1–2)
-     after phase 13: **heal** the player who touches them (`health +=
-     k × damageLevel`, two different constants), sound 11, popup type 5.
+     after phase 13, victim alive, not during the entrance: **heal** the
+     player who touches them (`health += k × damageLevel`, none in the
+     challenge mode), sound 11, popup type 5, removed.
 5. `phase++` when not paused (unless `life == 99` = infinite); the slot is
    freed when `phase > life`. A second counter (`c4`/`c5`) drives delayed
    actions (e.g. type 27 arms its hit box 2 ticks before the end).
@@ -61,7 +68,7 @@ floats read from the binary: `0x490568` = 1.0, `0x49056c` = 3.0, `0x490570`
 20.0, `0x490594` = 30.0, `0x4905a4` = 40.0. So: dust (type 2) rises 1.0 px
 per tick, floating text (type 5) rises 5.0 px per tick, pickups heal **20 ×
 damageLevel** (type 3) and **30 × damageLevel** (type 4), a projectile hit
-gives the attacker `1.0 × g_meterUnit` of meter, type 27 spawns its three
+gives the victim `1.0 × g_meterUnit` of meter, type 27 spawns its three
 type-28 bursts 20 px up and ±30 px sideways. Per-type motion statements
 are in `06a` with these values to substitute.
 

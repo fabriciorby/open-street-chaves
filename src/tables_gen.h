@@ -31,10 +31,10 @@ typedef struct { uint16_t stage_mask; uint8_t ciclo_lo, ciclo_hi, is_effect, ite
 extern const osc_stage_anim_row osc_stage_anim[137];
 #define OSC_N_STAGE_ANIM 137
 
-extern const osc_fx_type osc_fx_types[36];
+extern const osc_fx_type osc_fx_types[37];
 extern const osc_fx_sprite_row osc_fx_sprites[125];
 extern const osc_fx_spawn_row osc_fx_spawns[61];
-#define OSC_N_FX_TYPES 36
+#define OSC_N_FX_TYPES 37
 #define OSC_N_FX_SPRITES 125
 #define OSC_N_FX_SPAWNS 61
 

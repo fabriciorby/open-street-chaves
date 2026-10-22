@@ -83,6 +83,9 @@ typedef struct {
     int vy;              /* gravity-driven effects */
     int hb_l, hb_t, hb_r, hb_b;
     bool has_hitbox, done, persist, top_anchor, gravity;
+    bool knock;          /* +0x29 the hit knocks down */
+    bool reflect;        /* +0x32 turns hostile effects it touches into its owner's */
+    int chip;            /* +0x23 damage on guard */
     int loop_at;
 } osc_effect;
 

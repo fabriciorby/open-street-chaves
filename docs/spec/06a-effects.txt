@@ -473,6 +473,8 @@
   speed = (char)uVar2
   uVar2 = Random(3);
   sprite = rand+53
+
+## type 22
   life = 20
   sprite = 56
   f9 = 1
