@@ -83,14 +83,16 @@ static void select_tick(osc_game *g, uint8_t in1, uint8_t in2)
         osc_play_snd(g, 2);
     }
     if (g->sel_locked[1] && g->sel_locked[2]) {
-        if (!g->p2_in) {
-            osc_make_ladder(g, g->sel[1]);
-            g->sel[2] = g->ladder[g->fight_no];
+        bool both = g->p1_in && g->p2_in;
+        if (!both) {                        /* criaadversario for the lone human */
+            int h = g->p1_in ? 1 : 2;
+            osc_make_ladder(g, g->sel[h]);
+            g->sel[3 - h] = g->ladder[g->fight_no];
         }
         g->p[1].human = g->p1_in;
         g->p[2].human = g->p2_in;
         g->p[1].char_id = g->sel[1]; g->p[2].char_id = g->sel[2];
-        g->screen = g->p2_in ? OSC_SCREEN_FIGHT : OSC_SCREEN_VS;
+        g->screen = both ? OSC_SCREEN_FIGHT : OSC_SCREEN_VS;
         g->screen_tick = 0; g->ciclo = 0;
         if (g->screen == OSC_SCREEN_FIGHT) osc_fight_start(g, g->sel[1], g->sel[2], 0);
     }
@@ -194,39 +196,38 @@ static void vs_render(osc_game *g)
         for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + c2 - 120, k_black);
 }
 
-/* ---- continue ------------------------------------------------------------------- */
+/* ---- continue (state 9, 0x4ab647..0x4ab8fe) --------------------------------------- */
 static void continue_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
+    (void)in1; (void)in2;   /* continuing takes a coin and a start button (handle_keys) */
     g->screen_tick++;
+    if (g->timer_sec > 0 || g->timer_sub > 0) {
+        if (++g->ciclo > 10) g->ciclo = 0;
+    }
     if (g->timer_sub > 0) g->timer_sub--;
     if (g->timer_sub == 0 && g->timer_sec > 0) { g->timer_sec--; g->timer_sub = 25; }
-    if ((in1 | in2) & OSC_IN_B1) {
-        /* continue: back to the select screen, same ladder position */
-        g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 300;
-        g->sel_locked[1] = g->sel_locked[2] = 0; g->timer_sec = 30; g->timer_sub = 25;
-        g->p[1].score = 0;
-        return;
-    }
-    if (g->timer_sec == 0 && g->timer_sub == 0 && g->screen_tick > 150) {
-        /* game over -> records (state 8), then attract */
-        g->screen = OSC_SCREEN_RECORDS; g->screen_tick = 0; g->menu_cam = 0; g->ciclo = 0;
-        g->p1_in = g->p2_in = false; g->fight_no = 0;
-        g->p[1].score = g->p[2].score = 0;
+    if (g->timer_sec == 0 && g->timer_sub == 0) {
+        if (++g->ciclo > 150) {   /* game over -> records (state 8), then attract */
+            g->screen = OSC_SCREEN_RECORDS; g->screen_tick = 0; g->menu_cam = 0; g->ciclo = 0;
+            g->p1_in = g->p2_in = false;
+            g->p[1].human = g->p[2].human = false;
+        }
     }
 }
 
 static void continue_render(osc_game *g)
 {
-    osc_fight_render(g);
-    fill(g, 100, 100, 300, 200, 0, 0, 0);
-    rect(g, 100, 100, 300, 200, 255, 255, 255);
     char buf[16];
+    for (int i = 0; i <= 60; i++) barra(g, 0, 5 * i, 400, 5 * i + 5, rgb(3 * i + 10, 3 * i + 50, 3 * i + 30));
     if (g->timer_sec > 0 || g->timer_sub > 0) {
-        osc_text_at(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 23, g->lang), true);   /* CONTINUE ? */
-        snprintf(buf, sizeof buf, "%d", g->timer_sec);
-        osc_text_at(g, 200, 150, buf, true);
+        texto(g, 200, 20, osc_text(OSC_MEMO_TEXTO, 23, g->lang), 'c', 35, rgb(255, 120, 120));   /* CONTINUE ? */
+        if (g->timer_sec > 3 || g->ciclo < 8) {
+            snprintf(buf, sizeof buf, "%d", g->timer_sec);
+            texto(g, 320, 70, buf, 'c', 120, rgb(255, 25 * g->timer_sec, 25 * g->timer_sec));
+        }
     } else {
-        osc_text_at(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 22, g->lang), true);   /* FIM DO JOGO */
+        texto(g, 200, 110, osc_text(OSC_MEMO_TEXTO, 22, g->lang), 'c', 36, rgb(255, 0, 0));   /* FIM DO JOGO */
+        if (g->ciclo < 15) barra(g, 0, 10 * g->ciclo, 400, 300 - 10 * g->ciclo, k_white);
     }
 }
 
@@ -398,26 +399,24 @@ static void records_tick(osc_game *g)
 
 static void records_render(osc_game *g)
 {
-    SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
-    SDL_RenderClear(g->ren);
-    for (int i = 0; i < 21; i++)   /* [approx] gradient operands not recovered */
-        fill(g, 0, (float)(20 * i), 400, (float)(20 * i + 20), (Uint8)(40 + 4 * i), (Uint8)(30 + 3 * i), (Uint8)(120 + 5 * i));
+    for (int i = 0; i < 21; i++) barra(g, 0, 20 * i, 400, 20 * i + 20, rgb(5 * i + 100, 5 * i + 130, 5 * i + 160));
     for (int i = 1; i <= 10; i++) {
         const osc_record *r = &g->records[i - 1];
-        float y = (float)(60 * i - 350 - g->menu_cam);
-        bool hl = i == 1 && (g->ciclo & 1) == 0;
-        Uint8 cr = 255, cg = hl ? 255 : 255, cb = hl ? 0 : 255;
+        int y = 60 * i - 350 - g->menu_cam;
+        int hl = i == 1 && (g->ciclo & 1) == 0 ? 80 : 0;   /* the leader blinks */
+        osc_rgb c = rgb(255, 255 - hl, 255 - hl);
         char num[16], sc[16];
-        snprintf(num, sizeof num, "%d -", i);
+        snprintf(num, sizeof num, i < 10 ? "0%d -" : "%d -", i);
         snprintf(sc, sizeof sc, "%d", r->score);
-        osc_text_ex(g, 50, y, num, 'l', 12, cr, cg, cb);
-        osc_text_ex(g, 100, y, r->name, 'l', 12, cr, cg, cb);
-        if (r->char_id >= 1 && r->char_id <= 15 && g->face_small[r->char_id]) blit(g, g->face_small[r->char_id], 50, 60, 160, y - 20);
-        osc_text_ex(g, 230, y, sc, 'l', 12, cr, cg, cb);
+        texto(g, 50, y, num, '-', 15, c);
+        texto(g, 100, y, r->name, '-', 15, c);
+        if (r->char_id >= 1 && r->char_id <= 15) draw_tex(g, g->face_small[r->char_id], 160.f, (float)(y - 20), 255, false);
+        texto(g, 230, y, sc, '-', 15, c);
     }
-    if (g->screen_tick > 240) fill(g, 0, 0, 400, 320, 0, 0, 0);
-    if (g->ciclo < 18) osc_text_ex(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->lang), 'c', 12, 255, 255, 255);
-    if (g->ciclo < 10) osc_text_ex(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 12, 255, 255, 255);
+    if (g->screen_tick > 240)
+        for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + g->screen_tick - 240, k_black);
+    if (g->ciclo < 18) texto(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->lang), 'c', 12, k_white);    /* OS 10 MELHORES */
+    if (g->ciclo < 10) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 10, k_white);   /* INSIRA FICHAS */
 }
 
 
@@ -437,26 +436,41 @@ static void insert_record(osc_game *g, int p)
 static void leave_name_entry(osc_game *g)
 {
     for (int p = 1; p <= 2; p++) if (g->name_active[p]) { insert_record(g, p); g->name_active[p] = false; }
-    if (g->name_after == OSC_SCREEN_ENDING) { osc_ending_start(g, g->p[1].char_id); return; }
+    if (g->name_after == OSC_SCREEN_ENDING) { osc_ending_start(g, g->ending_char); return; }
     g->screen = g->name_after; g->screen_tick = 0; g->ciclo = 0; g->menu_cam = 0;
     if (g->screen == OSC_SCREEN_CONTINUE) { g->timer_sec = 9; g->timer_sub = 25; }
     if (g->screen == OSC_SCREEN_RECORDS) { g->p1_in = g->p2_in = false; }
 }
 
-/* A human finished (lost, or won the ladder): name entry if the score beats the table. */
-static void finish_player(osc_game *g, int p, bool won)
+/* End of a match (DXTimer1Timer round end, re == 100 and re > 220): the loser drops out
+ * (beating the CPU advances the ladder); with a human left the ladder goes on, past
+ * fight 8 that human sees the ending; with nobody left it is continue time. Either way a
+ * score above the 10th record asks for a name first (state 12). */
+static void after_match(osc_game *g, int winner)
 {
-    int after = won ? OSC_SCREEN_ENDING : OSC_SCREEN_CONTINUE;
-    if (g->p[p].human && g->p[p].score > g->records[9].score) {
-        memcpy(g->name[p], "AAA", 4);
-        g->name_pos[p] = 1;
-        g->name_active[p] = true;
-        g->name_after = after;
-        g->screen = OSC_SCREEN_NAME; g->screen_tick = 0; g->ciclo = 0;
-        g->p[p].in_prev = 0xff;
+    int loser = 3 - winner;
+    if (!g->p[loser].human) g->fight_no++;
+    g->p[loser].human = false;
+    if (loser == 1) g->p1_in = false; else g->p2_in = false;
+    bool any = g->p[1].human || g->p[2].human;
+    if (any && g->fight_no <= 8) {
+        if (!g->ladder[1]) osc_make_ladder(g, g->p[winner].char_id);   /* 2P winner goes on alone */
+        g->sel[winner] = g->p[winner].char_id;
+        g->screen = OSC_SCREEN_VS; g->screen_tick = 0; g->ciclo = 0;
         return;
     }
-    g->name_after = after;
+    g->name_after = any ? OSC_SCREEN_ENDING : OSC_SCREEN_CONTINUE;
+    g->ending_char = g->p[winner].char_id;
+    bool ask = false;
+    for (int p = 1; p <= 2; p++) {
+        g->name_active[p] = g->p[p].score > g->records[9].score;
+        if (!g->name_active[p]) continue;
+        memcpy(g->name[p], "AAA", 4);
+        g->name_pos[p] = 1;
+        g->p[p].in_prev = 0xff;
+        ask = true;
+    }
+    if (ask) { g->screen = OSC_SCREEN_NAME; g->screen_tick = 0; g->ciclo = 0; return; }
     leave_name_entry(g);
 }
 
@@ -485,23 +499,28 @@ static void name_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (*c > 'Z') *c = 'Z';
         if (pressed & OSC_IN_B1) (*pos)++;
     }
-    if (!any || g->screen_tick >= 1000) leave_name_entry(g);
+    /* the first player to pass the third letter (or the 40 s limit) ends the screen; only
+     * the names that were finished are recorded (state 12, 0x4ae0c4) */
+    bool done = !any || g->screen_tick >= 1000;
+    for (int p = 1; p <= 2; p++) if (g->name_active[p] && g->name_pos[p] > 3) done = true;
+    if (done) {
+        if (g->screen_tick < 1000)
+            for (int p = 1; p <= 2; p++) if (g->name_active[p] && g->name_pos[p] <= 3) g->name_active[p] = false;
+        leave_name_entry(g);
+    }
 }
 
 static void name_render(osc_game *g)
 {
-    SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
-    SDL_RenderClear(g->ren);
+    barra(g, 0, 0, 400, 300, k_black);
     for (int p = 1; p <= 2; p++) {
         if (!g->name_active[p]) continue;
-        float x0 = (float)((p - 1) * 200 + 20);
+        int x0 = (p - 1) * 200 + 20;
         for (int i = 0; i < 3; i++) {
             char l[2] = {g->name[p][i], 0};
-            osc_text_ex(g, x0 + 15.f * (float)i, 5, l, 'l', 16, 255, 255, 255);
+            texto(g, x0 + 15 * i, 5, l, '-', 15, k_white);
         }
-        if (g->ciclo < 15 && g->name_pos[p] <= 3)   /* [approx] marker under the active letter */
-            fill(g, x0 + 15.f * (float)(g->name_pos[p] - 1), 27, x0 + 15.f * (float)(g->name_pos[p] - 1) + 12, 29, 255, 255, 255);
-        osc_text_ex(g, x0, 30, osc_text(OSC_MEMO_NOMES, g->p[p].char_id, g->lang), 'l', 8, 255, 255, 255);
+        if (g->ciclo < 15 && g->name_pos[p] <= 3) texto(g, x0 + 15 * (g->name_pos[p] - 1), 4, "-", '-', 27, k_white);
     }
 }
 
@@ -519,7 +538,7 @@ static void join_player(osc_game *g, int p)
 static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
 {
     /* convenience for keyboards and pads: the first button on the title inserts a coin and starts */
-    if (g->screen == OSC_SCREEN_ATTRACT || g->screen == OSC_SCREEN_RECORDS || g->demo > 0) {
+    if (g->screen == OSC_SCREEN_ATTRACT || g->screen == OSC_SCREEN_RECORDS || g->screen == OSC_SCREEN_CONTINUE || g->demo > 0) {
         uint8_t p1 = (uint8_t)(in1 & ~g->p[1].in_prev), p2 = (uint8_t)(in2 & ~g->p[2].in_prev);
         g->p[1].in_prev = in1; g->p[2].in_prev = in2;
         if (p1 & OSC_IN_B1) { if (g->credits == 0) g->key_coin = true; g->key_start1 = true; }
@@ -557,11 +576,17 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
             join_player(g, p);
             g->p[p].human = true;
             g->challenge = 100;
-        } else if (g->screen == OSC_SCREEN_CONTINUE && g->timer_sec > 0) {
+        } else if (g->screen == OSC_SCREEN_CONTINUE && g->timer_sec > 0 && g->timer_sub > 0) {
+            /* FormKeyDown state 9: back to the same ladder (VS) or, before any fight, to select */
+            int keep = g->p[p].char_id;
             join_player(g, p);
-            g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 300;
-            g->sel_locked[1] = g->sel_locked[2] = 0;
+            g->sel[p] = keep ? keep : p;   /* same fighter, same ladder */
+            g->p[p].human = true;
+            g->sel_locked[p] = 1;
+            g->ciclo = 0; g->screen_tick = 0;
             g->ai_p2 = !g->p2_in;
+            if (g->ladder[1]) g->screen = OSC_SCREEN_VS;
+            else { g->screen = OSC_SCREEN_SELECT; g->sel_sub = 0; g->sel_locked[p] = 0; }
         }
     }
 }
@@ -586,18 +611,9 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
             break;
         }
         if (g->match_over) {
-            int winner = g->match_over, loser = 3 - winner;
+            int winner = g->match_over;
             g->match_over = 0;
-            if (!g->p2_in && winner == 1) {
-                /* arcade ladder: next opponent */
-                g->fight_no++;
-                if (g->fight_no > 8) { g->fight_no = 0; finish_player(g, 1, true); break; }
-                g->sel[2] = g->ladder[g->fight_no];
-                g->screen = OSC_SCREEN_VS; g->screen_tick = 0;
-                g->stage_id = osc_stage_for(g, g->sel[2]);
-            } else {
-                finish_player(g, g->p[loser].human ? loser : winner, false);
-            }
+            after_match(g, winner);
         }
         break;
     }

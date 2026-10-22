@@ -155,6 +155,10 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         memcpy(g->name[1], "AAA", 4); g->name_pos[1] = 1; g->name_active[1] = true;
         g->name_after = OSC_SCREEN_CONTINUE; g->screen = OSC_SCREEN_NAME;
     }
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CONTINUE) {   /* debug: the continue countdown */
+        osc_game *g = &a->game;
+        g->screen = OSC_SCREEN_CONTINUE; g->screen_tick = 0; g->ciclo = 0; g->timer_sec = 9; g->timer_sub = 25;
+    }
     a->game.debug_boxes = boxes;
 #ifndef __EMSCRIPTEN__
     if (!a->loaded)

@@ -118,6 +118,43 @@ The table above was a first pass; `draw_hud_top`, `draw_hud_bottom` and
   with the active one blinking, `MemoTexto[0x19/0x1a/0x1f]` credits lines
   in state 11.
 
+### Select, next battle, continue, records, name entry: full transcription (2026-10-22) [decomp]
+
+`select_*`, `vs_*`, `continue_*`, `records_render` and `name_*` in
+`src/flow.c` now follow DXTimer1Timer states 4, 5, 8, 9 and 12 call by
+call (0x4a22f0, 0x4a342f, 0x4ab259, 0x4ab647, 0x4adca3). Points that the
+summaries above got wrong or left open:
+
+- Select: background `barra(0,300−c,200,600−c)` RGB(120,120,255) and
+  `barra(200,c−300,400,c)` RGB(255,100,100); Icone 11/12 (by language)
+  tiled at (145j−67, 200i−200+8·timerB) and (145j, 200i−100+8·timerB);
+  the face strip slides with `k = Round(c·1.35)`, panel RGB(30,50,70)
+  with white lines at y 158 and 286; every grid face is DrawAlpha 60, the
+  cursor face is redrawn opaque; no cursor rectangle, only "1P"/"2P"
+  (size 10) at the cell's top-left. Title size 18 at y = Round(c·0.3)−96,
+  timer size 22 at (200,15). Snd 1 on move, Snd 2 on confirm.
+  `DXImageListIcone` is the form field at +0x314 (field table in the VMT).
+- Next battle: 61 bars RGB(2i+10,3i+20,4i+30); header size 26 slides in
+  and out; ladder faces are the mirrored `Rxx-a`; Icone 9 hides future
+  slots (unless Churros.dat), Icone 10 marks beaten ones, Icone 8 blinks
+  over the current one; stage preview StretchDraw (80,6)–(320,134), name
+  size 9 at (200,115); wipe of 16 black bars after c 120, fight at 150.
+- 2P fights draw `Round(Random(120)/10)+1` as the stage; music without a
+  fixed choice is `Round(Random(60)/10)+1`, 6 only on stage 12.
+- Match end: the loser stops being human; beating the CPU advances the
+  ladder; a lone human (also the winner of a 2P match) goes on to the
+  next battle; with no human left a name entry (score above the 10th
+  record) then continue. Continue needs coin + start and returns to the
+  same ladder (state 5), or to select before the first fight.
+- Continue: own screen, 61 bars RGB(3i+10,3i+50,3i+30), "CONTINUE ?" size
+  35, the digit size 120 at (320,70) in RGB(255,25t,25t), blinking from 3;
+  then "FIM DO JOGO" size 36 red with a closing white flash, records after
+  150 ticks.
+- Records: 21 bars RGB(5i+100,5i+130,5i+160), rows "01 -" … size 15,
+  the leader blinks RGB(255,175,175), black venetian wipe after 240.
+- Name entry: black screen, the three letters size 15 at x 20/35/50
+  (+200 for P2), a size-27 "-" cursor; the first finished name ends it.
+
 ## Attract / intro (`state1_attract.txt`) [objdump, verified against the x86 code]
 
 `texto(x, y, s, align, size, colour)` draws Comic Sans MS at `size` points
