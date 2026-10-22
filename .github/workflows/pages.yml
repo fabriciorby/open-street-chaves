@@ -31,7 +31,7 @@ jobs:
           mkdir -p site
           cp build-web/open-street-chaves.html site/index.html
           cp build-web/open-street-chaves.js build-web/open-street-chaves.wasm site/
-          echo streetchaves.fabriciorby.me > site/CNAME
+          echo chaves.fabriciorby.me > site/CNAME
       - name: Fetch the game data (optional)
         continue-on-error: true
         run: |
