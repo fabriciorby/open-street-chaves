@@ -59,3 +59,9 @@ separator columns; hit/hurt boxes relative to sprite top-left; damage ×
 `g_damageLevel`; meter 102 → stock; super needs stock or health ≤ 15; block
 breaking rules (low attacks vs stand block, jump attacks vs crouch block);
 projectile cancel rules; text tables PT/ES; config file layout.
+
+- **First-attack headline** — on the first hit of a round the attacker gets
+  `msgIndex = 1`, and the HUD draws `MemoTexto.Get(0)` big in green; line 0
+  is "-", so nothing visible appears in our dump. We skip "-"; only the small
+  "Primeiro Ataque" line shows. A build with a different memo may differ.
+

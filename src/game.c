@@ -404,6 +404,7 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
         spawn_fx(g, 14, 0, 0, h->x, h->y);
         if (v->facing == 1) move_x(g, v, -4.0); else move_x(g, v, 4.0);
         if (!g->no_push) v->health -= h->chip * g->damage_level;
+        v->trail_delay = 20;
         if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
         if (v->health > 0.0) g->hit_stop = h->attacker ? osc_random(g, 4) + (h->level == 2 ? 4 : 2) : 2;
         return;
@@ -412,6 +413,12 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
     spawn_fx(g, 1, 0, 0, h->x, h->y);
     v->facing = v->x < a->x ? 1 : 2;
     if (a->human && v->health > 0.0) a->score += h->attacker ? 5 : 10;
+    if (!g->first_hit) {
+        /* "Primeiro Ataque": +300 for a human (0x4a9221, projectiles 0x490229) */
+        a->msg_index = 1; a->msg_timer = 50;
+        if (a->human && (!h->attacker || (!g->hit_stop && !g->super_pause))) a->score += 300;
+        g->first_hit = true;
+    }
     if (a->meter < OSC_METER_MAX) a->meter += k_meter_unit * (h->attacker ? 2.0 : 1.0);
     if (v->meter < OSC_METER_MAX && h->attacker) v->meter += k_meter_unit;
     if (a->combo_timer < 36) a->hits = 0;
@@ -419,6 +426,7 @@ static void apply_hit(osc_game *g, osc_fighter *a, osc_fighter *v, const osc_hit
     a->combo_timer = h->attacker ? 44 : 50;
     if (a->hits > a->max_combo) a->max_combo = a->hits;
     if (!g->no_push) v->health -= h->damage * g->damage_level;
+    v->trail_delay = 20;
     if (v->health <= 0.0) { play_snd(g, 9); set_move(g, v, 10); }
     set_move(g, v, h->heavy ? 9 : 8);
     if (h->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
@@ -584,7 +592,7 @@ void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
     f->char_id = ch;
     f->x = p == 1 ? 220.0 : 380.0;
     f->y = OSC_GROUND_Y;
-    f->health = OSC_HEALTH_MAX;
+    f->health = f->health_shown = OSC_HEALTH_MAX;
     f->state = 1; f->frame = 1; f->anim_dur = 99;
     f->facing = p == 1 ? 1 : 2;
     f->sprite_h = k_sprite_h[ch];
@@ -634,6 +642,8 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     for (int c = 1; c <= 15; c++) {
         snprintf(rel, sizeof rel, "Rostos/R%02d-a.bmp", c);
         load_image_tex(g, rel, true, &g->face_small[c], NULL, NULL);
+        snprintf(rel, sizeof rel, "Rostos/R%02d-b.bmp", c);
+        load_image_tex(g, rel, true, &g->face_hurt[c], NULL, NULL);
         snprintf(rel, sizeof rel, "Rostos/R%02d-c.bmp", c);
         load_image_tex(g, rel, true, &g->face_big[c], &g->face_big_w[c], &g->face_big_h[c]);
     }
@@ -828,63 +838,120 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         osc_fighter *f = &g->p[i];
         f->in_prev = f->in;
         /* meter 102 -> stock (main loop 4572) */
+        if (f->stocks < 0) f->stocks = 0;
         if (f->meter >= OSC_METER_MAX && f->stocks < 3) { f->stocks++; f->meter = 0; play_snd(g, 13); }
-        if (f->meter > OSC_METER_MAX) f->meter = OSC_METER_MAX;
+        if (f->stocks >= 3) { f->meter = OSC_METER_MAX; f->stocks = 3; }
+        /* health bars (HUD loop 0x4a4cbe): the red bar waits 20 ticks after a hit, then
+         * falls 3 per tick to the health */
+        if (f->health < 0.0) f->health = 0.0;
+        if (f->health > OSC_HEALTH_MAX) f->health = OSC_HEALTH_MAX;
+        if (f->health_shown > OSC_HEALTH_MAX) f->health_shown = OSC_HEALTH_MAX;
+        if (!g->super_pause && !g->hit_stop && f->trail_delay == 0) {
+            if (f->health_shown > f->health) f->health_shown -= 3.0;
+            if (f->health_shown < f->health) f->health_shown = f->health;
+        }
+        if (f->trail_delay > 0) f->trail_delay--;
+        if (f->msg_timer > 0) f->msg_timer--;
+        if (f->combo_timer > 15 && f->hits > 1) f->combo_jitter = osc_random(g, 10);
     }
 
-    /* round intro (g_roundStart 0..72): bars fill, no input until tick 55 */
-    if (g->round_start < 72 && g->round_end == 0) {
+    /* round intro (DXTimer1Timer 0x4a71d0): g_roundStart counts to 71, the bars
+     * fill from tick 6, no input until tick 55 */
+    if (g->round_start <= 70) {
         g->round_start++;
-        g->no_push = g->round_start < 55;
-        if (g->round_start < 5) { g->p[1].health = g->p[2].health = 1.0; }
-        else if (g->round_start < 55) {
-            for (int i = 1; i <= 2; i++) if (g->p[i].health < OSC_HEALTH_MAX) g->p[i].health += 3.0;
+        if (g->round_start < 10) g->no_push = true;
+        g->hud_y = g->hud_y2 = 0;
+        for (int i = 1; i <= 2; i++) {
+            osc_fighter *f = &g->p[i];
+            if (g->round_start < 5) f->health = f->health_shown = 1.0;
+            if (g->round_start > 5 && g->round_start < 55 && f->health < OSC_HEALTH_MAX) f->health += 3.0;
         }
-        if (g->round_start == 55) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
-        if (g->round_start < 55) return;
+        if (g->round_start == 55) {
+            g->no_push = false;
+            g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
+        }
     }
 
-    /* round end: KO or time over (simplified sequence, 05 "Round flow") */
-    bool ko = g->p[1].health <= 0.0 || g->p[2].health <= 0.0;
-    if ((ko || g->timer_sec == 0) && g->round_end == 0) {
-        g->round_end = 1;
-        g->hit_stop = 30;
-        if (!ko) play_snd(g, 4);
-    }
-    if (g->round_end > 0) {
+    /* time over (0x4a7005): the lower health drops to 0, a draw empties both */
+    if (g->timer_sec == 0) {
+        if (g->round_end < 30) { g->round_end = 30; play_snd(g, 4); }
+        if (g->hud_y > -120) g->hud_y -= 10;
+        if (g->hud_y2 < 490) g->hud_y2 += 10;
         g->no_push = true;
-        g->round_end++;
-        if (g->round_end == 2) {
-            osc_fighter *w = NULL;
-            if (g->p[1].health > g->p[2].health) w = &g->p[1];
-            else if (g->p[2].health > g->p[1].health) w = &g->p[2];
-            if (w) { w->wins++; if (w->human) w->score += 1000; }
-        }
-        /* the match winner's victory line, a or b at random: Round(Random(200) / 200)
-         * with banker's rounding (DXTimer1Timer 0x4a7c80) */
-        if (g->round_end == 95 && g->hit_stop == 0 && g->super_pause == 0)
+        double h1 = g->p[1].health, h2 = g->p[2].health;
+        if (h1 < h2) g->p[1].health = 0.0;
+        if (h2 < h1) g->p[2].health = 0.0;
+        if (h1 == h2) g->p[1].health = g->p[2].health = 0.0;
+    }
+
+    /* round end (0x4a7496): runs once a fighter is down */
+    if (g->p[1].health <= 0.0 || (g->p[2].health <= 0.0 && g->round_end < 230)) {
+        bool calm = !g->hit_stop && !g->super_pause;
+        if (calm) g->round_end++;
+        if (g->round_end > 40) g->no_push = true;
+        if (g->round_end == 1) { g->hit_stop = 30; g->round_end = 2; }
+        if (g->p[1].health <= 0.0) { g->p[2].invuln = true; g->p[1].invuln = false; }
+        if (g->p[2].health <= 0.0) { g->p[1].invuln = true; g->p[2].invuln = false; }
+        if (g->round_end > 0 && g->round_end < 30) { g->hud_y -= 5; g->hud_y2 += 5; }
+        /* the round's winner: win pose and bonuses */
+        if (g->round_end > 30 && g->round_end < 90)
+            for (int i = 1; i <= 2; i++) {
+                osc_fighter *f = &g->p[i], *o = opp(g, f);
+                if (f->health <= 0.0) continue;
+                if (g->no_push) set_move(g, f, 14);
+                calm = !g->hit_stop && !g->super_pause;
+                if (f->human && f->health < OSC_HEALTH_MAX && g->round_end == 35 && calm) {
+                    f->score += iround(f->health) * 5;   /* VITALIDADE x5 */
+                    g->round_end++;
+                }
+                if (f->human && f->health == OSC_HEALTH_MAX && g->round_end == 45 && calm) {
+                    f->score += 1000;                     /* PERFEITO */
+                    g->round_end++;
+                }
+                if (f->human && f->wins == g->rounds_to_win && o->wins == 0 && g->round_end == 45 && calm)
+                    f->score += 1000;                     /* COMPLETO */
+            }
+        if (g->round_end == 40) {
             for (int i = 1; i <= 2; i++) {
                 osc_fighter *f = &g->p[i];
-                if (f->wins < g->rounds_to_win || f->char_id < 1 || f->char_id > 15) continue;
+                if (f->health > 0.0 && !g->hit_stop && !g->super_pause) { f->wins++; g->round_end++; }
+                g->transition = iround(osc_random(g, 40) / 10.0) + 1;
+                if (g->transition > 4) g->transition = 4;
+                f->quote = iround(osc_random(g, 30) / 10.0) + 1;
+                if (f->quote > 3) f->quote = 3;
+            }
+        }
+        /* the match winner: pose, big portrait and quote (0x4a7b5d) */
+        for (int i = 1; i <= 2; i++) {
+            osc_fighter *f = &g->p[i];
+            if (f->wins < g->rounds_to_win || g->round_end < 90 || g->round_end > 210) continue;
+            if (g->no_push) set_move(g, f, 14);
+            /* holding the first button hurries the scene along */
+            if ((f->in & OSC_IN_B1) && (g->round_end < 90 || g->round_end > 100)) g->round_end += 2;
+            if (g->round_end == 95 && !g->hit_stop && !g->super_pause && f->char_id >= 1 && f->char_id <= 15) {
+                /* the victory line, a or b: Round(Random(200) / 200) with banker's rounding */
                 const osc_wav *v = &g->voices[f->char_id][osc_random(g, 200) > 100];
                 if (v->buf) osc_audio_play(v);
             }
-        if (g->round_end > 230) {
-            /* next round (state 6 -> 7 init) */
+        }
+        bool decided = g->p[1].wins >= g->rounds_to_win || g->p[2].wins >= g->rounds_to_win;
+        if (!decided && g->round_end > 130) {
+            /* next round (zerardados for both) */
             for (int i = 1; i <= 2; i++) {
                 osc_fighter *f = &g->p[i];
-                int wins = f->wins, ch = f->char_id, st = f->stocks, score = f->score; bool human = f->human;
-                const osc_strip *s = f->strip;
+                int wins = f->wins, ch = f->char_id, st = f->stocks, score = f->score, mc = f->max_combo;
+                double meter = f->meter; bool human = f->human;
+                const osc_strip *st_ = f->strip;
                 extern void osc_reset_fighter(osc_fighter *, int, int, const osc_strip *);
-                osc_reset_fighter(f, ch, i, s);
-                f->wins = wins; f->stocks = st; f->score = score; f->human = human;
+                osc_reset_fighter(f, ch, i, st_);
+                f->wins = wins; f->stocks = st; f->score = score; f->human = human; f->meter = meter; f->max_combo = mc;
             }
-            if (g->p[1].wins >= g->rounds_to_win) g->match_over = 1;
-            else if (g->p[2].wins >= g->rounds_to_win) g->match_over = 2;
             g->round_no++;
-            g->round_end = 0; g->round_start = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
+            g->round_end = 0; g->round_start = 0; g->hit_stop = 0; g->super_pause = 0;
+            g->hud_y = g->hud_y2 = 0; g->first_hit = false;
             g->timer_sec = osc_round_time(g); g->timer_sub = 25; g->cam_x = 100;
         }
+        if (decided && g->round_end > 220) g->match_over = g->p[1].wins >= g->rounds_to_win ? 1 : 2;
     }
 
     /* camera: midpoint rule, clamped to the stage */
@@ -900,7 +967,9 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (g->hit_stop) g->hit_stop--;
     if (g->super_pause) g->super_pause--;
     if (++g->ciclo > 30) g->ciclo = 0;   /* state 7 wraps the blink counter at 31 */
-    if (!frozen && g->timer_sec > 0 && --g->timer_sub == 0) { g->timer_sec--; g->timer_sub = 25; }
+    /* the clock (0x4a4c66) stops during pauses and while nobody may move */
+    if (!frozen && !g->no_push) g->timer_sub--;
+    if (g->timer_sub <= 0) { g->timer_sub = 25; if (g->timer_sec > 0) g->timer_sec--; }
     osc_audio_update();
 }
 
@@ -930,42 +999,279 @@ static void draw_fighter(osc_game *g, const osc_fighter *f)
     }
 }
 
-static void fill(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
+/* TForm1 canvas helpers (0x48e444..0x48e720), GDI semantics: rectangles exclude
+ * their right and bottom edge; RoundRect corners are ellipses of diameter `d`. */
+typedef struct { Uint8 r, g, b; } osc_rgb;
+static osc_rgb rgb(int r, int g, int b) { return (osc_rgb){(Uint8)r, (Uint8)g, (Uint8)b}; }   /* Delphi bytes wrap */
+static const osc_rgb k_white = {255, 255, 255}, k_black = {0, 0, 0}, k_grey = {170, 170, 170};
+
+static void shape(osc_game *g, int x1, int y1, int x2, int y2, double rx, double ry, osc_rgb c)
 {
-    SDL_FRect rc = {SDL_min(x1, x2), SDL_min(y1, y2), SDL_fabsf(x2 - x1), SDL_fabsf(y2 - y1)};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderFillRect(g->ren, &rc);
+    if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
+    if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
+    int w = x2 - x1, h = y2 - y1;
+    if (w <= 0 || h <= 0) return;
+    if (rx > w / 2.0) rx = w / 2.0;
+    if (ry > h / 2.0) ry = h / 2.0;
+    SDL_SetRenderDrawColor(g->ren, c.r, c.g, c.b, 255);
+    for (int j = 0; j < h; j++) {
+        double yc = j + 0.5, dy = 0.0, in = 0.0;
+        if (yc < ry) dy = ry - yc;
+        else if (yc > h - ry) dy = yc - (h - ry);
+        if (dy > 0.0 && ry > 0.0) { double t = 1.0 - (dy / ry) * (dy / ry); in = rx - rx * sqrt(t > 0.0 ? t : 0.0); }
+        int l = x1 + (int)floor(in + 0.5), r = x2 - (int)floor(in + 0.5);
+        if (r > l) { SDL_FRect row = {(float)l, (float)(y1 + j), (float)(r - l), 1.f}; SDL_RenderFillRect(g->ren, &row); }
+    }
+}
+static void barra(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb c) { shape(g, x1, y1, x2, y2, 0, 0, c); }
+static void retangulo(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb c)
+{
+    if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
+    if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
+    if (x2 - x1 < 1 || y2 - y1 < 1) return;
+    SDL_SetRenderDrawColor(g->ren, c.r, c.g, c.b, 255);
+    SDL_FRect rc = {(float)x1, (float)y1, (float)(x2 - x1), (float)(y2 - y1)};
+    SDL_RenderRect(g->ren, &rc);
+}
+static void barraredonda(osc_game *g, int x1, int y1, int x2, int y2, int d, osc_rgb pen, osc_rgb brush)
+{
+    shape(g, x1, y1, x2, y2, d / 2.0, d / 2.0, pen);
+    int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+    shape(g, x1 + sx, y1 + sy, x2 - sx, y2 - sy, d / 2.0 - 1.0, d / 2.0 - 1.0, brush);
+}
+static void circulopintado(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb pen, osc_rgb brush)
+{
+    double rx = abs(x2 - x1) / 2.0, ry = abs(y2 - y1) / 2.0;
+    shape(g, x1, y1, x2, y2, rx, ry, pen);
+    int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+    shape(g, x1 + sx, y1 + sy, x2 - sx, y2 - sy, rx - 1.0, ry - 1.0, brush);
+}
+static void texto(osc_game *g, int x, int y, const char *s, char align, int size, osc_rgb c)
+{
+    osc_text_ex(g, (float)x, (float)y, s, align, size, c.r, c.g, c.b);
+}
+static const char *tx(osc_game *g, int get) { return osc_text(OSC_MEMO_TEXTO, get - 1, g->lang); }   /* MemoTexto.Lines.Get(n) */
+static bool even(int v) { return (v & 1) == 0; }
+
+/* Top HUD, drawn before the fighters (DXTimer1Timer 0x4a49ac..0x4a5a61). */
+static void draw_hud_top(osc_game *g)
+{
+    int hy = g->hud_y;
+    char buf[96];
+    snprintf(buf, sizeof buf, "%s %d", tx(g, 29), g->fight_no);                        /* BATALHA n */
+    texto(g, 200, hy + 3, buf, 'c', 7, k_white);
+    barraredonda(g, 170, hy + 15, 230, hy + 54, 15, k_white, k_white);
+    barraredonda(g, 172, hy + 17, 228, hy + 52, 15, k_grey, k_grey);
+    barraredonda(g, 174, hy + 19, 226, hy + 50, 15, k_black, k_black);
+    if (g->cfg_time_mode != 4) {
+        osc_rgb c = g->timer_sub <= 2 ? rgb(255, 180, 180) : rgb(255, 50, 50);
+        if (g->timer_sec >= 10) {
+            snprintf(buf, sizeof buf, "%d", g->timer_sec);
+            texto(g, 200, hy + 10, buf, 'c', 25, c);
+        } else {
+            snprintf(buf, sizeof buf, "0%d", g->timer_sec);
+            texto(g, 200, hy + 10, buf, 'c', 25, c);
+            if (even(g->timer_sub)) texto(g, 200, hy + 10, buf, 'c', 25, rgb(255, 180, 180));
+        }
+    }
+    for (int p = 1; p <= 2; p++) {
+        const osc_fighter *f = &g->p[p];
+        int s = p == 1 ? -1 : 1, c = f->char_id;
+        int pulse = iround(cos(g->ciclo / 4.75) * 30.0);
+        osc_rgb plate = p == 1 ? rgb(pulse + 50, pulse + 50, 255) : rgb(255, pulse + 30, pulse + 30);
+        barra(g, 200 + s * 198, hy + 40, 200 + s * 130, hy + 68, plate);
+        retangulo(g, 200 + s * 198, hy + 40, 200 + s * 130, hy + 68, k_white);
+        barraredonda(g, 200 + s * 157, hy + 30, 200 + s * 17, hy + 50, 8, k_black, k_white);
+        barraredonda(g, 200 + s * 155, hy + 32, 200 + s * 19, hy + 48, 8, k_grey, k_grey);
+        barraredonda(g, 200 + s * 153, hy + 34, 200 + s * 21, hy + 46, 8, k_black, k_black);
+        if (f->health <= 15.0 && even(g->ciclo))
+            barraredonda(g, 200 + s * 153, hy + 34, 200 + s * 21, hy + 46, 8, k_black, rgb(200, 0, 0));
+        /* face: Rxx-a, or Rxx-b shaking while the red bar falls; P2's faces are mirrored */
+        int shake = 0;
+        if (f->health_shown > f->health) shake = even(g->ciclo) ? -1 : 1;
+        if (c >= 1 && c <= 15) {
+            SDL_Texture *t = shake ? g->face_hurt[c] : g->face_small[c];
+            float w, h;
+            if (t && SDL_GetTextureSize(t, &w, &h)) {
+                SDL_FRect d = {(float)((p == 1 ? 3 : 347) - shake), (float)(hy + 7), w, h};
+                SDL_RenderTextureRotated(g->ren, t, NULL, &d, 0.0, NULL, p == 1 ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
+            }
+        }
+        barra(g, 200 + iround(s * (25.0 + f->health_shown)), hy + 35, 200 + s * 25, hy + 45, rgb(170, 0, 0));
+        int hx = 200 + iround(s * (25.0 + f->health));
+        barra(g, hx, hy + 35, 200 + s * 25, hy + 45, rgb(150, 150, 0));
+        barra(g, hx, hy + 36, 200 + s * 25, hy + 44, rgb(220, 220, 70));
+        barra(g, hx, hy + 38, 200 + s * 25, hy + 42, rgb(250, 250, 100));
+        barra(g, hx, hy + 39, 200 + s * 25, hy + 40, k_white);
+        /* round lamps */
+        int pulse2 = iround(cos(g->ciclo / 2.735) * 60.0);
+        for (int i = 1; i <= g->rounds_to_win; i++) {
+            int xa = 200 + s * (195 - 17 * (i - 1)), xb = 200 + s * (180 - 17 * (i - 1));
+            barraredonda(g, xa, hy + 70, xb, hy + 85, 5, k_white, k_black);
+            if (f->wins >= i) {
+                barraredonda(g, xa, hy + 70, xb, hy + 85, 5, k_white, rgb(160 - pulse2, 0, 0));
+                if (g->ciclo < 10) barraredonda(g, xa, hy + 70, xb, hy + 85, 5, k_white, rgb(255, 0, 0));
+            }
+        }
+        /* an empty side invites a second player */
+        if (!f->human && g->demo == 0 && g->ciclo < 15) {
+            if (g->credits == 0) texto(g, 200 + s * 100, 0, tx(g, 6), 'c', 10, k_white);          /* INSIRA FICHAS */
+            else if (!g->no_push) texto(g, 200 + s * 100, 0, tx(g, 7), 'c', 10, k_white);      /* ENTRE AGORA */
+        }
+        const char *name = osc_text(OSC_MEMO_NOMES, c, g->lang);
+        if (p == 1) texto(g, 200 + s * 145, hy + 45, name, '-', 12, rgb(120, 120, 255));
+        else texto(g, 200 + s * 145, hy + 45, name, 'e', 12, rgb(255, 110, 110));
+        if (f->human) {
+            int k = iround(cos(g->ciclo / 4.75) * 20.0);
+            snprintf(buf, sizeof buf, "%d", f->score);
+            if (p == 1) {
+                texto(g, 200 + s * 145, hy + 10, "1P", '-', 12, rgb(k + 120, k + 120, 255));
+                texto(g, 200 + s * 50, hy + 10, buf, 'e', 12, rgb(k + 120, k + 120, 255));
+            } else {
+                texto(g, 200 + s * 145, hy + 10, "2P", 'e', 12, rgb(255, k + 110, k + 110));
+                texto(g, 200 + s * 50, hy + 10, buf, '-', 12, rgb(255, k + 110, k + 110));
+            }
+        }
+    }
 }
 
-static void draw_hud(osc_game *g)
+/* Bottom HUD, after the fighters and effects (0x4a678e..0x4a6fff). */
+static void draw_hud_bottom(osc_game *g)
 {
-    /* timer frame: (170,15)-(230,54) white / grey / black (07b) */
-    fill(g, 170, 15, 230, 54, 255, 255, 255);
-    fill(g, 172, 17, 228, 52, 170, 170, 170);
-    fill(g, 174, 19, 226, 50, 0, 0, 0);
-    char buf[16];
-    snprintf(buf, sizeof buf, "%2d", g->timer_sec);
-    SDL_SetRenderDrawColor(g->ren, 255, 255, 255, 255);
-    SDL_RenderDebugText(g->ren, 192, 30, buf);
+    int hy2 = g->hud_y2;
+    char buf[32];
+    for (int p = 1; p <= 2; p++) {
+        const osc_fighter *f = &g->p[p];
+        int s = p == 1 ? -1 : 1;
+        if (f->msg_timer > 0) {
+            const char *m = tx(g, f->msg_index);
+            if (strcmp(m, "-") != 0) texto(g, 200 + s * 100, 80, m, 'c', 15, rgb(80, 255, 140));
+            if (f->msg_index == 1 && f->human) texto(g, 200 + s * 80, 110, tx(g, 2), 'c', 10, k_white);   /* Primeiro Ataque */
+        }
+        if (f->combo_timer > 0 && f->hits > 1) {
+            snprintf(buf, sizeof buf, "%d", f->hits);
+            if (f->combo_timer > 15) texto(g, 195 + f->combo_jitter + s * 170, 110, buf, 'c', 25, k_white);
+            else texto(g, 200 + s * 170, 110, buf, 'c', 25, k_white);
+            texto(g, 200 + s * 150, 145, tx(g, 3), 'c', 12, rgb(80, 255, 140));                       /* Acertos. */
+        }
+        /* super stocks */
+        barraredonda(g, 200 + s * 65, hy2 + 280, 200 + s * 22, hy2 + 288, 6, rgb(10, 20, 30), k_white);
+        int pv = even(g->ciclo) && f->stocks > 0 ? 100 : 0;
+        for (int i = 1; i <= f->stocks; i++)
+            circulopintado(g, 200 + s * (30 + 10 * (i - 1)), hy2 + 286, 200 + s * (35 + 10 * (i - 1)), hy2 + 281,
+                           rgb(255, 20, 20), rgb(255, pv + 150, pv + 150));
+        int pw = even(g->ciclo) && f->stocks > 0 ? 50 : 0;
+        snprintf(buf, sizeof buf, "%d", f->stocks);
+        texto(g, 200 + s * 18, hy2 + 270, buf, 'c', 12, rgb(255 - pw, 255 - pw, 255));
+        /* special meter */
+        barraredonda(g, 200 + s * 170, hy2 + 275, 200 + s * 60, hy2 + 285, 5, k_white, k_white);
+        barraredonda(g, 200 + s * 169, hy2 + 276, 200 + s * 61, hy2 + 284, 5, k_grey, k_grey);
+        barraredonda(g, 200 + s * 168, hy2 + 277, 200 + s * 62, hy2 + 283, 5, rgb(60, 30, 0), k_black);
+        int mx = 200 + iround(s * (64.0 + f->meter));
+        if (f->meter < OSC_METER_MAX) {
+            barra(g, mx, hy2 + 278, 200 + s * 64, hy2 + 282, rgb(210, 160, 30));
+            barra(g, mx, hy2 + 279, 200 + s * 64, hy2 + 281, rgb(250, 220, 140));
+        } else {
+            int pm = even(g->ciclo) ? 50 : 0, k = f->stocks + 1;
+            barra(g, mx, hy2 + 278, 200 + s * 64, hy2 + 282, rgb(240, pm + 190, pm + 60));
+            barra(g, mx, hy2 + 279, 200 + s * 64, hy2 + 281, rgb(255, 250, pm + 170));
+            osc_rgb c = even(g->ciclo) ? rgb(k + 140, k + 140, 255) : rgb(k + 170, k + 170, 255);
+            texto(g, 200 + iround(s * 115.0), hy2 + 262, tx(g, 4), 'c', 15, c);                       /* M A X */
+        }
+    }
+}
+
+/* Round intro and outro texts, the winner's scene and the wipe (0x4a7005..0x4a83bf). */
+static void draw_round_texts(osc_game *g)
+{
+    char buf[96];
+    int re = g->round_end;
+    if (g->timer_sec == 0) {
+        int p = even(g->ciclo) ? 80 : 0;
+        if (re < 80) texto(g, 200, 40, tx(g, 27), 'c', 28, rgb(255, p, p));                       /* FIM DO TEMPO */
+        if (g->p[1].health == g->p[2].health && re < 90) texto(g, 200, 120, tx(g, 28), 'c', 29, rgb(255, 2 * p, 2 * p));   /* EMPATE */
+    }
+    if (g->round_start <= 71) {
+        if (g->round_start > 5 && g->round_start < 40) {
+            int p = even(g->ciclo) ? 30 : 0;
+            snprintf(buf, sizeof buf, "%d", g->round_no);
+            texto(g, 260, 85, buf, 'c', 35, rgb(255 - p, 255 - p, 255 - p));
+            texto(g, 200, 100, "ROUND   ", 'c', 20, k_white);
+        }
+        if (g->round_start > 42 && g->round_start < 60) {
+            int p = even(g->ciclo) ? 120 : 0;
+            texto(g, 200, 120, tx(g, 15), 'c', 25, rgb(255, p + 30, p));                            /* LUTEM */
+        }
+    }
+    if (!(g->p[1].health <= 0.0 || (g->p[2].health <= 0.0 && re < 230))) return;
+    if (re > 0 && re < 30) {
+        int p = even(g->ciclo) ? 100 : 0;
+        texto(g, 200, 100, "KO", 'c', 70, rgb(255, p, 0));
+    }
+    if (re > 30 && re < 90)
+        for (int i = 1; i <= 2; i++) {
+            const osc_fighter *f = &g->p[i], *o = &g->p[3 - i];
+            if (f->health <= 0.0) continue;
+            int p = even(g->ciclo) ? 80 : 0;
+            texto(g, 200, 110, osc_text(OSC_MEMO_NOMES, f->char_id, g->lang), 'c', 20, rgb(255, p, p));
+            texto(g, 200, 140, tx(g, 14), 'c', 14, k_white);                                        /* VENCEU */
+            if (f->human && f->health < OSC_HEALTH_MAX) {
+                snprintf(buf, sizeof buf, "%sx5=%d PTS.", tx(g, 5), iround(f->health) * 5);         /* VITALIDADE */
+                texto(g, 200, 210, buf, 'c', 12, k_white);
+            }
+            int p3 = even(g->ciclo) ? 120 : 0;
+            if (f->health == OSC_HEALTH_MAX && re > 35) texto(g, 200, 170, tx(g, 30), 'c', 28, rgb(255, p3 + 120, p3 + 30));   /* PERFEITO */
+            if (f->human && f->health == OSC_HEALTH_MAX) texto(g, 200, 210, "BONUS 1000 PTS.", 'c', 15, k_white);
+            if (f->human && f->wins == g->rounds_to_win && o->wins == 0) {
+                int p4 = even(g->ciclo) ? 20 : 0;
+                snprintf(buf, sizeof buf, "%s  1000 PTS.", tx(g, 32));                              /* COMPLETO */
+                texto(g, 200, 240, buf, 'c', 20, rgb(p4 + 170, p4 + 170, p4 + 235));
+            }
+        }
     for (int i = 1; i <= 2; i++) {
         const osc_fighter *f = &g->p[i];
-        float s = i == 1 ? -1.f : 1.f;
-        /* health frame */
-        fill(g, 200 + s * 157, 30, 200 + s * 17, 50, 255, 255, 255);
-        fill(g, 200 + s * 155, 32, 200 + s * 19, 48, 170, 170, 170);
-        fill(g, 200 + s * 153, 34, 200 + s * 21, 46, 0, 0, 0);
-        double hp = f->health < 0 ? 0 : f->health;
-        float len = (float)(hp / OSC_HEALTH_MAX * 132.0);
-        fill(g, 200 + s * 21, 35, 200 + s * (21 + len), 45, hp <= 15 ? 220 : 240, hp <= 15 ? 40 : 200, 40);
-        /* super meter at the bottom */
-        float ml = (float)(f->meter / OSC_METER_MAX * 100.0);
-        fill(g, 200 + s * 60, 285, 200 + s * 160, 291, 60, 60, 60);
-        fill(g, 200 + s * 60, 286, 200 + s * (60 + ml), 290, 250, 220, 60);
-        for (int k = 0; k < 3; k++)
-            fill(g, 200 + s * (30 + 10 * k) - 3, 283, 200 + s * (30 + 10 * k) + 3, 289, k < f->stocks ? 255 : 80, k < f->stocks ? 200 : 80, 40);
-        if (f->hits > 1) {
-            snprintf(buf, sizeof buf, "%d HITS", f->hits);
-            SDL_RenderDebugText(g->ren, i == 1 ? 30 : 320, 60, buf);
+        if (f->wins < g->rounds_to_win || re < 90 || re > 210) continue;
+        int p5 = even(g->ciclo) ? 30 : 0, c = f->char_id;
+        /* the winner's big face (Rxx-c) slides in, holds, slides out */
+        if (c >= 1 && c <= 15 && g->face_big[c]) {
+            int l = re < 100 ? 728 - (re - 90) * 50 : re < 180 ? 128 : 128 - (re - 180) * 50;
+            SDL_FRect d = {(float)l, 29.f, 144.f, 189.f};
+            SDL_RenderTexture(g->ren, g->face_big[c], NULL, &d);
+        }
+        if (f->human) {
+            texto(g, 10, 20, tx(g, 16), '-', 12, rgb(p5 + 30, p5 + 220, p5 + 30));                    /* MÁXIMO DE ACERTOS */
+            snprintf(buf, sizeof buf, "%d", f->max_combo);
+            texto(g, 10, 35, buf, '-', 14, rgb(255 - p5, 255 - p5, 255 - p5));
+            texto(g, 10, 60, tx(g, 17), '-', 12, rgb(p5 + 30, p5 + 220, p5 + 30));                    /* PONTOS */
+            snprintf(buf, sizeof buf, "%d", f->score);
+            texto(g, 10, 75, buf, '-', 14, rgb(255 - p5, 255 - p5, 255 - p5));
+        }
+        barraredonda(g, 5, 220, 395, 280, 5, k_white, k_black);
+        texto(g, 200, 237, osc_text(OSC_MEMO_FRASES, (c - 1) * 4 + f->quote, g->lang), 'c', 12, k_white);
+    }
+    /* wipe to the next round */
+    if (g->p[1].wins < g->rounds_to_win && g->p[2].wins < g->rounds_to_win && re > 95) {
+        switch (g->transition) {
+        case 1:
+            barra(g, 0, 0, 400, re * 10 - 950, k_black);
+            barra(g, 0, 1250 - re * 10, 400, 300, k_black);
+            break;
+        case 2:
+            barra(g, 0, 0, 200, re * 12 - 1150, k_black);
+            barra(g, 200, 1450 - re * 12, 400, 300, k_black);
+            break;
+        case 3:
+            for (int i = 0; i < 4; i++) {
+                barra(g, 0, 80 * i, re * 17 - 1670, 80 * i + 40, k_black);
+                barra(g, 2070 - re * 17, 80 * i + 40, 400, 80 * i + 80, k_black);
+            }
+            break;
+        case 4:
+            barra(g, 0, 0, 400, re * 10 - 1000, k_black);
+            barra(g, 0, 1300 - re * 10, 400, 300, k_black);
+            barra(g, 0, 0, re * 10 - 1000, 300, k_black);
+            barra(g, 1400 - re * 10, 0, 400, 300, k_black);
+            break;
         }
     }
 }
@@ -1011,6 +1317,7 @@ void osc_fight_render(osc_game *g)
         SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
         SDL_RenderTexture(g->ren, t, NULL, &d);
     }
+    draw_hud_top(g);
     /* fighter shadows: Efeito-001 under the feet (desenhalutador) */
     for (int i = 1; i <= 2; i++) {
         if (g->n_fx_tex < 1) break;
@@ -1022,15 +1329,8 @@ void osc_fight_render(osc_game *g)
     draw_fighter(g, &g->p[2]);
     draw_fighter(g, &g->p[1]);
     osc_fx_render(g);
-    draw_hud(g);
-    /* join prompt for the empty side (texto at 200 +/- 100, y 0, blinking) */
-    if (g->demo == 0 && g->challenge == 0 && g->ciclo < 15) {
-        for (int p = 1; p <= 2; p++) {
-            if (p == 1 ? g->p1_in : g->p2_in) continue;
-            if (g->credits == 0) osc_text_ex(g, p == 1 ? 100 : 300, 0, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 8, 255, 255, 255);
-            else if (!g->no_push) osc_text_ex(g, p == 1 ? 100 : 300, 0, osc_text(OSC_MEMO_TEXTO, 6, g->lang), 'c', 8, 255, 255, 255);
-        }
-    }
+    draw_hud_bottom(g);
+    draw_round_texts(g);
     if (g->challenge > 0) {
         SDL_FRect box = {80, 100, 240, 70};
         SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255); SDL_RenderFillRect(g->ren, &box);

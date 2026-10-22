@@ -43,6 +43,35 @@ animated to −120 at round end) — the second block uses `0x4b44d4`.
 | Level / credits | "NIVEL-n" (`MemoTexto[0x12]`) and "CREDITOS n" (`[0x13]`) at the bottom when the options are on | |
 | Challenger box | `barraredonda(80, 100, …, 10, 170, 320)` with `MemoTexto[10..12]` | centred 240×70 box |
 
+### Fight HUD, full transcription (2026-10-22) [decomp]
+
+The table above was a first pass; `draw_hud_top`, `draw_hud_bottom` and
+`draw_round_texts` in `src/game.c` now follow DXTimer1Timer
+(0x4a49ac..0x4a83bf) call by call. Corrections to the table:
+
+- Draw order: stage, stage animations, **top HUD**, shadows, fighters,
+  effects, **bottom HUD** (messages, combo, stocks, meter), round texts,
+  winner scene and wipe.
+- Primitives: `barraredonda(x1,y1,x2,y2,d,pen,brush)` is GDI RoundRect
+  (corner ellipse diameter `d`); `circulopintado` is Ellipse; `barra` and
+  `retangulo` normalise their corners.
+- Health fill is 1 px per HP: `200 + round(s·(25 + health))` to `200 + s·25`,
+  stripes y+35..45 (150,150,0), +36..44 (220,220,70), +38..42 (250,250,100),
+  +39..40 white. A red trail `(170,0,0)` follows `shown` (+0x48), which
+  waits `+0x50` = 20 ticks after a hit and then falls 3 per tick.
+- Portrait: `Rxx-a`, or `Rxx-b` shaking ±1 px while the red trail is above
+  the health; P1 at (3, hudY+7), P2 mirrored at (347, hudY+7). A name plate
+  `barra(200+s·198, hudY+40, 200+s·130, hudY+68)` pulses blue / red.
+- Names at `200+s·145, hudY+45`; "1P"/"2P" and the score at `hudY+10`
+  for human players.
+- MemoTexto index: the code's `Lines.Get(n)` is our `osc_text(TEXTO, n−1)`.
+- Super stocks sit in a white pill at `hudY2+280..288` with the count at
+  `200+s·18`; the meter frame spans `200+s·60..170`, fill from `200+s·64`.
+- Round texts: "ROUND n" at rs 6..39, LUTEM at 43..59, KO at re 1..29,
+  winner name / VENCEU / VITALIDADEx5 / PERFEITO / COMPLETO at re 31..89,
+  big `Rxx-c` slide + quote box (Frases `(id−1)·4 + quote`) at re 90..210,
+  and one of four black wipes (`transition` 1..4) after re 95.
+
 ## Character select (`state4_select.txt`) [decomp]
 
 - Background: `Cenario` item 0 scrolled by `g_camY`, and 4×2 big

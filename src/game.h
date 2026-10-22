@@ -32,6 +32,8 @@ typedef struct {
     int hurt_l, hurt_t, hurt_r, hurt_b;
     int hit_l, hit_t, hit_r, hit_b;
     double health;
+    double health_shown; /* +0x48 the red bar that trails the health */
+    int trail_delay;     /* +0x50 ticks before the red bar starts to fall (20 per hit) */
     int stocks;
     double meter;
     bool attacking;
@@ -51,9 +53,12 @@ typedef struct {
     int sprite_h;        /* +0x7a */
     double speed;        /* +0x80 */
     int score;
+    int msg_index, msg_timer; /* +0x8f/+0x90 MemoTexto line shown over the player ("Primeiro Ataque") */
+    int quote;           /* +0x8d winner's line 1..3 from MemoFrases */
     bool invuln;         /* +0x92 */
     bool blocking;       /* +0x93 */
     int hits, combo_timer, max_combo;
+    int combo_jitter;    /* Random(10) shake of the hit counter, drawn by the HUD */
     int seq_state, seq_timer, down_hold, back_hold, mash_p, mash_k;
     int ai_pref;         /* +0x1c preferred distance */
     bool human;
@@ -120,9 +125,12 @@ typedef struct {
     int ladder[9];           /* ladder[1..7] opponents, ladder[8] rival */
     int match_over;          /* 0 running, 1 P1 won, 2 P2 won */
     SDL_Texture *face_small[16], *face_big[16];
+    SDL_Texture *face_hurt[16];  /* Rxx-b: the HUD face while the red bar falls */
     int face_big_w[16], face_big_h[16];
     bool p1_in, p2_in;       /* humans who joined */
-    int first_hit_given;
+    bool first_hit;          /* 0x4b57f4: the round's first attack was landed */
+    int hud_y, hud_y2;       /* 0x4b44d2 / 0x4b44d4: top and bottom HUD offsets (slide out at round end) */
+    int transition;          /* 0x4b449d: 1..4, wipe between rounds */
 
     /* coin-op flow (01, 07): attract, demo fight, records */
     int credits;
