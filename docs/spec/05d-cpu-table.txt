@@ -9,18 +9,18 @@
 #   1/13 chance: aiPrefDist (+0x1c) := one of 100 150 200 250 300 350 (Random(6))
 #   if |dist - aiPrefDist| < 51: aiPrefDist := dist
 #   walking (only when !proj): toward the opponent when aiPrefDist <= dist,
-#     away otherwise (setMove 2 = walk right / 1 = walk left by facing)
+#     away otherwise (setMove 2 = walk right / 1 = walk left by facing), every tick
 #   close range (only when !proj and dist <= 80), each P = 1/round(C*k):
 #     setMove 3 C=8, 4 C=8, 5 C=9, 6 C=9, 7 (crouch) C=4 and, if 7 fired,
 #     setMove 3 C=2, 4 C=2, 5 C=3, 6 C=3 (crouching attacks)
 #   then the per-character rows below.
-# k = 6.1 - 0.7 * fightNo (05). P(fire) = 1 / round(C * k) per tick.
+# k = (8 - level) * 0.6 + 1.3 - 0.1 * fightNo, level = "Nível do Jogo" 1..8. P(fire) = 1 / round(C * k) per tick.
 #
 # cond:  NOPROJ   no hostile effect with a hit box is live
 #        PROJ     one is live; the test is on pd instead of dist
 #        ANY      no projectile test
 #        +OPPAIR  and opponent.y < groundY (opponent airborne)
-#        +SELFAIR100  and my.y < groundY - 100     +SELFAIR50  my.y < groundY - 50
+#        +SELFAIR100  and my.y < groundY - 100     +OPPAIR50  Round(opponent.y) < groundY - 50
 # move: setMove(base + Random(n)); n = 1 means exactly that move.
 #
 # ch cond          test      C   move n
@@ -107,6 +107,6 @@
 15 NOPROJ          dist>160  12  16   2
 15 NOPROJ          dist<100  20  18   2
 15 NOPROJ          dist<120  25  20   2
-15 NOPROJ+SELFAIR50 dist<80  6   20   2
+15 NOPROJ+OPPAIR50 dist<80  6   20   2
 15 NOPROJ          dist<140  22  22   2
 15 NOPROJ          dist<120  30  24   1

@@ -217,20 +217,37 @@ A.bottom`).
 Every CPU decision is `Random(round(C × k)) == 0`, i.e. probability
 `1 / round(C·k)` per tick, where `C` is a per-decision float constant
 (2, 3, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55 or
-60 — the most common are 40, 30, 20, 10) and `k` depends only on the
-**arcade fight number** `g_fightNo` (`0x4b44dd`, 1..8, 8 = the rival):
+60 — the most common are 40, 30, 20, 10) and `k` depends on the F1 option
+"Nível do Jogo" (`g_cfg0`, 1..8, default 4) and the arcade fight number
+`g_fightNo` (`0x4b44dd`, 1..8, 8 = the rival):
 
-- `cpu()`: `k = (8 − fightNo) × 0.6 + 1.3 − fightNo × 0.1` = **6.1 − 0.7·fightNo**
-  (5.4 in fight 1 … 0.5 in fight 8).
-- `defendergolpe()` (blocking / jumping away): `k = (8 − fightNo) × 0.9 +
-  1.2 − fightNo × 0.1` = **8.4 − fightNo** (7.4 … 0.4; with `C = 0.5` and
-  `2.5` for the two block checks, `5` and `45` for others).
+- `cpu()`: `k = (8 − level) × 0.6 + 1.3 − fightNo × 0.1`
+  (level 4, fight 1: 3.6; level 8, fight 8: 0.5).
+- `defendergolpe()`: `kb = (8 − level) × 0.9 + 1.2 − fightNo × 0.1`, set to
+  0 when negative (a `Random(0)` check always fires).
 
-So in fight 8 almost every check fires (`round(C·0.5)` is small), while in
-fight 1 the CPU acts about ten times less often. The F1 option "Nível do
-Jogo" (`g_cfg0`, 1..8) is **not read anywhere in the gameplay code**: it is
-only clamped, saved and displayed as "NIVEL-n" — a cosmetic setting (or an
-unfinished feature) in 1.5A. A runtime test should confirm this (see 99).
+Higher levels and later fights make every check fire more often.
+
+### defendergolpe() [objdump, `0x494bd8`]
+
+Runs for both players after the fighters are framed, unless paused, in the
+challenge or during the entrance.
+
+- Human: holding back (`TRAS`) while the opponent attacks gives move 12
+  (standing guard), or 13 with `BAIXO`; the same for every live hostile
+  effect with a hit box, attacking or not.
+- CPU (`dist` between the fighters; `proj`/`pd` as in `cpu()`, plus that
+  effect's `y` and whether it is persistent):
+  1. Opponent attacking and `dist ≤ 160`: opponent `y ≤ groundY − 30` →
+     move 12 with `C = 0.5`; `y ≥ groundY − 30` → move 13 with `C = 0.5`;
+     own state 21 / 22 renews move 12 / 13.
+  2. Standing or walking: jump (vy −32, state 12, toward the opponent, 1 in
+     8 straight up) when a projectile is within 130 px and `my.y − 120 <
+     effect.y` with `Random(Round(5·kb)) ≤ 3`; otherwise, when no
+     projectile is live and not airborne, with `C = 45`.
+  3. Projectile within 120 px and `my.y − 120 < effect.y`: move 12 with
+     `C = 0.4`; within 100 px and `my.y − 120 ≥ effect.y`: move 13 with
+     `C = 2.5`.
 
 ### cpu() decision order [objdump]
 

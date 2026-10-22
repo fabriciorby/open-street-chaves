@@ -109,50 +109,39 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
     if (r->snd >= 0) play_snd(g, r->snd);
 }
 
-/* ---- CPU opponent (cpu 0x4931ac / defendergolpe CPU part), generic rules ----------
- * The per-character special-move choices of the original are approximated with
- * the same distance bands (see 04 and 99); the walk/normals/block logic is exact. */
+/* ---- CPU opponent: TForm1.cpu (0x4931ac), calls setMove directly ------------------
+ * Difficulty k = (8 - level) * 0.6 + 1.3 - 0.1 * fightNo; a rule with constant C
+ * fires with Random(Round(C * k)) == 0. Per-character rows: 05d-cpu-table.txt. */
 static void cpu_think(osc_game *g, osc_fighter *f)
 {
-    /* TForm1.cpu, transcribed from the x86 code (docs/spec/05d-cpu-table.txt). */
     osc_fighter *o = opp(g, f);
     int me = (f == &g->p[1]) ? 1 : 2;
-    double k = 6.1 - 0.7 * g->fight_no;      /* cpu() */
-    double kb = 8.4 - 1.0 * g->fight_no;     /* defendergolpe() */
     int dist = abs(iround(f->x) - iround(o->x));
-    f->in = 0;
+    int oy = iround(o->y);
 
     /* a hostile effect with a hit box is live (projectile incoming) */
     bool proj = false;
     int pd = 0;
     for (int i = 0; i < OSC_MAX_FX; i++) {
         const osc_effect *e = &g->fx[i];
-        if (e->type && e->owner != me && e->has_hitbox) {
+        if (e->has_hitbox && e->owner != me && e->type) {
             proj = true;
-            pd = abs(iround(e->x) - iround(f->x));
+            pd = abs(iround(f->x) - iround(e->x));
         }
     }
+    double k = (8 - g->level) * 0.6 + 1.3 - 0.1 * g->fight_no;
 
     /* preferred distance re-rolled with chance 1/13 */
     static const int pref[6] = {100, 150, 200, 250, 300, 350};
     if (osc_random(g, 13) == 0) f->ai_pref = pref[osc_random(g, 6)];
-    if (abs(dist - f->ai_pref) < 51) f->ai_pref = dist;
+    if (abs(dist - f->ai_pref) <= 50) f->ai_pref = dist;
 
-    bool busy = !(f->state == 1 || f->state == 2 || f->state == 7);
-    if (!f->blocking && !proj && !busy) {
-        bool toward = dist >= f->ai_pref;   /* aiPrefDist <= dist -> walk toward */
-        bool right = (f->x < o->x) == toward;
-        f->in |= right ? OSC_IN_RIGHT : OSC_IN_LEFT;
-    }
-    /* defendergolpe(): opponent attacking within range */
-    if (o->attacking && !busy && dist <= 161) {
-        if (chance(g, 0.5, kb)) {
-            f->in &= (uint8_t)~(OSC_IN_LEFT | OSC_IN_RIGHT);
-            f->in |= (f->x < o->x) ? OSC_IN_LEFT : OSC_IN_RIGHT;   /* hold back */
-            if (o->state == 9 || o->state == 11 || o->y > OSC_GROUND_Y - 20) f->in |= OSC_IN_DOWN;
-        } else if (chance(g, 2.5, kb) && f->state != 12) {
-            f->in |= OSC_IN_UP;                                      /* jump away */
-        }
+    /* walk toward the opponent when farther than preferred, away otherwise */
+    if (!f->blocking && !proj) {
+        if (dist >= f->ai_pref && f->facing == 1) set_move(g, f, 2);
+        if (dist < f->ai_pref && f->facing == 1) set_move(g, f, 1);
+        if (dist >= f->ai_pref && f->facing == 2) set_move(g, f, 1);
+        if (dist < f->ai_pref && f->facing == 2) set_move(g, f, 2);
     }
     /* close range: normals, crouch, crouching normals */
     if (!f->blocking && !proj && dist <= 80) {
@@ -169,20 +158,19 @@ static void cpu_think(osc_game *g, osc_fighter *f)
         }
     }
     /* per-character specials and supers */
-    if (!f->blocking) {
-        for (int i = 0; i < OSC_N_CPU; i++) {
-            const osc_cpu_row *r = &osc_cpu[i];
-            if (r->ch != f->char_id) continue;
-            if ((r->cond & 1) && proj) continue;
-            if ((r->cond & 2) && !proj) continue;
-            if ((r->cond & 4) && !(o->y < OSC_GROUND_Y)) continue;
-            if ((r->cond & 8) && !(f->y < OSC_GROUND_Y - 100)) continue;
-            if ((r->cond & 16) && !(f->y < OSC_GROUND_Y - 50)) continue;
-            int v = (r->cond & 2) ? pd : dist;
-            if (r->greater ? !(v > r->thr) : !(v < r->thr)) continue;
-            if (!chance(g, r->c, k)) continue;
-            set_move(g, f, r->move + (r->n > 1 ? osc_random(g, r->n) : 0));
-        }
+    if (f->blocking) return;
+    for (int i = 0; i < OSC_N_CPU; i++) {
+        const osc_cpu_row *r = &osc_cpu[i];
+        if (r->ch != f->char_id) continue;
+        if ((r->cond & 1) && proj) continue;
+        if ((r->cond & 2) && !proj) continue;
+        int v = (r->cond & 2) ? pd : dist;
+        if (r->greater ? !(v > r->thr) : !(v < r->thr)) continue;
+        if ((r->cond & 4) && !(o->y < OSC_GROUND_Y)) continue;
+        if ((r->cond & 8) && !(f->y < OSC_GROUND_Y - 100)) continue;
+        if ((r->cond & 16) && !(oy < OSC_GROUND_Y - 50)) continue;   /* opponent's rounded y */
+        if (!chance(g, r->c, k)) continue;
+        set_move(g, f, r->move + (r->n > 1 ? osc_random(g, r->n) : 0));
     }
 }
 
@@ -411,12 +399,61 @@ static void input_dispatch(osc_game *g, osc_fighter *f)
     if (pressed & (OSC_IN_B2 | OSC_IN_B4)) f->mash_k += 6;
 }
 
-/* ---- defendergolpe (human part) -------------------------------------------------- */
+/* ---- defendergolpe (0x494bd8): guard for humans, guard and jump-over for the CPU -- */
 static void defend(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    if (!f->human) return;
-    if (held(f, "TRAS") && o->attacking) set_move(g, f, held(f, "BAIXO") ? 13 : 12);
+    int me = (f == &g->p[1]) ? 1 : 2;
+    if (f->human) {
+        /* holding back guards against a body attack or any hostile projectile */
+        if (held(f, "TRAS") && !held(f, "BAIXO") && o->attacking) set_move(g, f, 12);
+        if (held(f, "TRAS") && held(f, "BAIXO") && o->attacking) set_move(g, f, 13);
+        for (int i = 0; i < OSC_MAX_FX; i++) {
+            const osc_effect *e = &g->fx[i];
+            if (!e->type || !e->has_hitbox || e->owner == me) continue;
+            if (held(f, "TRAS") && !held(f, "BAIXO")) set_move(g, f, 12);
+            if (held(f, "TRAS") && held(f, "BAIXO")) set_move(g, f, 13);
+        }
+        return;
+    }
+    int dist = abs(iround(g->p[1].x) - iround(g->p[2].x));
+    bool proj = false, pers = false;
+    int pd = 0;
+    double ey = 0;
+    for (int i = 0; i < OSC_MAX_FX; i++) {
+        const osc_effect *e = &g->fx[i];
+        if (!e->has_hitbox || e->owner == me || !e->type) continue;
+        proj = true;
+        pd = abs(iround(f->x) - iround(e->x));
+        if (e->persist) pers = true;
+        ey = e->y;
+    }
+    double kb = (8 - g->level) * 0.9 + 1.2 - 0.1 * g->fight_no;
+    if (kb < 0.0) kb = 0.0;
+
+    if (o->attacking && dist <= 160) {
+        if (o->y <= OSC_GROUND_Y - 30 && chance(g, 0.5, kb)) set_move(g, f, 12);
+        if (o->y >= OSC_GROUND_Y - 30 && chance(g, 0.5, kb)) set_move(g, f, 13);
+        if (f->state == 21) set_move(g, f, 12);   /* keep the guard up */
+        if (f->state == 22) set_move(g, f, 13);
+    }
+    if (f->state == 1 || f->state == 2) {
+        bool jump = false;
+        if (proj && pd <= 130 && f->y - 120.0 < ey) {
+            int n = iround(5.0 * kb);
+            jump = osc_random(g, n < 1 ? 1 : n) <= 3;
+        }
+        if (!jump && !proj && chance(g, 45, kb) && !f->in_air && !pers) jump = true;
+        if (jump) {
+            f->vy = -32; f->in_air = true; f->state = 12;
+            f->anim_timer = 0; f->anim_dur = 99; f->blocking = false;
+            if (f->facing == 1) f->jump_dir = 3;
+            if (f->facing == 2) f->jump_dir = 2;
+            if (osc_random(g, 8) == 0) f->jump_dir = 1;
+        }
+    }
+    if (proj && pd <= 120 && f->y - 120.0 < ey && chance(g, 0.4, kb)) set_move(g, f, 12);
+    if (proj && pd <= 100 && f->y - 120.0 >= ey && chance(g, 2.5, kb)) set_move(g, f, 13);
 }
 
 /* ---- body hits (DXTimer1Timer 0x4a85ec..0x4a9442), attacker a = P1 then P2 ---- */
@@ -1129,7 +1166,6 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             osc_fighter *f = &g->p[i];
             if (f->human || g->no_push) continue;
             cpu_think(g, f);
-            input_dispatch(g, f);
         }
     for (int i = 1; i <= 2; i++) counters(g, &g->p[i]);
     stage_objects(g);

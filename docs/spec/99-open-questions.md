@@ -7,10 +7,8 @@ faithful port.
 
 1. ~~FPU literal constants~~ — resolved (values in 06, 05, 02; menu step
    0.1).
-2. ~~Difficulty → probability~~ — resolved: `k` comes from the fight
-   number, "Nível do Jogo" is unused (05). **Verify at runtime** that the
-   menu level really has no effect (search for other readers of
-   `0x4b44d9` through aliases if a test contradicts this).
+2. ~~Difficulty → probability~~ — resolved: `k` uses both "Nível do Jogo"
+   (`g_cfg0`) and the fight number (05, "AI difficulty").
 3. ~~Per-type projectile motion~~ — resolved (06 "Motion rules"); still
    open: whether an off-screen cull exists for looping fireballs.
 4. **HUD coordinates** — transcribed statically into `07b-draw-calls/

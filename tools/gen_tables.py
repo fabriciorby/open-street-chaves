@@ -288,7 +288,7 @@ for line in read('07d-text-index.txt').split('\n'):
 
 # ---------------------------------------------------------------- 05d cpu table
 cpu_rows = []
-COND = {'NOPROJ': 1, 'PROJ': 2, 'ANY': 0, 'OPPAIR': 4, 'SELFAIR100': 8, 'SELFAIR50': 16}
+COND = {'NOPROJ': 1, 'PROJ': 2, 'ANY': 0, 'OPPAIR': 4, 'SELFAIR100': 8, 'OPPAIR50': 16}
 for line in read('05d-cpu-table.txt').split('\n'):
     m = re.match(r'(\d+)\s+([A-Z0-9+]+)\s+(dist|pd)([<>])(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$', line)
     if not m:
@@ -330,7 +330,7 @@ typedef struct { uint8_t ch, req, forb, down_hold, on_ground, from, to; } osc_se
 typedef struct { uint8_t ch, btn; int8_t seq; uint8_t extra, move; } osc_golpe_row;     /* extra: 1 backHold>5 2 downHold>5 4 airborne */
 typedef struct { uint8_t ch, cond, greater; int16_t thr; uint8_t c, move, n; } osc_cpu_row;
 typedef struct { uint8_t ch; int16_t from, to; uint8_t op; int16_t a, b, c, d, e; uint8_t chance, alt; } osc_ending_row; /* 07e */
-enum { OSC_END_STAGE = 1, OSC_END_CHAR, OSC_END_FIGHTER, OSC_END_SHADOW, OSC_END_FINAL, OSC_END_BLACK, OSC_END_FLASH, OSC_END_SPAWN };  /* cond bits: 1 NOPROJ 2 PROJ(pd) 4 OPPAIR 8 SELFAIR100 16 SELFAIR50 */
+enum { OSC_END_STAGE = 1, OSC_END_CHAR, OSC_END_FIGHTER, OSC_END_SHADOW, OSC_END_FINAL, OSC_END_BLACK, OSC_END_FLASH, OSC_END_SPAWN };  /* cond bits: 1 NOPROJ 2 PROJ(pd) 4 OPPAIR 8 SELFAIR100 16 OPPAIR50 */
 
 enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MOVE_WALK = 8 };
 
