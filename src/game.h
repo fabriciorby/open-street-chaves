@@ -117,11 +117,13 @@ typedef struct {
     int rounds_to_win;
     bool ai_p2;
     int lang;                /* 0 Portuguese, 1 Spanish */
+    bool unlock_churros;     /* Churros.dat: the VS ladder shows every face */
+    bool unlock_gentalha;    /* Gentalha.dat: a new game starts at fight 8 */
 
     /* screens (07) */
     int screen;              /* osc_screen */
     int screen_tick;
-    int sel[3], sel_locked[3], sel_timer, sel_sub;
+    int sel[3], sel_locked[3], sel_sub;
     int ladder[9];           /* ladder[1..7] opponents, ladder[8] rival */
     int match_over;          /* 0 running, 1 P1 won, 2 P2 won */
     SDL_Texture *face_small[16], *face_big[16];
@@ -187,7 +189,6 @@ void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_ending_render(osc_game *g);
 /* game.c helpers for the scripts */
 bool osc_load_fighter(osc_game *g, int slot, int ch);
-bool osc_load_stage(osc_game *g, int stage);
 void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);
 void osc_spawn_fx(osc_game *g, int type, int x, int y);
 void osc_fx_tick(osc_game *g);
@@ -201,5 +202,6 @@ void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_render(osc_game *g);
 void osc_make_ladder(osc_game *g, int char_id);
 int osc_stage_for(osc_game *g, int opponent);
+bool osc_load_stage(osc_game *g, int stage);
 
 #endif

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "canvas.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -24,7 +25,7 @@ int osc_random(osc_game *g, int n)
     return (int)(((uint64_t)(uint32_t)n * (uint64_t)g->rng) >> 32);
 }
 
-static int iround(double v) { return (int)floor(v + 0.5); }
+static int iround(double v) { return (int)rint(v); }   /* Delphi Round: half to even */
 
 static osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->p[1] ? &g->p[2] : &g->p[1]; }
 
@@ -704,7 +705,13 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
     g->sel[1] = 1; g->sel[2] = 2;
-    g->sel_timer = 30 * 25;
+    {   /* FormCreate: unlock files next to the game */
+        char upath[1200];
+        load_path(upath, sizeof upath, g->data_dir, "Churros.dat");
+        g->unlock_churros = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Gentalha.dat");
+        g->unlock_gentalha = SDL_GetPathInfo(upath, NULL);
+    }
     g->p1_in = false;   /* nobody has joined until a start button */
     g->p2_in = false;
     return true;
@@ -748,7 +755,6 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     char rel[64];
     osc_image img;
     char path[1200];
-    if (g->stage) { SDL_DestroyTexture(g->stage); g->stage = NULL; }
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     memset(g->fx, 0, sizeof g->fx);
 
@@ -766,12 +772,15 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         g->p[i + 1].human = had ? human : (i == 0 || !g->ai_p2);
         g->p[i + 1].wins = wins; g->p[i + 1].score = score;
     }
-    if (stage < 1 || stage > 12) stage = osc_stage_for(g, char2);
-    g->stage_id = stage;
-    snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
-    if (!load_image_tex(g, rel, false, &g->stage, &g->stage_w, &g->stage_h)) return false;
+    if (stage < 1 || stage > 12) {
+        if (g->p[1].human && g->p[2].human) {                       /* 2P: Round(Random(120)/10)+1 */
+            stage = iround(osc_random(g, 120) / 10.0) + 1;
+            if (stage > 12) stage = 12;
+        } else stage = osc_stage_for(g, char2);
+    }
+    if (!osc_load_stage(g, stage)) return false;
 
-    /* music: Chaves 4, Quico 2, Madruga 3 (CPU side), stage 12 -> 6, else random 1..5 */
+    /* music: Chaves 4, Quico 2, Madruga 3 (CPU side), stage 12 -> 6, else Round(Random(60)/10)+1 */
     int music = 0;
     for (int i = 1; i <= 2; i++) {
         if (g->p[i].human) continue;
@@ -780,7 +789,9 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         if (g->p[i].char_id == 2) music = 3;
     }
     if (stage == 12) music = 6;
-    if (!music) music = osc_random(g, 5) + 1;
+    if (!music) music = iround(osc_random(g, 6 * 10) / 10.0) + 1;   /* 6 = Musicas loaded */
+    if (music > 6) music = 6;
+    if (music == 6 && stage != 12) music = 1;
     osc_play_music(g, music);
 
     g->cam_x = 100; g->cam_y = 20;
@@ -807,7 +818,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         g->no_push = true;
         if (--g->challenge == 0) {
             g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 0;
-            g->sel_locked[1] = g->sel_locked[2] = 0; g->sel_timer = 20 * 25;
+            g->sel_locked[1] = g->sel_locked[2] = 0; g->timer_sec = 20; g->timer_sub = 25;
             g->p[1].human = g->p1_in; g->p[2].human = g->p2_in; g->ai_p2 = !g->p2_in;
             g->sel[1] = g->p[1].char_id; g->sel[2] = g->p[2].char_id;
             g->no_push = false;
@@ -999,57 +1010,6 @@ static void draw_fighter(osc_game *g, const osc_fighter *f)
     }
 }
 
-/* TForm1 canvas helpers (0x48e444..0x48e720), GDI semantics: rectangles exclude
- * their right and bottom edge; RoundRect corners are ellipses of diameter `d`. */
-typedef struct { Uint8 r, g, b; } osc_rgb;
-static osc_rgb rgb(int r, int g, int b) { return (osc_rgb){(Uint8)r, (Uint8)g, (Uint8)b}; }   /* Delphi bytes wrap */
-static const osc_rgb k_white = {255, 255, 255}, k_black = {0, 0, 0}, k_grey = {170, 170, 170};
-
-static void shape(osc_game *g, int x1, int y1, int x2, int y2, double rx, double ry, osc_rgb c)
-{
-    if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
-    if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
-    int w = x2 - x1, h = y2 - y1;
-    if (w <= 0 || h <= 0) return;
-    if (rx > w / 2.0) rx = w / 2.0;
-    if (ry > h / 2.0) ry = h / 2.0;
-    SDL_SetRenderDrawColor(g->ren, c.r, c.g, c.b, 255);
-    for (int j = 0; j < h; j++) {
-        double yc = j + 0.5, dy = 0.0, in = 0.0;
-        if (yc < ry) dy = ry - yc;
-        else if (yc > h - ry) dy = yc - (h - ry);
-        if (dy > 0.0 && ry > 0.0) { double t = 1.0 - (dy / ry) * (dy / ry); in = rx - rx * sqrt(t > 0.0 ? t : 0.0); }
-        int l = x1 + (int)floor(in + 0.5), r = x2 - (int)floor(in + 0.5);
-        if (r > l) { SDL_FRect row = {(float)l, (float)(y1 + j), (float)(r - l), 1.f}; SDL_RenderFillRect(g->ren, &row); }
-    }
-}
-static void barra(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb c) { shape(g, x1, y1, x2, y2, 0, 0, c); }
-static void retangulo(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb c)
-{
-    if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
-    if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
-    if (x2 - x1 < 1 || y2 - y1 < 1) return;
-    SDL_SetRenderDrawColor(g->ren, c.r, c.g, c.b, 255);
-    SDL_FRect rc = {(float)x1, (float)y1, (float)(x2 - x1), (float)(y2 - y1)};
-    SDL_RenderRect(g->ren, &rc);
-}
-static void barraredonda(osc_game *g, int x1, int y1, int x2, int y2, int d, osc_rgb pen, osc_rgb brush)
-{
-    shape(g, x1, y1, x2, y2, d / 2.0, d / 2.0, pen);
-    int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
-    shape(g, x1 + sx, y1 + sy, x2 - sx, y2 - sy, d / 2.0 - 1.0, d / 2.0 - 1.0, brush);
-}
-static void circulopintado(osc_game *g, int x1, int y1, int x2, int y2, osc_rgb pen, osc_rgb brush)
-{
-    double rx = abs(x2 - x1) / 2.0, ry = abs(y2 - y1) / 2.0;
-    shape(g, x1, y1, x2, y2, rx, ry, pen);
-    int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
-    shape(g, x1 + sx, y1 + sy, x2 - sx, y2 - sy, rx - 1.0, ry - 1.0, brush);
-}
-static void texto(osc_game *g, int x, int y, const char *s, char align, int size, osc_rgb c)
-{
-    osc_text_ex(g, (float)x, (float)y, s, align, size, c.r, c.g, c.b);
-}
 static const char *tx(osc_game *g, int get) { return osc_text(OSC_MEMO_TEXTO, get - 1, g->lang); }   /* MemoTexto.Lines.Get(n) */
 static bool even(int v) { return (v & 1) == 0; }
 

@@ -8,8 +8,7 @@
 #define STBTT_STATIC
 #include "stb_truetype.h"
 
-#define ATLAS 512
-#define MAX_SIZES 10
+#define MAX_SIZES 32
 
 typedef struct {
     int size;                /* points */
@@ -91,7 +90,10 @@ static font_size *get_size(int size)
     int asc, desc, gap;
     stbtt_GetFontVMetrics(&g_info, &asc, &desc, &gap);
     f->ascent = (float)asc * f->scale;
-    unsigned char *bmp = calloc(ATLAS * ATLAS, 1);
+    /* room for 191 glyphs at 2x oversampling: big sizes (KO is 70 pt) need a bigger atlas */
+    int over = px > 30.f ? 1 : 2, ATLAS = 256;
+    while ((double)ATLAS * ATLAS < 191.0 * (1.3 * over * px) * (1.3 * over * px) * 0.6 && ATLAS < 2048) ATLAS *= 2;
+    unsigned char *bmp = calloc((size_t)ATLAS * ATLAS, 1);
     if (!bmp) return NULL;
     stbtt_pack_context pc;
     if (!stbtt_PackBegin(&pc, bmp, ATLAS, ATLAS, 0, 1, NULL)) { free(bmp); return NULL; }
@@ -101,8 +103,8 @@ static font_size *get_size(int size)
         { h, 32, NULL, 95, f->ascii, 0, 0 },
         { h, 160, NULL, 96, f->latin1, 0, 0 },
     };
-    stbtt_PackSetOversampling(&pc, 2, 2);
-    stbtt_PackFontRanges(&pc, g_ttf, 0, ranges, 2);
+    stbtt_PackSetOversampling(&pc, (unsigned)over, (unsigned)over);
+    if (!stbtt_PackFontRanges(&pc, g_ttf, 0, ranges, 2)) SDL_Log("font: size %d did not fit a %d px atlas", size, ATLAS);
     stbtt_PackEnd(&pc);
     /* alpha -> RGBA (white) */
     Uint32 *rgba = malloc((size_t)ATLAS * ATLAS * 4);
