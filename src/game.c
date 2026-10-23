@@ -249,7 +249,22 @@ static int fx_sprite(const osc_effect *e)
     for (int i = 0; i < OSC_N_FX_SPRITES; i++) {
         const osc_fx_sprite_row *r = &osc_fx_sprites[i];
         if (r->type != e->type) continue;
-        if (r->phase < 0 || r->phase == e->phase) s = r->sprite;
+        if (r->phase < 0) {
+            /* "any phase" rows: types 24, 25 and 30 are picked by the conditions below, type 32 only below phase 2 */
+            if (e->type == 24 || e->type == 25 || e->type == 30) continue;
+            if (e->type == 32 && e->phase >= 2) continue;
+            s = r->sprite;
+        } else if (r->phase == e->phase) s = r->sprite;
+    }
+    switch (e->type) {   /* the range conditions of desenhaefeitos 0x48f50e.. */
+    case 24: s = e->phase < e->life - 10 ? 61 : 62; break;
+    case 25: s = e->phase < 12 ? 63 : e->phase < 24 ? 64 : 65; break;
+    case 30:   /* by the countdown c4 of c5 = 25, the later tests win */
+        if (e->c5 - 10 <= e->c4) s = 77;
+        if (e->c5 - 7 <= e->c4) s = 78;
+        if (e->c5 - 4 <= e->c4) s = 79;
+        break;
+    default: break;
     }
     return s;
 }
@@ -827,9 +842,24 @@ static void update_fx(osc_game *g)
         osc_effect *e = &g->fx[i];
         if (!e->type) continue;
         e->sprite = fx_sprite(e);
+        /* blink flags (0x48ee4e..): pickups from life - 20, the popup text from life - 10, the geyser at phase 5 */
+        if ((e->type == 3 || e->type == 4) && e->life - 20 <= e->phase) e->done = true;
+        if (e->type == 5 && e->life - 10 <= e->phase) e->done = true;
+        if (e->type == 8 && e->phase == 5) e->done = true;
+        /* Power Geyser: the pillar's box grows with the frames (FUN_004769c4 sets the box l, t, r, b), and at
+         * phases 6 and 12 the box is re-armed and the phase steps once more (0x48f6fb..0x48f754, not gated) */
+        if (e->type == 8) {
+            if (e->phase == 2) { e->hb_l = -45; e->hb_t = -150; e->hb_r = 45; e->hb_b = 0; }
+            if (e->phase == 5) { e->hb_l = -45; e->hb_t = -220; e->hb_r = 45; e->hb_b = 0; }
+            if (e->phase == 6 || e->phase == 12) { e->has_hitbox = true; e->phase++; }
+        }
+        /* Psycho Field burst: the box is re-armed at c4 = 3, 6, 9 and c4 steps once more */
+        if (e->type == 28 && (e->c4 == 3 || e->c4 == 6 || e->c4 == 9)) { e->has_hitbox = true; e->c4++; }
         if (e->type == 31 || e->type == 32) fx_orbit(g, e);                  /* 0x48f76f, not gated */
         if (e->type == 30 && g->p[e->owner].state != 26) e->type = 0;       /* 0x48f8f4, not gated */
         if (!e->type) continue;
+        if (e->type == 34 && e->phase > 13) e->has_hitbox = false;                          /* 0x48f911, not gated */
+        if (e->type == 24) { e->x += iround(2.0 * cos((double)e->phase)); e->y -= 1.0; }   /* 0x48f920, not gated; 0x49057c = 2.0 */
         if (!frozen) {
             /* motion rules (06) */
             if (e->dir == 1) e->x += e->speed; else if (e->dir == 2) e->x -= e->speed;
@@ -844,7 +874,6 @@ static void update_fx(osc_game *g)
                     if (e->type == 22) { e->done = true; e->has_hitbox = false; }
                 }
             }
-            if (e->type == 34 && e->phase > 13) e->has_hitbox = false;
             if (!e->type) continue;
         }
         /* effect vs effect (0x48fdb2): a reflector takes the other one over, otherwise
