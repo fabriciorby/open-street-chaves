@@ -911,8 +911,22 @@ static void update_fx(osc_game *g)
         if (!frozen) {
             if (e->life != 99) e->phase++;
             if (e->loop_at && e->phase >= e->loop_at) e->phase = 0;
-            if (e->c5 && ++e->c4 >= e->c5) e->has_hitbox = true;
             if (e->life != 99 && e->phase > e->life) e->type = 0;
+            /* countdown (desenhaefeitos 0x48edfc, decomp 889-915): the slot is freed at c4 >= c5;
+             * type 27 arms its box 2 ticks early and bursts into three type-28 effects ("A") */
+            if (e->c5) {
+                e->c4++;
+                if (e->type == 27) {
+                    if (e->c4 >= e->c5 - 2) e->has_hitbox = true;
+                    if (e->c4 >= e->c5) {
+                        double bx = e->x, by = e->y;
+                        spawn_fx(g, 28, 1, e->owner, bx - 30, by + 20);
+                        spawn_fx(g, 28, 1, e->owner, bx + 30, by + 20);
+                        spawn_fx(g, 28, 1, e->owner, bx, by - 40);
+                    }
+                }
+                if (e->c4 >= e->c5) e->type = 0;
+            }
         }
         /* the cull at the end of the slot (desenhaefeitos): a screen margin of 50 px (not gated by the
          * pauses); the Chaos Flare (19) also bursts when its box reaches the floor */

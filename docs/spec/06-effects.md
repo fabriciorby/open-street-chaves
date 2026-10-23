@@ -58,8 +58,25 @@ Every tick, for each live slot:
      player who touches them (`health += k × damageLevel`, none in the
      challenge mode), sound 11, popup type 5, removed.
 5. `phase++` when not paused (unless `life == 99` = infinite); the slot is
-   freed when `phase > life`. A second counter (`c4`/`c5`) drives delayed
-   actions (e.g. type 27 arms its hit box 2 ticks before the end).
+   freed when `phase > life`. A second counter (`c4`/`c5`, only for types
+   with `c5` ≠ 0: 27, 28, 30, 31, 32) runs right after the life test, also
+   when not paused (decomp `0x48edfc` lines 889–915):
+   ```
+   if c5 != 0 and not paused:
+       c4++
+       if type == 27:                       # type read after the life test
+           if c4 >= c5 - 2: hasHitbox = 1   # only type 27 arms here
+           if c4 >= c5: spawn(28,"A",owner, x-30,y+20); spawn(28,"A",owner, x+30,y+20);
+                        spawn(28,"A",owner, x,y-40)
+       if c4 >= c5: type = 0                # slot freed
+   ```
+   so 27 lives 35 ticks and then bursts into three type-28 effects, which
+   are freed after `c5` = 20 ticks (30: 25, 31/32: 70) even though 28 and 30
+   loop their phase and are never freed by `life`. If the life test already
+   freed the slot the burst does not happen. (The original also adds extra
+   `c4++` steps elsewhere in the same function: type 28 at c4 = 3, 6, 9
+   [with a hit box re-arm] and the orbiting 31/32 every 10th tick; these
+   are not modelled by the port.)
 
 The FPU literals that the decompiler shows as `_DAT_0049056x` are 32-bit
 floats read from the binary: `0x490568` = 1.0, `0x49056c` = 3.0, `0x490570`
