@@ -36,8 +36,17 @@ static inline void retangulo(osc_game *g, int x1, int y1, int x2, int y2, osc_rg
 {
     if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
     if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
-    if (x2 - x1 < 1 || y2 - y1 < 1) return;
     SDL_SetRenderDrawColor(g->ren, c.r, c.g, c.b, 255);
+    if (x2 - x1 < 1 || y2 - y1 < 1) {
+        /* Windows FrameRect still draws a degenerate rect: a column at x1 and one at x2 - 1 */
+        SDL_FRect l = {(float)x1, (float)y1, 1.f, (float)(y2 - y1)}, r = {(float)(x2 - 1), (float)y1, 1.f, (float)(y2 - y1)};
+        if (y2 > y1) { SDL_RenderFillRect(g->ren, &l); SDL_RenderFillRect(g->ren, &r); }
+        if (x2 > x1) {
+            SDL_FRect t = {(float)x1, (float)y1, (float)(x2 - x1), 1.f}, b = {(float)x1, (float)(y2 - 1), (float)(x2 - x1), 1.f};
+            SDL_RenderFillRect(g->ren, &t); SDL_RenderFillRect(g->ren, &b);
+        }
+        return;
+    }
     SDL_FRect rc = {(float)x1, (float)y1, (float)(x2 - x1), (float)(y2 - y1)};
     SDL_RenderRect(g->ren, &rc);
 }

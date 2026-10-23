@@ -1379,6 +1379,11 @@ static void draw_hud_top(osc_game *g)
                 SDL_RenderTextureRotated(g->ren, t, NULL, &d, 0.0, NULL, p == 1 ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
             }
         }
+        /* tick marks (0x4a527b..0x4a5323): drawn on the real health, under the bars, so only the empty part shows them */
+        for (int i = 0; i < 7; i++) {
+            int tx_ = 200 + s * (40 + 16 * i);
+            retangulo(g, tx_, hy + 35, tx_, hy + 45, f->health > 15.0 ? rgb(80, 80, 80) : rgb(150, 30, 30));
+        }
         barra(g, 200 + iround(s * (25.0 + f->health_shown)), hy + 35, 200 + s * 25, hy + 45, rgb(170, 0, 0));
         int hx = 200 + iround(s * (25.0 + f->health));
         barra(g, hx, hy + 35, 200 + s * 25, hy + 45, rgb(150, 150, 0));
