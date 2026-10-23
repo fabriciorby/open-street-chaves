@@ -121,12 +121,12 @@ FormCreate (missing file → defaults):
 |---|---|
 | `Churros.dat` | VS screen shows the whole ladder's faces instead of only the fought ones [infer] |
 | `Gentalha.dat` | select cursor starts at 8 and the ladder/boss logic uses `g_selectCursorStart ≥ 8` (hidden characters path) |
-| `Energeticos.dat` | sets a 0.15 factor (`0x4b5898`) — UNKNOWN use |
-| `Satanas.dat` | blood on every hit |
-| `Fadiga.dat` | VS screen jumps straight to the ending (state 10) |
-| `Mentecapto.dat` | UNKNOWN (`0x4b58af`) |
-| `Bruxa.dat` | no limit of one projectile per owner |
-| `SC01.dat` … `SC12.dat` | force stage NN |
+| `Energeticos.dat` | `g_energeticos` (`0x4b5898`) = 0.15, else 0. Every tick of the fight screen, in the player loop right after the round-timer drawing of `DXTimer1Timer` (`all.pp.c` ~93632, no pause test of its own): for each player `if (p1.health > 0 && p2.health > 0) health += 0.15`, followed by the usual clamps (< 0 → 0, > 125 → 125) |
+| `Satanas.dat` (`0x4b58ad`) | blood on every hit: each blood spawn (effect 10) is `(cfg_blood && Random(n) == 0 [&& extra]) \|\| satanas` (`all.pp.c` 82468 `Random(3)`, 95231 hit level 2 && `Random(5)`, 95534 `Random(4)` && field +10 == 5); with blood off no `Random` is drawn |
+| `Fadiga.dat` (`0x4b58ae`) | VS / next-battle screen (state 5): right after its own transition test (`0x96 < counterC` → state 6), `state = 10; counterD = 0; counterC = 0` every tick, so it goes straight to the ending of the player's character |
+| `Mentecapto.dat` (`0x4b58af`) | at the top of every `DXTimer1Timer` tick `hudY (0x4b44d2) = -90; hudY2 (0x4b44d4) = 40`: the HUD is pushed off screen |
+| `Bruxa.dat` (`0x4b58b0`) | `0x476454(type, owner)` ("an effect of that type of that owner is alive") returns false when the flag is set, so the one-projectile-at-a-time rule of the move setup (`needsN` in `05b-move-setup.txt`) never refuses |
+| `SC01.dat` … `SC12.dat` (`0x4b58b1`) | the highest NN found (scan 1..12) forces the stage: 1P fights `all.pp.c` ~93209 `if (sc != 0 && selectCursorStart < 8) stage = clamp(sc, 1, 12)`; 2P fights ~93375 `if (sc != 0) stage = clamp(sc, 1, 12)` unconditionally |
 
 ## Startup defaults (FormCreate) [decomp]
 

@@ -86,6 +86,11 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
     }
     const osc_move_row *r = find_move(f->char_id, move, f->state);
     if (!r) return;
+    if (r->needs_fx && !g->unlock_bruxa) {        /* 0x476454: one projectile of this type per owner */
+        int me = (f == &g->p[1]) ? 1 : 2;
+        for (int i = 0; i < OSC_MAX_FX; i++)
+            if (g->fx[i].type == r->needs_fx && g->fx[i].owner == me) return;
+    }
     if ((r->flags & OSC_MOVE_ONGROUND) && f->vy != 0) return;
     if ((r->flags & OSC_MOVE_NOT_INAIR) && f->in_air) return;
     if (r->flags & OSC_MOVE_SUPER) {
@@ -751,7 +756,7 @@ static void melee_step(osc_game *g, osc_fighter *a)
             if (v->facing == 2) v->rot_step = 20;
         }
         spawn_fx(g, 1, 0, 0, cx, cy);
-        if ((g->cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0))
+        if ((g->cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0) || g->unlock_satanas)
             spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
         set_move(g, v, (st == 4 || st == 6 || st == 8 || st == 9 || st == 10) ? 9 : 8);
         if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
@@ -862,7 +867,7 @@ static void update_fx(osc_game *g)
                 g->snd_pending = 9;
                 spawn_fx(g, 1, 0, 0, e->x, e->y);
                 if (g->cfg_flash && osc_random(g, 3) == 0) g->flash = 4;
-                if (g->cfg_blood && osc_random(g, 3) == 0) spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
+                if ((g->cfg_blood && osc_random(g, 3) == 0) || g->unlock_satanas) spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
                 if (a->human && v->health > 0.0) a->score += 10;
                 if (a->combo_timer <= 35) a->hits = 0;
                 a->hits++;
@@ -983,7 +988,7 @@ static void physics(osc_game *g, osc_fighter *f)
         if (f->state == 20) {                       /* bouncing on the ground */
             if (f->facing == 1) move_x(g, f, -f->hitstun);
             if (f->facing == 2) move_x(g, f, f->hitstun);
-            if (g->cfg_blood && osc_random(g, 4) == 0 && f->anim_timer == 5)
+            if ((g->cfg_blood && osc_random(g, 4) == 0 && f->anim_timer == 5) || g->unlock_satanas)
                 spawn_fx(g, 10, 0, 0, f->facing == 1 ? f->x - 30 : f->x + 30, f->y - 50);
             if (f->y > OSC_GROUND_Y) {
                 f->y = OSC_GROUND_Y; f->in_air = false; f->rot = 0; f->rot_step = 0; f->vy = 0; f->hitstun = 0;
@@ -1359,6 +1364,23 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
         g->unlock_churros = SDL_GetPathInfo(upath, NULL);
         load_path(upath, sizeof upath, g->data_dir, "Gentalha.dat");
         g->unlock_gentalha = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Energeticos.dat");
+        g->unlock_energeticos = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Satanas.dat");
+        g->unlock_satanas = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Fadiga.dat");
+        g->unlock_fadiga = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Mentecapto.dat");
+        g->unlock_mentecapto = SDL_GetPathInfo(upath, NULL);
+        load_path(upath, sizeof upath, g->data_dir, "Bruxa.dat");
+        g->unlock_bruxa = SDL_GetPathInfo(upath, NULL);
+        g->unlock_sc = 0;
+        for (int n = 1; n <= 12; n++) {      /* the last file found wins */
+            char nm[16];
+            snprintf(nm, sizeof nm, "SC%02d.dat", n);
+            load_path(upath, sizeof upath, g->data_dir, nm);
+            if (SDL_GetPathInfo(upath, NULL)) g->unlock_sc = n;
+        }
     }
     g->p1_in = false;   /* nobody has joined until a start button */
     g->p2_in = false;
@@ -1374,6 +1396,7 @@ int osc_stage_for(osc_game *g, int opponent)
     if (osc_random(g, 5) < 2 && g->fight_no < 8 && alt[opponent]) st = alt[opponent];
     if (osc_random(g, 6) < 2 && g->fight_no < 8 &&
         (opponent == 3 || opponent == 4 || opponent == 9 || opponent == 10 || opponent == 11 || opponent == 14)) st = 12;
+    if (g->unlock_sc && g->fight_no < 8) st = g->unlock_sc;   /* SCnn.dat, not on the Gentalha path */
     return st;
 }
 
@@ -1424,6 +1447,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         if (g->p[1].human && g->p[2].human) {                       /* 2P: Round(Random(120)/10)+1 */
             stage = iround(osc_random(g, 120) / 10.0) + 1;
             if (stage > 12) stage = 12;
+            if (g->unlock_sc) stage = g->unlock_sc;
         } else stage = osc_stage_for(g, char2);
     }
     if (!osc_load_stage(g, stage)) return false;
@@ -1464,6 +1488,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
+    if (g->unlock_mentecapto) { g->hud_y = -90; g->hud_y2 = 40; }   /* top of DXTimer1Timer */
     if (g->demo > 0) { g->timer_sec = g->cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
     if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
         g->no_push = true;
@@ -1535,6 +1560,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (f->stocks >= 3) { f->meter = OSC_METER_MAX; f->stocks = 3; }
         /* health bars (HUD loop 0x4a4cbe): the red bar waits 20 ticks after a hit, then
          * falls 3 per tick to the health */
+        if (g->unlock_energeticos && g->p[1].health > 0.0 && g->p[2].health > 0.0) f->health += 0.15;   /* g_energeticos */
         if (f->health < 0.0) f->health = 0.0;
         if (f->health > OSC_HEALTH_MAX) f->health = OSC_HEALTH_MAX;
         if (f->health_shown > OSC_HEALTH_MAX) f->health_shown = OSC_HEALTH_MAX;

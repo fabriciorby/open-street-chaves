@@ -165,6 +165,7 @@ static void vs_tick(osc_game *g, uint8_t in1, uint8_t in2)
     uint8_t held = (uint8_t)((g->p1_in ? in1 : 0) | (g->p2_in ? in2 : 0));
     if ((held & OSC_IN_B1) && g->screen_tick > 0) g->screen_tick += 5;
     if (c2 > 150) osc_fight_start(g, g->sel[1], g->sel[2], g->stage_id);
+    if (g->unlock_fadiga) osc_ending_start(g, g->sel[g->p1_in ? 1 : 2]);   /* Fadiga.dat: state 10 */
 }
 
 static void vs_render(osc_game *g)

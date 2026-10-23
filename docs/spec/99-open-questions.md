@@ -23,7 +23,7 @@ faithful port.
    whether the ending fighters animate (the port shows the scripted
    state/timer frame), and the exact spawn boxes of the fireworks.
 7. `healthShown` (+0x48), +0x50, +0x14, +0x7c, +0xac..+0xaf of the player
-   record; `Energeticos.dat`, `Mentecapto.dat`; `0x4b449d` (round-end
+   record; `0x4b449d` (round-end
    transition style 1..4). ~~`0x4b58a2/a3`~~ — resolved: FormCreate counts the
    `Sons/Som-NN.wav` / `Musicas/Musica-NN.wav` files (07b "Menus reviewed").
 8. Language 2 fill order of the memos (verify that constant indices pick

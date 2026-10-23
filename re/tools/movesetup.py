@@ -25,7 +25,7 @@ for cid, blk in blocks:
         dur = re.search(r"0x4b44ae\) = (0x[0-9a-f]+|\d+);", body)
         meter = re.search(r"_DAT_004b5890 \* ([0-9.]+)", body)
         snd = re.search(r"g_sndIndexA = (0x[0-9a-f]+|\d+);", body)
-        chk = re.search(r"func_0x00476454\(CONCAT31\([^,]*,(\d+)\)", body)
+        chk = re.search(r"func_0x00476454\(CONCAT31\([^,]*,(0x[0-9a-f]+|\d+)\)", body)
         extra = []
         if re.search(r"&DAT_004b44b0\)\[[^\]]*\] == '\\0'", body.split('{',1)[0]): extra.append('onGround(+0x78==0)')
         if '0x4b44a2) == ' in body.split('{',1)[0]: extra.append('flag+0x6a==0')
@@ -36,4 +36,4 @@ for cid, blk in blocks:
         if 'FUN_00476a04' in body: extra.append('spawnEffect')
         print('  move %-5s from %-22s -> state %-4s dur %-4s meter x%-3s snd %-4s %s %s' % (
             ids, ','.join(map(str, froms)) or '-', setst.group(1) if setst else '-', dur.group(1) if dur else '-',
-            meter.group(1) if meter else '-', snd.group(1) if snd else '-', 'needs%s' % chk.group(1) if chk else '', ' '.join(extra)))
+            meter.group(1) if meter else '-', snd.group(1) if snd else '-', 'needs%d' % int(chk.group(1), 0) if chk else '', ' '.join(extra)))

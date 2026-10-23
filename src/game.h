@@ -129,6 +129,12 @@ typedef struct {
     int lang;                /* 0 Portuguese, 1 Spanish */
     bool unlock_churros;     /* Churros.dat: the VS ladder shows every face */
     bool unlock_gentalha;    /* Gentalha.dat: a new game starts at fight 8 */
+    bool unlock_energeticos; /* Energeticos.dat (0x4b5898): +0.15 health per tick while both are alive */
+    bool unlock_satanas;     /* Satanas.dat (0x4b58ad): blood on every hit */
+    bool unlock_fadiga;      /* Fadiga.dat (0x4b58ae): the VS screen jumps to the ending */
+    bool unlock_mentecapto;  /* Mentecapto.dat (0x4b58af): the HUD stays off screen */
+    bool unlock_bruxa;       /* Bruxa.dat (0x4b58b0): no "one projectile at a time" rule */
+    int unlock_sc;           /* SC01..SC12.dat (0x4b58b1): the highest NN found forces that stage, 0 = none */
 
     /* screens (07) */
     int screen;              /* osc_screen */

@@ -94,6 +94,8 @@ configuration on the title screen (saved in SDL's preferences folder, never
 in your game folder). `P` pauses, `G` pauses with the move list, `-` / `=` change the game speed, `,` / `.` shift the picture, `B` shows hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
 fight (`--2p` makes P2 human).
 
+As in the original, empty files with these names in the game folder change the game: `Churros.dat`, `Gentalha.dat`, `Energeticos.dat`, `Satanas.dat`, `Fadiga.dat`, `Mentecapto.dat`, `Bruxa.dat` and `SC01.dat` … `SC12.dat`.
+
 ### Credits and license
 
 - *Street Chaves* © 2003–2004 **CyberGamba** (freeware, "proibido ser
@@ -187,6 +189,8 @@ título (salvas na pasta de preferências do SDL, nunca na pasta do jogo).
 `P` pausa, `G` pausa e mostra a lista de golpes, `-` / `=` mudam a velocidade do
 jogo, `,` / `.` deslocam a imagem, `B` mostra as hit boxes, `Esc` sai. `--fight --p1 N --p2 N` vai
 direto para uma luta (`--2p` deixa o P2 humano).
+
+Como no original, arquivos vazios com estes nomes na pasta do jogo mudam o jogo: `Churros.dat`, `Gentalha.dat`, `Energeticos.dat`, `Satanas.dat`, `Fadiga.dat`, `Mentecapto.dat`, `Bruxa.dat` e `SC01.dat` … `SC12.dat`.
 
 ### Créditos e licença
 
