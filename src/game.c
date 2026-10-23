@@ -801,6 +801,24 @@ static void melee_step(osc_game *g, osc_fighter *a)
     }
 }
 
+/* Dona Neves' Phoenix Arrow / Shining Crystal Bit (types 31 / 32, 0x48f76f..0x48f8f1): the position is
+ * recomputed from the owner every tick, x = owner.x +/- Round(70 * Cos(c4 / 3)) and
+ * y = owner.y - 80 + Round(70 * Cos(c4 / 3)) (floats 0x49056c = 3.0, 0x490570 = 70.0, 0x490574 = 80.0).
+ * Whenever c4 is a multiple of 10 the box is re-armed, c4 steps once more and the slot dies if the owner
+ * is no longer in state 29 (0x1d). Not gated by the pauses. */
+static void fx_orbit(osc_game *g, osc_effect *e)
+{
+    const osc_fighter *ow = &g->p[e->owner];
+    int r = iround(70.0 * cos(e->c4 / 3.0));
+    e->x = e->type == 31 ? r + ow->x : ow->x - r;
+    e->y = (ow->y - 80.0) + r;
+    if (e->c4 % 10 == 0) {
+        e->has_hitbox = true;
+        e->c4++;
+        if (ow->state != 29) e->type = 0;
+    }
+}
+
 /* ---- effects update: motion, collisions, drawing data (desenhaefeitos) ------------- */
 static void update_fx(osc_game *g)
 {
@@ -809,6 +827,9 @@ static void update_fx(osc_game *g)
         osc_effect *e = &g->fx[i];
         if (!e->type) continue;
         e->sprite = fx_sprite(e);
+        if (e->type == 31 || e->type == 32) fx_orbit(g, e);                  /* 0x48f76f, not gated */
+        if (e->type == 30 && g->p[e->owner].state != 26) e->type = 0;       /* 0x48f8f4, not gated */
+        if (!e->type) continue;
         if (!frozen) {
             /* motion rules (06) */
             if (e->dir == 1) e->x += e->speed; else if (e->dir == 2) e->x -= e->speed;
@@ -823,8 +844,6 @@ static void update_fx(osc_game *g)
                     if (e->type == 22) { e->done = true; e->has_hitbox = false; }
                 }
             }
-            if (e->type == 30 && g->p[e->owner].state != 26) e->type = 0;
-            if ((e->type == 31 || e->type == 32) && g->p[e->owner].state != 29) e->type = 0;
             if (e->type == 34 && e->phase > 13) e->has_hitbox = false;
             if (!e->type) continue;
         }
