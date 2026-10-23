@@ -21,6 +21,10 @@ typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row
 typedef struct { uint8_t ch, state; int16_t t_lo, t_hi, frame; uint8_t face, lvl, mod, count, owner, type, variant, flags; int16_t dx, rx, dy, ry; } osc_fx_spawn_row; /* 06e; variant 0 none, 1 A, 2 B */
 enum { OSC_SPAWN_ROUND = 1, OSC_SPAWN_CAM_X = 2, OSC_SPAWN_CAM_Y = 4 };
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t snd, chance; } osc_fx_sound_row; /* timer -1: every tick, Random(chance)==0 (06c) */
+/* walk during special states (06d-special-motion): sub_47648c(f, facing == 1 ? dx : -dx) while the row matches */
+typedef struct { unsigned char ch, state, variant; signed char tmin, tmax, frame; float dx; } osc_motion_row;
+extern const osc_motion_row osc_motion[95];
+#define OSC_N_MOTION 95
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
 /* text index (07d): memo line -> index of the string constant inside Chaves.exe */

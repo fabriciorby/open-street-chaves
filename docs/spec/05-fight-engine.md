@@ -340,6 +340,9 @@ supers' hit sounds (Madruga states 29 and 31, Chiquinha and Barriga state 30:
 writes the move's sound into `g_sndIndexA` too (played at the start of the next
 tick, not immediately).
 
+The selector also moves the fighter in the special states (`sub_47648c` walks, direct x / y / vy / `inAir`
+writes): see `06d-special-motion.txt`.
+
 ### Inventory of the frame selector `0x47d21c..0x48dcbf` (asm vs port) [objdump]
 
 | statement kind | in the asm | in the port |

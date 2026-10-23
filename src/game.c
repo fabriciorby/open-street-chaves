@@ -832,6 +832,170 @@ static void stage_objects(osc_game *g)
     }
 }
 
+/* ---- motion of the special moves (06d-special-motion) -------------------------------
+ * The frame selector (0x47d21c) walks the fighter with sub_47648c and writes x / y / vy / inAir
+ * directly in the special states. The walks are the osc_motion table; the rest is hand-coded
+ * here. Phase 0 runs before the walks (rules whose y change precedes the walk calls in the
+ * original), phase 1 after them. */
+static void jump_off(osc_fighter *f, int vy) { f->in_air = true; f->vy = vy; }
+
+static void motion_rules(osc_game *g, osc_fighter *f, int phase)
+{
+    const int T = f->anim_timer, S = f->hit_level, fr = f->frame, st = f->state;
+    const int floor_y = OSC_GROUND_Y;
+    if (st < 23) return;
+    switch (f->char_id) {
+    case 1:
+        if (st == 27 && phase == 0) f->y -= 10;
+        if (st == 27 && phase == 0 && T == 20) f->in_air = true;
+        break;
+    case 2:
+        if (st == 26 && phase == 0) {
+            if ((T == 11 && S == 1) || (T == 15 && S == 2)) jump_off(f, -6);
+            if (fr == 39) f->y -= S == 1 ? 11 : S == 2 ? 12 : 0;
+            if (fr == 40) f->in_air = true;
+        }
+        if (st == 27) {
+            if (phase == 0) {
+                if (T == 0) { f->vy = 0; f->jump_dir = 0; }
+                if (T > 2) f->y += S == 1 ? 20 : S == 2 ? 13 : 0;
+            } else if (T > 2 && f->y > 270) f->vy = 2;
+        }
+        break;
+    case 3:
+        if (st == 30 && phase == 0) f->y -= 3;
+        break;
+    case 6:
+        if (phase == 0) break;
+        if (st == 27) {
+            if (T > 2 && T < 13) f->y -= S == 1 ? 10 : S == 2 ? 13 : 0;
+            if (T == 13) jump_off(f, S == 1 ? -3 : -6);
+        }
+        if (st == 28) {
+            if (T > 1 && T < 6) f->y -= 15;
+            if (T == 6) f->in_air = true;
+        }
+        if (st == 29) {
+            if (T == 8) { f->in_air = false; f->y = floor_y; }
+            if (T > 8 && T < 26) f->y -= 10;
+            if (T == 26) jump_off(f, -5);
+        }
+        break;
+    case 8:
+        if (phase == 1) break;
+        if (st == 23) {
+            f->y += (T % 2 == 0) ? -4 : 4;
+            if (f->y > floor_y) f->y = floor_y;
+        }
+        if (st == 26 && (T == 0 || T == 8)) { f->vy = 0; f->in_air = false; }
+        if (st == 27 && T == 2) { f->vy = S == 1 ? -25 : S == 2 ? -32 : f->vy; f->jump_dir = 0; f->in_air = true; }
+        if (st == 28 && T == 0) { f->vy = 0; f->in_air = false; }
+        if (st == 28 && T == 8) {
+            double d = S == 1 ? 80.0 : S == 2 ? 150.0 : 0.0;
+            f->x += f->facing == 1 ? d : -d;
+            f->y = 50.0; f->vy = 0; f->in_air = true; f->jump_dir = 0;
+        }
+        break;
+    case 9:
+        if (st == 26) {
+            if (phase == 1 && T < 8) f->y -= S == 1 ? 9 : S == 2 ? 15 : 0;
+            if (phase == 1 && T == 8) jump_off(f, -10);
+        }
+        if (st == 28) {
+            if (phase == 0 && T == 0) f->vy = 0;
+            if (phase == 1 && T > 2) {
+                f->y += 15;
+                if (f->y >= floor_y) { f->state = 1; f->anim_timer = 0; f->attacking = false; f->y = floor_y; }
+            }
+        }
+        if (st == 29 && phase == 1) {
+            if (T > 11 && T < 19) f->y -= 18;
+            if (T == 22) jump_off(f, -14);
+        }
+        break;
+    case 10:
+        if (st == 29 && phase == 0) {
+            if (T == 15) jump_off(f, -35);
+            if (T == 20) f->vy = 10;
+        }
+        break;
+    case 11:
+        if (st == 28 && phase == 1) {
+            f->y -= S == 1 ? 6 : S == 2 ? 8 : 0;
+            if (T == 11) f->vy = -10;
+        }
+        break;
+    case 12:
+        if (st == 23 && phase == 0) {
+            f->x += f->facing == 1 ? 12.0 : f->facing == 2 ? -12.0 : 0.0;
+            if (f->x - g->cam_x <= 100.0) f->facing = 1;
+            if (f->x - g->cam_x >= 300.0) f->facing = 2;
+        }
+        if (st == 26 && phase == 0) {
+            if (((T == 8 && S == 1) || (T == 10 && S == 2))) jump_off(f, -6);
+            if (fr == 39) f->y -= S == 1 ? 15 : S == 2 ? 17 : 0;
+            if (fr == 40) f->in_air = true;
+        }
+        if (st == 27 && phase == 0) { f->y -= 11; f->y += T; }
+        if (st == 28 && phase == 0) {
+            if (T > 12 && T < 25) f->y -= 12;
+            if (T == 25) { f->in_air = true; f->jump_dir = 0; f->vy = -8; }
+        }
+        break;
+    case 13:
+        if (st == 23 && phase == 0) {
+            f->y -= iround(cos(T / 3.0) * 6.0);
+            if (f->y > floor_y - 10) f->y = floor_y - 10;
+        }
+        if (st == 28 && phase == 0 && T == 10) {
+            static const int cx[5] = {0, 0x50, 0xa0, 0xf0, 0x140};
+            if (S >= 1 && S <= 4) f->x = g->cam_x + cx[S];
+            f->y = g->cam_y + 0x96;
+            f->in_air = true; f->vy = 0;
+        }
+        break;
+    case 14:
+        if (phase == 0) break;
+        if (st == 27) f->y += 8;
+        if (st == 28) {
+            if (T > 3 && T < 16) f->y -= S == 1 ? 6 : S == 2 ? 9 : 0;
+            if (T == 17) { f->in_air = true; f->jump_dir = 0; f->vy = -2; }
+        }
+        break;
+    case 15:
+        if (st == 27 && phase == 0) {
+            if (T >= 0 && T < 9) f->y -= S == 1 ? 6 : S == 2 ? 10 : 0;
+            if (T == 9) jump_off(f, -5);
+        }
+        if (st == 28 && phase == 1) f->y += (signed char)(T - 8);
+        if (st == 29 && phase == 1) f->y += (signed char)(T - 5);
+        break;
+    }
+}
+
+static void special_motion(osc_game *g, osc_fighter *f)
+{
+    if (f->state < 23 && !(f->char_id == 13 && f->state == 11)) return;
+    motion_rules(g, f, 0);
+    for (int i = 0; i < OSC_N_MOTION; i++) {
+        const osc_motion_row *r = &osc_motion[i];
+        if (r->ch != f->char_id || r->state != f->state) continue;
+        if (r->variant && f->hit_level != r->variant) continue;
+        if (f->anim_timer < r->tmin || f->anim_timer > r->tmax) continue;
+        if (r->frame >= 0 && f->frame != r->frame) continue;
+        move_x(g, f, f->facing == 1 ? r->dx : -r->dx);
+    }
+    if (f->char_id == 15 && (f->state == 28 || f->state == 29)) {   /* computed walks (signed byte k) */
+        int k = f->state == 28 ? (signed char)(18 - f->anim_timer) : (signed char)(22 - f->anim_timer);
+        if (f->state == 29 && k < 1) k = 1;
+        double dx = k;
+        if (f->state == 28 && f->hit_level == 2) dx = k * 1.3;
+        if (f->state == 28 && f->hit_level != 1 && f->hit_level != 2) dx = 0;
+        if (dx != 0.0) move_x(g, f, f->facing == 1 ? dx : -dx);
+    }
+    motion_rules(g, f, 1);
+}
+
 /* ---- desenhalutador's logic part (0x490bb8): facing, frame, spin ---------------- */
 static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
 {
@@ -843,6 +1007,7 @@ static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
     }
     if (!paused) {
         select_frame(f);
+        special_motion(g, f);
         fx_spawns_for(g, f, pidx);
         fx_sounds_for(g, f);
         f->rot += f->rot_step;

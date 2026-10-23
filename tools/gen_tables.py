@@ -255,6 +255,15 @@ for line in read('06c-special-sounds.txt').split('\n'):
         fx_sounds.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5) or 0)))
 fx_types = sorted(fx_init)
 
+# 06d-special-motion: walk table (rows only: first token an integer; the prose section starts at '## ')
+motion = []
+for line in read('06d-special-motion.txt').split('\n'):
+    if line.startswith('## '):
+        break
+    t = line.split('#')[0].split()
+    if len(t) == 7 and t[0].lstrip('-').isdigit():
+        motion.append((int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), repr(float(t[6])) + 'f'))
+
 # ---------------------------------------------------------------- 07c stage animations
 stage_anim = []
 for line in read('07c-stage-animations.txt').split('\n'):
@@ -325,6 +334,10 @@ typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row
 typedef struct { uint8_t ch, state; int16_t t_lo, t_hi, frame; uint8_t face, lvl, mod, count, owner, type, variant, flags; int16_t dx, rx, dy, ry; } osc_fx_spawn_row; /* 06e; variant 0 none, 1 A, 2 B */
 enum { OSC_SPAWN_ROUND = 1, OSC_SPAWN_CAM_X = 2, OSC_SPAWN_CAM_Y = 4 };
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t snd, chance; } osc_fx_sound_row; /* timer -1: every tick, Random(chance)==0 (06c) */
+/* walk during special states (06d-special-motion): sub_47648c(f, facing == 1 ? dx : -dx) while the row matches */
+typedef struct { unsigned char ch, state, variant; signed char tmin, tmax, frame; float dx; } osc_motion_row;
+extern const osc_motion_row osc_motion[@N_MOTION@];
+#define OSC_N_MOTION @N_MOTION@
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
 /* text index (07d): memo line -> index of the string constant inside Chaves.exe */
@@ -437,6 +450,10 @@ const osc_fx_sound_row osc_fx_sounds[%d] = {
 %s
 };
 
+const osc_motion_row osc_motion[@N_MOTION@] = {
+@MOTION_ROWS@
+};
+
 const osc_stage_anim_row osc_stage_anim[%d] = {
 %s
 };
@@ -449,6 +466,8 @@ const osc_text_index_row osc_text_index[%d] = {
        len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns), len(fx_sounds), rows(fx_sounds),
        len(stage_anim), rows(stage_anim), len(text_index), rows(text_index))
 
+h = h.replace('@N_MOTION@', str(len(motion)))
+c = c.replace('@N_MOTION@', str(len(motion))).replace('@MOTION_ROWS@', rows(motion))
 with open(OUT_H, 'w') as f:
     f.write(h)
 with open(OUT_C, 'w') as f:

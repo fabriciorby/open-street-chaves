@@ -1,0 +1,167 @@
+# 06d — motion during special states, from the frame selector (0x47d21c): sub_47648c(p, dx) = walk-with-push by dx.
+# Row applies every tick while char/state match, variant (0 = any, else hit level A=1/B=2), tmin<=timer<=tmax,
+# and frame (-1 = any, else the character-relative frame index). dx is for facing 1 (right); facing 2 uses -dx.
+# ch state variant tmin tmax frame dx
+1 26 1 0 99 41 19.0
+1 26 2 0 99 41 21.0
+1 27 0 0 99 -1 5.0
+1 28 1 4 13 -1 17.0
+1 28 2 4 13 -1 21.0
+2 26 1 0 99 39 4.0
+2 26 2 0 9 39 9.0
+2 26 2 10 99 39 3.0
+2 27 1 3 99 -1 11.0
+2 27 2 3 99 -1 15.0
+2 30 0 3 99 -1 23.0
+2 31 0 0 99 -1 3.0
+3 26 1 0 99 -1 6.0
+3 26 2 0 99 -1 8.0
+3 27 1 5 99 -1 17.0
+3 27 2 5 99 -1 16.0
+3 28 1 0 99 -1 10.0
+3 28 2 0 99 -1 14.0
+3 29 0 0 99 -1 17.0
+4 26 1 7 99 -1 26.0
+4 26 2 7 99 -1 25.0
+4 27 1 0 99 -1 10.0
+4 27 2 0 99 -1 13.0
+4 28 1 2 5 -1 9.0
+4 28 2 2 5 -1 18.0
+4 29 0 0 99 -1 17.0
+5 26 1 0 12 -1 6.0
+5 26 2 0 12 -1 10.0
+5 27 1 4 34 -1 7.0
+5 27 2 4 34 -1 9.0
+5 29 0 0 7 -1 5.0
+5 29 0 8 27 -1 10.0
+6 27 1 3 12 -1 6.0
+6 27 2 3 12 -1 9.0
+6 28 0 0 99 -1 2.0
+6 28 1 2 5 -1 20.0
+6 28 2 2 5 -1 27.0
+6 29 0 0 8 -1 1.0
+6 29 0 3 6 -1 21.0
+6 29 0 9 25 -1 9.0
+7 25 1 0 99 -1 2.0
+7 25 2 0 99 -1 4.0
+7 27 1 1 4 -1 7.0
+7 27 2 1 4 -1 12.0
+7 28 1 0 99 -1 6.0
+7 28 2 0 99 -1 11.0
+7 29 0 3 99 -1 25.0
+7 30 0 0 99 -1 3.0
+8 27 1 3 7 -1 5.0
+8 27 2 3 7 -1 12.0
+8 28 1 8 99 -1 5.0
+8 28 2 8 99 -1 8.0
+9 25 1 0 9 -1 14.0
+9 25 2 0 17 -1 13.0
+9 26 1 0 7 -1 6.0
+9 26 2 0 7 -1 12.0
+9 27 1 0 2 -1 20.0
+9 27 2 0 2 -1 25.0
+9 28 1 3 99 -1 4.0
+9 28 2 3 99 -1 12.0
+9 29 0 0 10 -1 12.0
+9 29 0 12 18 -1 15.0
+10 25 1 0 99 -1 2.0
+10 25 2 0 99 -1 3.0
+10 26 1 4 99 -1 19.0
+10 26 2 4 15 -1 17.0
+10 27 1 0 4 -1 16.0
+10 27 2 0 4 -1 20.0
+10 28 1 6 99 -1 16.0
+10 28 2 6 99 -1 20.0
+10 29 0 3 14 -1 13.0
+10 29 0 15 19 -1 23.0
+11 27 1 1 99 -1 19.0
+11 27 2 1 99 -1 16.0
+11 28 1 0 99 -1 7.0
+11 28 2 0 99 -1 12.0
+11 29 0 0 26 -1 7.0
+11 29 0 27 99 -1 12.0
+12 26 1 0 99 39 4.0
+12 26 2 0 99 39 8.0
+12 27 1 0 99 -1 10.0
+12 27 2 0 99 -1 15.0
+12 28 0 0 8 -1 15.0
+12 28 0 13 24 -1 4.0
+13 11 0 0 99 -1 9.0
+13 26 1 0 99 -1 8.0
+13 26 2 0 99 -1 13.0
+13 29 0 0 99 -1 14.0
+14 27 1 0 99 -1 6.0
+14 27 2 0 99 -1 9.0
+14 28 1 4 15 -1 4.0
+14 28 2 4 15 -1 8.0
+15 26 2 2 4 -1 15.0
+15 27 2 0 2 -1 10.0
+15 27 2 3 8 -1 3.0
+# char 15 (Chapolin) states 28/29 are computed, not tabulated (see the second section):
+#   15 28: k = 18 - timer (signed byte); variant 1: dx = k; variant 2: dx = k * 1.3 (the 80-bit constant at 0x48dd80)
+#   15 29: k = max(22 - timer, 1) (signed byte); dx = k, any variant
+
+## Direct position and flight rules (hand-coded in special_motion(), src/game.c)
+
+Decompiled from the same function (0x47d21c). T = animTimer, side = hitLevel (1/2), frame = the
+character-relative frame index, floor = groundY (300), camX/camY = camera. "walk" is the table
+above; "y first" means the y change comes before the walk calls of that state (the body-push test of
+sub_47648c uses y). vy values are signed bytes. Line numbers refer to 0047d21c_sub_47d21c.c.
+
+Position (y unless noted):
+
+| ch | state | when | rule | line |
+|---|---|---|---|---|
+| 1 | 27 | every tick, y first | y -= 10 | 497 |
+| 2 | 26 | frame 39, y first | y -= 11 (side 1) / 12 (side 2) | 735 |
+| 2 | 27 | T > 2, y first | y += 20 (side 1) / 13 (side 2); then, after the walk, y > 270 sets vy = 2 | 794, 821 |
+| 3 | 30 | every tick | y -= 3 | 1345 |
+| 6 | 27 | 2 < T < 13, after walk | y -= 10 (side 1) / 13 (side 2) | 2255 |
+| 6 | 28 | 1 < T < 6, after walk | y -= 15 | 2309 |
+| 6 | 29 | T == 8 | y = floor, inAir = 0 | 2348 |
+| 6 | 29 | 8 < T < 26, after walk | y -= 10 | 2372 |
+| 8 | 23 | every tick | y -= 4 on even T, += 4 on odd T; then y > floor -> y = floor | 2795 |
+| 8 | 28 | T == 8 | x += 80 (side 1) / 150 (side 2) towards the facing; y = 50, vy = 0, inAir = 1, jumpDir = 0 | 2988 |
+| 9 | 26 | T < 8, after walk | y -= 9 (side 1) / 15 (side 2) | 3233 |
+| 9 | 28 | T > 2, after walk | y += 15; if y >= floor: state = 1, animTimer = 0, attacking = 0, y = floor | 3308 |
+| 9 | 29 | 11 < T < 19, after walk | y -= 18 | 3378 |
+| 11 | 28 | every tick, after walk | y -= 6 (side 1) / 8 (side 2) | 3956 |
+| 12 | 23 | every tick | x += 12 / -= 12 by facing (no push); x - camX <= 100 -> facing 1; >= 300 -> facing 2 | 4133 |
+| 12 | 26 | frame 39, y first | y -= 15 (side 1) / 17 (side 2) | 4238 |
+| 12 | 27 | every tick, y first | y -= 11, then y += T | 4292 |
+| 12 | 28 | 12 < T < 25, y first | y -= 12 | 4360 |
+| 13 | 23 | every tick | y -= Round(Cos(T / 3.0) * 6.0); then y > floor - 10 -> y = floor - 10 | 4455 |
+| 13 | 28 | T == 10 | x = camX + 80 / 160 / 240 / 320 for side 1 / 2 / 3 / 4; y = camY + 150; inAir = 1, vy = 0 | 4623 |
+| 14 | 27 | every tick, after walk | y += 8 | 4859 |
+| 14 | 28 | 3 < T < 16, after walk | y -= 6 (side 1) / 9 (side 2) | 4891 |
+| 15 | 27 | 0 <= T < 9, y first | y -= 6 (side 1) / 10 (side 2) | 5132 |
+| 15 | 28 | every tick, after walk | y += (signed byte)(T - 8) | 5187 |
+| 15 | 29 | every tick, after walk | y += (signed byte)(T - 5) | 5226 |
+
+Flight (inAir / vy writes; they make the physics of 05 carry the fighter, landing in state 1):
+
+| ch | state | when | rule | line |
+|---|---|---|---|---|
+| 1 | 27 | T == 20 | inAir = 1 | 505 |
+| 2 | 26 | (T == 11 and side 1) or (T == 15 and side 2) | inAir = 1, vy = -6 | 731 |
+| 2 | 26 | frame 40 | inAir = 1 | 774 |
+| 2 | 27 | T == 0 | vy = 0, jumpDir = 0 | 787 |
+| 6 | 27 | T == 13 | vy = -3 (side 1) / -6 (side 2), inAir = 1 | 2262 |
+| 6 | 28 | T == 6 | inAir = 1 | 2316 |
+| 6 | 29 | T == 26 | inAir = 1, vy = -5 | 2376 |
+| 8 | 26 | T == 0 or T == 8 | vy = 0, inAir = 0 | 2863, 2906 |
+| 8 | 27 | T == 2 | vy = -25 (side 1) / -32 (side 2); jumpDir = 0, inAir = 1 | 2932 |
+| 8 | 28 | T == 0 | vy = 0, inAir = 0 | 2976 |
+| 9 | 26 | T == 8 | vy = -10, inAir = 1 | 3212 |
+| 9 | 28 | T == 0 | vy = 0 | 3286 |
+| 9 | 29 | T == 22 | vy = -14, inAir = 1 | 3387 |
+| 10 | 29 | T == 15 / T == 20 | vy = -35, inAir = 1 / vy = 10 | 3661, 3666 |
+| 11 | 28 | T == 11 | vy = -10 | 3974 |
+| 12 | 26 | (T == 8 and side 1) or (T == 10 and side 2); frame 40 | inAir = 1, vy = -6; inAir = 1 | 4233, 4259 |
+| 12 | 28 | T == 25 | inAir = 1, jumpDir = 0, vy = -8 | 4370 |
+| 14 | 28 | T == 17 | inAir = 1, jumpDir = 0, vy = -2 | 4900 |
+| 15 | 27 | T == 9 | inAir = 1, vy = -5 | 5157 |
+
+Not ported here: the throw set-ups that place and launch the opponent (lines 871-886, 973-986,
+1357-1373, 2663-2676 and the throw endings at 1424 and 2715), the per-tick "knockdown" flag
+(+0x69 = 1) these states keep setting, and the KO fix at line 302.
