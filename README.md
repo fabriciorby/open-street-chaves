@@ -70,6 +70,7 @@ push (see the *Actions* tab → artifacts). The web build asks for your game
 folder (or its `.zip`, by picker or drag and drop); the files are read in the
 browser only and cached in its IndexedDB storage.
 On touch devices a semi-transparent on-screen gamepad (D-pad on the left; Z X C V as a diamond on the right; FICHA inserts a coin and Z starts) appears once the game starts.
+On desktop the canvas fills the window at 4:3; a small toolbar under it offers *Tela cheia* (fullscreen) and *Escala* (Ajustar / 2x / 3x / Pixel perfeito, remembered in the browser).
 
 ### Web build on GitHub Pages
 
