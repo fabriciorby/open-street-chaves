@@ -908,7 +908,15 @@ static void update_fx(osc_game *g)
             if (e->loop_at && e->phase >= e->loop_at) e->phase = 0;
             if (e->c5 && ++e->c4 >= e->c5) e->has_hitbox = true;
             if (e->life != 99 && e->phase > e->life) e->type = 0;
-            if (e->x < g->cam_x - 200 || e->x > g->cam_x + 600) e->type = 0;
+        }
+        /* the cull at the end of the slot (desenhaefeitos): a screen margin of 50 px (not gated by the
+         * pauses); the Chaos Flare (19) also bursts when its box reaches the floor */
+        if (e->x < g->cam_x - 50) e->type = 0;
+        if (e->x > g->cam_x + 450) e->type = 0;
+        if (e->y < g->cam_y - 50) e->type = 0;
+        if (e->type == 19 && e->hb_b + e->y > OSC_GROUND_Y) {
+            e->type = 0;
+            spawn_fx(g, 1, 0, 0, e->x, e->y);
         }
     }
 }
@@ -1509,10 +1517,9 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         g->cam_x = g->cam_x - 10 + osc_random(g, 20);
         g->cam_y = g->cam_y - 10 + osc_random(g, 20);
     }
-    int max_cam = g->stage_w - OSC_SCREEN_W; if (max_cam < 0) max_cam = 0;
-    if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > max_cam) g->cam_x = max_cam;
-    int max_cy = g->stage_h - OSC_SCREEN_H; if (max_cy < 0) max_cy = 0;
-    if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > max_cy) g->cam_y = max_cy;
+    /* fixed limits of the original (0x4a47f1): x 0..200, y 0..20 */
+    if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > 200) g->cam_x = 200;
+    if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > 20) g->cam_y = 20;
     bool frozen = g->hit_stop || g->super_pause;
     if (g->demo > 0) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;   /* nobody falls in the demo */
     if (g->cfg_power == 2 || g->cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */

@@ -79,11 +79,9 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
 
 1. **Horizontal**: `dir == 1 → x += speed`, `dir == 2 → x −= speed`
    (`speed` = field +0x21, e.g. 8 "A" / 11 "B" for fireballs, 10/13 for
-   Bad Stone, 0 for stationary effects). Nothing stops a projectile at the
-   screen edge; it lives until `phase > life` (fireballs loop their phase
-   and have `life` 5 but are kept alive by the loop `phase := 0` — their
-   lifetime is the loop, so they fly until they hit something or the owner
-   state ends; UNKNOWN whether an off-screen cull exists elsewhere).
+   Bad Stone, 0 for stationary effects). Fireballs loop their phase and
+   have `life` 5 but are kept alive by the loop `phase := 0`; they fly until
+   they hit something, the owner state ends, or the **off-screen cull** (rule 5) removes them.
 2. **Vertical specials**: type 19 (Bruxa air Chaos Flare) also `y +=
    speed` (diagonal down); type 20 `y −= 7 + Random(13)` (rises
    erratically); type 2 dust `y −= 1`; type 5 text `y −= 5`; type 24 wobbles
@@ -99,8 +97,15 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
    every 10th tick the hit box is re-armed and the counter advances; the
    effect is removed when the owner leaves state 29 (and type 30 when the
    owner leaves state 26). Type 34 loses its hit box after phase 13.
-5. Debug: with `g_debugBoxes` the effect's box is drawn (`barra`).
-6. Drawing: sprite `Efeitos[sprite]` at `(x − camX − w/2, y − camY − h/2)`, or `y − camY − h` when `f8`
+5. **Off-screen cull** [decomp, `0x48edfc`, decomp lines 917-934, last statements of the slot, not gated by
+   `g_hitStop`/`g_superPause`]: after the life/`c5` handling every live slot is freed (`type := 0`) when
+   `x < camX − 50`, `x > camX + 450` (0x1c2) or `y < camY − 50` (`g_counterE`). There is no lower
+   bound other than rule 3's landing (a stray fireball can sink below the screen, it is only culled by
+   x). Type 19 (Chaos Flare) is additionally freed, with a hit spark (type 1) at its position, as soon
+   as `y + hitBoxBottom > groundY` (the ground check uses the box bottom, +0x1c). Camera: `camX` and
+   `camY` are clamped to 0..200 and 0..20 (`0x4a47f1`); the port used the stage image size, now the same fixed limits.
+6. Debug: with `g_debugBoxes` the effect's box is drawn (`barra`).
+7. Drawing: sprite `Efeitos[sprite]` at `(x − camX − w/2, y − camY − h/2)`, or `y − camY − h` when `f8`
    (centred horizontally; centred on y by default, `f8` flag = bottom-anchored, standing on y),
    mirrored list when `dir == 2`; types with `done == 1` draw blinking.
 

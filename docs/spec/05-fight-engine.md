@@ -92,7 +92,7 @@ stock (`+0x58`), sets `g_superPause = 22`, sound 19.
 
 - World: x in pixels (double), y = feet (double), `groundY = 300`. Camera
   `g_camX`/`g_camY` is subtracted when drawing; the playable band is
-  `camX + 30 … camX + 370`.
+  `camX + 30 … camX + 370` (for fighters with health > 0 only); the camera follows the midpoint of the fighters, clamped to x 0..200, y 0..20.
 - Walk: `sub_47648c(p, dx)` adds `dx` (±`speed`, +0x80: 8.0, 8.5 or 7.5 by
   character) and resolves body overlap: if the hurt boxes of both players
   intersect (and neither is in state 20/23), the other player is pushed 5

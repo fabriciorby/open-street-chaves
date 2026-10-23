@@ -9,8 +9,8 @@ faithful port.
    0.1).
 2. ~~Difficulty → probability~~ — resolved: `k` uses both "Nível do Jogo"
    (`g_cfg0`) and the fight number (05, "AI difficulty").
-3. ~~Per-type projectile motion~~ — resolved (06 "Motion rules"); still
-   open: whether an off-screen cull exists for looping fireballs.
+3. ~~Per-type projectile motion~~ — resolved (06 "Motion rules"); the
+   off-screen cull exists and is ported (06 rule 5: x outside camX−50..camX+450, y above camY−50).
 4. **HUD coordinates** — transcribed statically into `07b-draw-calls/
    state7_hud.txt` and summarised in `07b-layout.md`; a few operands are
    still `Round()`/`?` (health-fill width, portrait x) → confirm from the
@@ -45,11 +45,19 @@ faithful port.
     1357–1373, 2663–2676; endings 1424, 2715), the `knockdown` flag (+0x69)
     that special states set every tick (~40 sites, so specials do not knock
     down yet) and the KO fix near line 302.
-13. Port checks after 06d: a fighter can sit up to 12 px under the floor for a
-    tick or two in a few states (Furtado 27, Madruga 27, Glória 28,
-    Dona Neves 27), and a long CPU-vs-CPU run logged x outside the camera
-    clamps in states 1/19/20 — confirm against the original whether either
-    happens there.
+13. ~~Port checks after 06d~~ — resolved by tracing a 3000-frame CPU fight for 12 pairs with a
+    per-tick log. (a) Floor: the 2-12 px under the floor seen in specials (Furtado 27, Madruga 27,
+    Glória 28/29, Dona Neves 27) only existed in a log taken before the move clock and gravity
+    block; at the end of the tick `y <= groundY` always holds. The original does it the same way:
+    a non-airborne special moves y freely and `y := groundY` is applied by the move clock when the
+    move ends (DXTimer1Timer ~5625) or by the airborne landing check (~5750). (b) x outside
+    `camX+30..camX+370` only happens for fighters with `health <= 0`: the knockdown flight (state 19,
+    which adds `hitstun` to x without `sub_47648c`, DXTimer1Timer ~5660) and the bounce (state 20 via
+    `sub_47648c`, whose clamp is guarded by `0.0 < health`, 0x4b4478) are unclamped in the original too,
+    and a killing throw has `hitstun` 28..30, so a corpse flies 300-600 px (x −610..1150 seen).
+    Alive fighters never leave the window (the round-1 jump-in from x 0 / 600 is original, 0x4a44cb).
+    (c) The only real divergence was the camera clamp (port: stage image size, original: x 0..200,
+    y 0..20), now fixed; effects at such x are removed by the cull of item 3.
 
 ## Verification plan (needs Wine or a Windows VM)
 
