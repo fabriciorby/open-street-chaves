@@ -37,6 +37,19 @@ faithful port.
     `FUN_00476a04` call of the frame selector with its guards and offsets. ~~Stage 8 moving
     elements~~ — the passing car and the flickering mice/lights are in 07c
     (`xmul`, `yjit` columns).
+12. ~~Special-move sounds and motion~~ — resolved: `06c-special-sounds.txt`
+    (every `g_sndIndexA` of the frame selector) and `06d-special-motion.txt`
+    (all 196 `sub_47648c` walk calls with their pushed steps, plus the direct
+    x/y and `inAir`/`vy` writes). Still open from the same function: the throw
+    set-ups that place and launch the opponent (decomp lines 871–886, 973–986,
+    1357–1373, 2663–2676; endings 1424, 2715), the `knockdown` flag (+0x69)
+    that special states set every tick (~40 sites, so specials do not knock
+    down yet) and the KO fix near line 302.
+13. Port checks after 06d: a fighter can sit up to 12 px under the floor for a
+    tick or two in a few states (Furtado 27, Madruga 27, Glória 28,
+    Dona Neves 27), and a long CPU-vs-CPU run logged x outside the camera
+    clamps in states 1/19/20 — confirm against the original whether either
+    happens there.
 
 ## Verification plan (needs Wine or a Windows VM)
 

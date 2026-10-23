@@ -91,7 +91,7 @@ strong kick). P2: `W` `A` `S` `D` + `F` `G` `H` `J`, or a gamepad (d-pad or
 left stick, `X` `A` `Y` `B` for the four attacks; the first pad goes to P2
 like the original's joystick, a second pad to P1). `F1` opens the configuration menu and `F2` the key
 configuration on the title screen (saved in SDL's preferences folder, never
-in your game folder). `P` pauses, `B` shows hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
+in your game folder). `P` pauses, `G` pauses with the move list, `-` / `=` change the game speed, `,` / `.` shift the picture, `B` shows hit/hurt boxes, `Esc` quits. `--fight --p1 N --p2 N` jumps straight into a
 fight (`--2p` makes P2 human).
 
 ### Credits and license
@@ -148,7 +148,8 @@ continue, recordes, os 15 finais com seus diálogos e os créditos. O motor de l
 golpes normais em pé/agachado/no ar, defesa (regras alta/baixa), estados
 de acerto, queda e levantar, hit boxes, dano, hit-stop, combos, barra de
 especial e estoques, o leitor de comandos dos especiais (meia-lua, carga,
-repetição) com seus quadros, hit boxes e projéteis/efeitos, CPU com a tabela
+repetição) com seus quadros, hit boxes, deslocamento, sons e projéteis/efeitos,
+lista de golpes na pausa (`G`), CPU com a tabela
 de decisões por personagem do original, relógio do round e fluxo de KO e
 tempo esgotado, animações dos cenários, sons e música. Todos os dados
 numéricos são gerados de `docs/spec` por `tools/gen_tables.py`.
@@ -183,7 +184,8 @@ ou analógico esquerdo, `X` `A` `Y` `B` para os quatro golpes; o primeiro
 controle vai para o P2 como o joystick do original, um segundo para o P1).
 `F1` abre o menu de configuração e `F2` a configuração de teclas na tela de
 título (salvas na pasta de preferências do SDL, nunca na pasta do jogo).
-`P` pausa, `B` mostra as hit boxes, `Esc` sai. `--fight --p1 N --p2 N` vai
+`P` pausa, `G` pausa e mostra a lista de golpes, `-` / `=` mudam a velocidade do
+jogo, `,` / `.` deslocam a imagem, `B` mostra as hit boxes, `Esc` sai. `--fight --p1 N --p2 N` vai
 direto para uma luta (`--2p` deixa o P2 humano).
 
 ### Créditos e licença
