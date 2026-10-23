@@ -35,7 +35,7 @@ input/physics lock).
 | `-` / `+` | `g_speedDelay` ±1 (DXTimer interval in ms, 0..80, default 28); shows "VELOCIDADE" for 30 ticks |
 | `,` / `.` | `DXDraw1.Left` -1 / +1 while > -40 / < 40 (picture slides, black form behind it; not saved) |
 | `P` | pause toggle (see below) |
-| `G` | only in state 7 (fight): pause + move list (`mostragolpe`), or resume |
+| `G` | only in state 7 (fight): pause + move list (`mostragolpe`), or resume. Port rule: ignored while `G` is bound to either player's controls in `g->keymap` (P2's default strong punch is `G`), so a P2 keyboard player does not pause on every punch |
 | `F1` | attract ↔ configuration menu; leaving saves `Chaves.dat` |
 | `F2` | attract ↔ key configuration |
 | `1` / `2` | start or join as P1 / P2 (needs a credit) |

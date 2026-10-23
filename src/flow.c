@@ -619,6 +619,16 @@ static void game_tick_body(osc_game *g, uint8_t in1, uint8_t in2)
     }
 }
 
+/* Port rule: P2's default strong punch is G, so G only opens the move list when neither player's
+ * controls use it (the original has no such clash, its P2 keys are different). */
+static bool g_is_bound(const osc_game *g)
+{
+    for (int p = 0; p < 2; p++)
+        for (int k = 0; k < 8; k++)
+            if (g->keymap[p][k] == SDL_SCANCODE_G) return true;
+    return false;
+}
+
 /* FormKeyDown (0x49e2e8): speed, picture shift, pause and the move list */
 void osc_game_key(osc_game *g, SDL_Keycode key)
 {
@@ -627,7 +637,7 @@ void osc_game_key(osc_game *g, SDL_Keycode key)
     if (key == SDLK_MINUS || key == SDLK_EQUALS) g->speed_overlay = 30;
     if (key == SDLK_COMMA && g->view_dx > -40) g->view_dx--;
     if (key == SDLK_PERIOD && g->view_dx < 40) g->view_dx++;
-    bool p = key == SDLK_P, gk = key == SDLK_G && g->screen == OSC_SCREEN_FIGHT;
+    bool p = key == SDLK_P, gk = key == SDLK_G && g->screen == OSC_SCREEN_FIGHT && !g_is_bound(g);
     if (p || gk) {
         if (!g->paused) {
             g->paused = true;
