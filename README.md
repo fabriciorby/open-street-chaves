@@ -105,7 +105,8 @@ fight (`--2p` makes P2 human).
   code and documentation, never the original game's assets or text.
 - Text is drawn with the system's *Comic Sans MS* when present (the font
   the original uses; it is never shipped here). Otherwise the bundled
-  [Comic Neue](https://github.com/crozynski/comicneue) by Craig Rozynski is
+  [Comic Relief](https://github.com/loudifier/Comic-Relief) by Jeff Davis (a
+  metric-compatible Comic Sans MS replacement) is
   used, under the SIL Open Font License (`assets/fonts/OFL.txt`).
   Rasterised with Sean Barrett's public-domain `stb_truetype`.
 

@@ -1,5 +1,6 @@
 #include "font.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,12 +58,12 @@ bool osc_font_init(SDL_Renderer *ren)
     if (try_load("/usr/share/fonts/truetype/msttcorefonts/Comic_Sans_MS.ttf", "Comic Sans MS")) return true;
     if (try_load("/usr/share/fonts/truetype/msttcorefonts/comic.ttf", "Comic Sans MS")) return true;
 #endif
-    /* bundled OFL look-alike */
+    /* bundled OFL, metric-compatible with Comic Sans MS (Comic Relief) */
     const char *base = SDL_GetBasePath();
-    snprintf(buf, sizeof buf, "%sassets/fonts/ComicNeue-Regular.ttf", base ? base : "");
-    if (try_load(buf, "Comic Neue")) return true;
-    if (try_load("assets/fonts/ComicNeue-Regular.ttf", "Comic Neue")) return true;
-    if (try_load("/fonts/ComicNeue-Regular.ttf", "Comic Neue")) return true;   /* web build (embedded) */
+    snprintf(buf, sizeof buf, "%sassets/fonts/ComicRelief-Regular.ttf", base ? base : "");
+    if (try_load(buf, "Comic Relief")) return true;
+    if (try_load("assets/fonts/ComicRelief-Regular.ttf", "Comic Relief")) return true;
+    if (try_load("/fonts/ComicRelief-Regular.ttf", "Comic Relief")) return true;   /* web build (embedded) */
     SDL_Log("font: no TrueType font found, using the debug font");
     return false;
 }
@@ -84,28 +85,40 @@ static font_size *get_size(int size)
     font_size *f = &g_sizes[g_n_sizes];
     memset(f, 0, sizeof *f);
     f->size = size;
-    /* TFont.Size in points at 96 dpi: em height = size * 96 / 72 px */
-    float px = (float)size * 96.f / 72.f;
+    /* TFont.Size in points at 96 dpi: em height = size * 96 / 72 px, a whole number of pixels in GDI */
+    float px = floorf((float)size * 96.f / 72.f + 0.5f);
     f->scale = stbtt_ScaleForMappingEmToPixels(&g_info, px);
+    /* GDI's tmAscent comes from OS/2 usWinAscent (hhea only as a fallback), rounded to a pixel */
     int asc, desc, gap;
     stbtt_GetFontVMetrics(&g_info, &asc, &desc, &gap);
-    f->ascent = (float)asc * f->scale;
-    /* room for 191 glyphs at 2x oversampling: big sizes (KO is 70 pt) need a bigger atlas */
-    int over = px > 30.f ? 1 : 2, ATLAS = 256;
+    {
+        stbtt_uint32 os2 = stbtt__find_table(g_info.data, (stbtt_uint32)g_info.fontstart, "OS/2");
+        if (os2) { int wa = ttUSHORT(g_info.data + os2 + 74); if (wa > 0) asc = wa; }   /* usWinAscent */
+    }
+    f->ascent = floorf((float)asc * f->scale + 0.5f);
+    /* room for 191 glyphs, 1x (no oversampling: glyph pixels land on the game's pixel grid) */
+    int ATLAS = 256;
+    const int over = 1;
     while ((double)ATLAS * ATLAS < 191.0 * (1.3 * over * px) * (1.3 * over * px) * 0.6 && ATLAS < 2048) ATLAS *= 2;
     unsigned char *bmp = calloc((size_t)ATLAS * ATLAS, 1);
     if (!bmp) return NULL;
     stbtt_pack_context pc;
     if (!stbtt_PackBegin(&pc, bmp, ATLAS, ATLAS, 0, 1, NULL)) { free(bmp); return NULL; }
     /* PackFontRanges scales by (ascent - descent); feed it the height that yields our em scale */
-    float h = f->scale * (float)(asc - desc);
+    int hasc, hdesc, hgap;
+    stbtt_GetFontVMetrics(&g_info, &hasc, &hdesc, &hgap);
+    float h = f->scale * (float)(hasc - hdesc);
     stbtt_pack_range ranges[2] = {
         { h, 32, NULL, 95, f->ascii, 0, 0 },
         { h, 160, NULL, 96, f->latin1, 0, 0 },
     };
-    stbtt_PackSetOversampling(&pc, (unsigned)over, (unsigned)over);
     if (!stbtt_PackFontRanges(&pc, g_ttf, 0, ranges, 2)) SDL_Log("font: size %d did not fit a %d px atlas", size, ATLAS);
     stbtt_PackEnd(&pc);
+    /* GDI advances are whole pixels at these sizes */
+    for (int i = 0; i < 95; i++) f->ascii[i].xadvance = floorf(f->ascii[i].xadvance + 0.5f);
+    for (int i = 0; i < 96; i++) f->latin1[i].xadvance = floorf(f->latin1[i].xadvance + 0.5f);
+    /* GDI draws these sizes without antialiasing: threshold the coverage */
+    for (int i = 0; i < ATLAS * ATLAS; i++) bmp[i] = bmp[i] >= 128 ? 255 : 0;
     /* alpha -> RGBA (white) */
     Uint32 *rgba = malloc((size_t)ATLAS * ATLAS * 4);
     if (!rgba) { free(bmp); return NULL; }
@@ -117,7 +130,7 @@ static font_size *get_size(int size)
     free(rgba);
     if (!f->tex) return NULL;
     SDL_SetTextureBlendMode(f->tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureScaleMode(f->tex, SDL_SCALEMODE_LINEAR);
+    SDL_SetTextureScaleMode(f->tex, SDL_SCALEMODE_NEAREST);
     g_n_sizes++;
     return f;
 }
@@ -153,11 +166,12 @@ float osc_font_width(const char *utf8, int size)
 static void draw_run(font_size *f, float x, float y, const char *utf8)
 {
     const unsigned char *p = (const unsigned char *)utf8;
-    float pen = x, base = y + f->ascent;
+    float pen = x, base = floorf(y + 0.5f) + f->ascent;
     for (unsigned cp; (cp = next_cp(&p)) != 0;) {
         const stbtt_packedchar *g = glyph(f, cp);
+        float gx = floorf(pen + 0.5f);
         SDL_FRect src = {(float)g->x0, (float)g->y0, (float)(g->x1 - g->x0), (float)(g->y1 - g->y0)};
-        SDL_FRect dst = {pen + g->xoff, base + g->yoff, g->xoff2 - g->xoff, g->yoff2 - g->yoff};
+        SDL_FRect dst = {gx + g->xoff, base + g->yoff, g->xoff2 - g->xoff, g->yoff2 - g->yoff};
         SDL_RenderTexture(g_ren, f->tex, &src, &dst);
         pen += g->xadvance;
     }

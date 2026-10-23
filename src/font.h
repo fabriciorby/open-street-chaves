@@ -1,7 +1,7 @@
 /* Text in the original's style. TForm1.texto draws with "Comic Sans MS" at a
  * point size through GDI. We rasterise a TrueType font with stb_truetype:
  * the system's Comic Sans MS when the machine has it (Windows, macOS), else
- * the bundled Comic Neue (SIL OFL, assets/fonts). Microsoft's font is never
+ * the bundled Comic Relief (SIL OFL, assets/fonts). Microsoft's font is never
  * shipped with the project. */
 #ifndef OSC_FONT_H
 #define OSC_FONT_H
