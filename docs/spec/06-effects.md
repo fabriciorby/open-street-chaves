@@ -147,7 +147,7 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
 The "?" rows need the move names matched against `04-moves.md` by reading
 the spawning state in `05a` — pending.
 
-## Spawn calls of the frame selector (`06d-selector-spawns.txt`) [objdump]
+## Spawn calls of the frame selector (`06e-selector-spawns.txt`) [objdump]
 
 The frame selector `0x47d21c..0x48dcbf` calls `FUN_00476a04` at 106 sites
 (the first decompiled listing showed only 61 and merged the rest). Register

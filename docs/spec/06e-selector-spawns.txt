@@ -1,4 +1,4 @@
-# 06d - every call of FUN_00476a04 (effect spawn) in the frame selector 0x47d21c..0x48dcbf [objdump].
+# 06e - every call of FUN_00476a04 (effect spawn) in the frame selector 0x47d21c..0x48dcbf [objdump].
 # 106 call sites, in address order (Paty's move 20/21 also spawns 5 dust puffs from setMove, 0x47b0bb: x = x - 20 + Random(40), y = y + Random(10)).
 # Register call: al = type, edx = variant string ("A"/"B"/nil), cl = owner (0 = none), stack: x then y (doubles).
 # A row fires once per selector run while: char == ch, state == state, t_lo <= animTimer <= t_hi,

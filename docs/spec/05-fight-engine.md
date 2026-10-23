@@ -332,10 +332,27 @@ field 0x300) from line `(humanChar − 1)·12 + 0/3/6/9`, size 10, at (115,
 168 + 14k) for the human and (120, 223 + 14k) for the CPU. The human's
 first button takes 5 more ticks off while more than 10 are left.
 
-Selector effects: `06d-selector-spawns.txt` holds all 106 spawn call sites of the
+Selector effects: `06e-selector-spawns.txt` holds all 106 spawn call sites of the
 frame selector with their guards (see `06-effects.md`). The selector's
 `g_sndIndexA` writes are in `06c-special-sounds.txt`, including the throw
 supers' hit sounds (Madruga states 29 and 31, Chiquinha and Barriga state 30:
 `Random(4 or 6) == 0` for sound 7, 8, 9 in turn, the last one wins). `setMove`
 writes the move's sound into `g_sndIndexA` too (played at the start of the next
 tick, not immediately).
+
+### Inventory of the frame selector `0x47d21c..0x48dcbf` (asm vs port) [objdump]
+
+| statement kind | in the asm | in the port |
+|---|---|---|
+| `FUN_00476a04` effect spawn | 106 sites (+1 in `setMove`) | all (06e) |
+| `sub_476870` hurt box / `FUN_004768f8` hit box | 305 / 379 | all (`05a`) |
+| frame store `+0x6c` | 421: 379-row anim table; 14 are guarded by hit level, 29 by an even-timer or current-frame test (alternating frames), 4 are random, 4 pick the victim's frame in a throw | the table only: the alternating, level-guarded and throw frames are missing |
+| `g_sndIndexA` writes | 51 | all (`06c`, with the throw supers' hit sounds) |
+| `sub_47648c` (move_x) | 196 | other session (06d-special-motion) |
+| direct `x`/`y` stores (`fstp`) | 80 (35 self y, 10 self x, 8 + 8 on the opponent, throw and teleport lifts) | y rules by the other session; the throw ones (opponent lifted and shaken) not ported |
+| `setMove` (`0x4775fc`) | 6, all in the throw supers (victim move 10, own move 0x13 / 0x15) | not ported |
+| player fields `+0x68`, `+0x69` (knockdown), `+0x6a`, `+0x6b`, `+0x6d`, `+0x6e`, `+0x70`, `+0x72`, `+0x74`, `+0x76`, `+0x78` (vy), `+0x92` (invuln), `+0x93`, `+0x95`, `+0x96`, `+0x18` | 2, 38, 23, 4, 4, 7, 4, 9, 10, 5, 31, 20, 1, 4, 4, 6 | not ported (only `+0x78` partly by the other session) |
+| health store `+0x40` (throw super hit) | 4 | not ported |
+| globals `g_hitStop` `0x4b0e84`, `0x4b0fc8`, `0x4b0d68` | 5, 4, 1 | not ported |
+| `Random` | 86 (spawn offsets, sound draws, random frames, throw shake) | spawn offsets and sound draws |
+| `Round`, `0x40287c` (trunc, even-timer tests), `Cos` | 5, 18, 1 | the Round of Bruxa's dust base; the parity tests are the `mod` column of 06e; `Cos` (`0x48af09`) not ported |

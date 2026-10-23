@@ -261,7 +261,7 @@ static void fx_sounds_for(osc_game *g, osc_fighter *f)
 }
 
 /* Spawn the effects the frame selector produces for (char, state, timer): every call of
- * FUN_00476a04 in 0x47d21c..0x48dcbf with its guard (06d). */
+ * FUN_00476a04 in 0x47d21c..0x48dcbf with its guard (06e). */
 static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
 {
     for (int i = 0; i < OSC_N_FX_SPAWNS; i++) {
