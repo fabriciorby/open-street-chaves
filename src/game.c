@@ -201,7 +201,9 @@ static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, doubl
     for (int i = 0; i < OSC_MAX_FX; i++) {
         osc_effect *e = &g->fx[i];
         if (e->type) continue;
+        int stale = e->sprite;                              /* FUN_00476a04 does not write the sprite byte */
         memset(e, 0, sizeof *e);
+        e->sprite = stale;
         e->type = type; e->x = x; e->y = y; e->owner = owner;
         e->dir = owner ? g->p[owner].facing : 1;
         e->speed = variant == 2 ? t->speedB : t->speedA;
@@ -835,17 +837,41 @@ static void fx_orbit(osc_game *g, osc_effect *e)
 }
 
 /* ---- effects update: motion, collisions, drawing data (desenhaefeitos) ------------- */
+/* The draw data of a slot, taken at the point of the slot loop where desenhaefeitos draws (0x48fb0e..): the
+ * original draws the sprite right there, so an effect that is freed later in the same tick is still seen. */
+static void fx_snapshot(osc_game *g, int i, const osc_effect *e)
+{
+    osc_fx_draw *d = &g->fx_draw[i];
+    memset(d, 0, sizeof *d);
+    d->sx = iround(e->x) - g->cam_x;
+    d->sy = iround(e->y) - g->cam_y;
+    if (g->debug_boxes) {   /* 0x48fa5b: every live slot, whether armed or not */
+        d->box = true;
+        d->bx = (int)(e->x + e->hb_l - g->cam_x); d->by = (int)(e->y + e->hb_t - g->cam_y);
+        d->bw = e->hb_r - e->hb_l; d->bh = e->hb_b - e->hb_t;
+    }
+    if (e->done && (g->ciclo & 1)) return;           /* blinking: drawn on even g_ciclo only */
+    if (e->type != 5 && e->sprite < g->n_fx_tex) { d->kind = 1; d->sprite = e->sprite; d->dir = e->dir; d->bottom = e->bottom_anchor; }
+    if (e->type == 5) d->kind = 2;                   /* the floating "VITALIDADE" text of a pickup */
+}
+
+/* ---- effects update: desenhaefeitos 0x48edfc, one pass over the 80 slots in table order ------------ */
 static void update_fx(osc_game *g)
 {
-    bool frozen = g->hit_stop || g->super_pause;
+    bool frozen = g->hit_stop || g->super_pause;       /* DAT_004b57f9 / DAT_004b57f8 */
+    memset(g->fx_draw, 0, sizeof g->fx_draw);
     for (int i = 0; i < OSC_MAX_FX; i++) {
         osc_effect *e = &g->fx[i];
         if (!e->type) continue;
+        /* (phase) -> sprite table, 0x48ee4e..0x48f6fb: runs first, not gated by the pauses */
         e->sprite = fx_sprite(e);
-        /* blink flags (0x48ee4e..): pickups from life - 20, the popup text from life - 10, the geyser at phase 5 */
+        /* blink flags: pickups from life - 20, the popup text from life - 10, the geyser at phase 5 */
         if ((e->type == 3 || e->type == 4) && e->life - 20 <= e->phase) e->done = true;
         if (e->type == 5 && e->life - 10 <= e->phase) e->done = true;
         if (e->type == 8 && e->phase == 5) e->done = true;
+        if (e->type == 2 && !frozen) e->y -= 1.0;
+        /* the looping types rewind when they reach their end phase (the sprite keeps the last one for this tick) */
+        if (e->loop_at && e->phase == e->loop_at) e->phase = 0;
         /* Power Geyser: the pillar's box grows with the frames (FUN_004769c4 sets the box l, t, r, b), and at
          * phases 6 and 12 the box is re-armed and the phase steps once more (0x48f6fb..0x48f754, not gated) */
         if (e->type == 8) {
@@ -857,25 +883,23 @@ static void update_fx(osc_game *g)
         if (e->type == 28 && (e->c4 == 3 || e->c4 == 6 || e->c4 == 9)) { e->has_hitbox = true; e->c4++; }
         if (e->type == 31 || e->type == 32) fx_orbit(g, e);                  /* 0x48f76f, not gated */
         if (e->type == 30 && g->p[e->owner].state != 26) e->type = 0;       /* 0x48f8f4, not gated */
-        if (!e->type) continue;
         if (e->type == 34 && e->phase > 13) e->has_hitbox = false;                          /* 0x48f911, not gated */
         if (e->type == 24) { e->x += iround(2.0 * cos((double)e->phase)); e->y -= 1.0; }   /* 0x48f920, not gated; 0x49057c = 2.0 */
-        if (!frozen) {
-            /* motion rules (06) */
-            if (e->dir == 1) e->x += e->speed; else if (e->dir == 2) e->x -= e->speed;
+        if (e->gravity && !frozen) {                                                         /* 0x48f95d */
+            e->y += e->vy; e->vy += 4;
+            if (e->y > OSC_GROUND_Y - 5) {
+                e->y = OSC_GROUND_Y - 5; e->speed = 0; e->vy = 0;
+                if (e->type == 22) { e->done = true; e->has_hitbox = false; }
+            }
+        }
+        if (!frozen) {                                                                       /* 0x48f9cb */
+            if (e->dir == 1) e->x += e->speed;
+            if (e->dir == 2) e->x -= e->speed;
             if (e->type == 19) e->y += e->speed;
             if (e->type == 20) e->y -= 7 + osc_random(g, 13);
-            if (e->type == 2) e->y -= 1.0;
-            if (e->type == 5) e->y -= 5.0;
-            if (e->gravity) {
-                e->y += e->vy; e->vy += 4;
-                if (e->y > OSC_GROUND_Y - 5) {
-                    e->y = OSC_GROUND_Y - 5; e->speed = 0; e->vy = 0; e->gravity = false;
-                    if (e->type == 22) { e->done = true; e->has_hitbox = false; }
-                }
-            }
-            if (!e->type) continue;
         }
+        fx_snapshot(g, i, e);                                                                /* 0x48fa5b..0x48fc8d */
+        if (e->type == 5 && !g->super_pause) e->y -= 5.0;                                    /* 0x48fd90: not by the hit stop */
         /* effect vs effect (0x48fdb2): a reflector takes the other one over, otherwise
          * effects of different owners cancel, each leaving a spark unless it persists */
         for (int j = 0; j < OSC_MAX_FX && e->type; j++) {
@@ -889,9 +913,8 @@ static void update_fx(osc_game *g)
             if (!e->persist) { spawn_fx(g, 1, 0, 0, e->x, e->y); e->type = 0; }
             if (!o->persist) { spawn_fx(g, 1, 0, 0, o->x, o->y); o->type = 0; }
         }
-        if (!e->type) continue;
-        /* effect vs player (0x48fee7) */
-        for (int p = 1; p <= 2 && e->type; p++) {
+        /* effect vs player (0x48fee7): the slot is processed to its end even when it was freed above */
+        for (int p = 1; p <= 2; p++) {
             osc_fighter *v = &g->p[p], *a = opp(g, v);
             if (!(e->x + e->hb_r > v->x + v->hurt_l && e->x + e->hb_l < v->x + v->hurt_r &&
                   e->y + e->hb_b > v->y - v->sprite_h + v->hurt_t && e->y + e->hb_t < v->y - v->sprite_h + v->hurt_b))
@@ -955,10 +978,8 @@ static void update_fx(osc_game *g)
                 e->type = 0;
             }
         }
-        if (!e->type) continue;
         if (!frozen) {
             if (e->life != 99) e->phase++;
-            if (e->loop_at && e->phase >= e->loop_at) e->phase = 0;
             if (e->life != 99 && e->phase > e->life) e->type = 0;
             /* countdown (desenhaefeitos 0x48edfc, decomp 889-915): the slot is freed at c4 >= c5;
              * type 27 arms its box 2 ticks early and bursts into three type-28 effects ("A") */
@@ -1490,6 +1511,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     char path[1200];
     for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
     memset(g->fx, 0, sizeof g->fx);
+    memset(g->fx_draw, 0, sizeof g->fx_draw);
 
     int chars[2] = {char1, char2};
     for (int i = 0; i < 2; i++) {
@@ -2049,17 +2071,19 @@ static void draw_round_texts(osc_game *g)
 void osc_fx_render(osc_game *g)
 {
     for (int i = 0; i < OSC_MAX_FX; i++) {
-        const osc_effect *e = &g->fx[i];
-        if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
-        if (e->done && (g->tick & 1)) continue;
-        float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
-        /* desenhaefeitos 0x48fb0e: x - Round(w / 2), y - Round(h / 2), or y - h with the f8 flag */
-        float ox = (float)iround(w / 2.0), oy = e->bottom_anchor ? h : (float)iround(h / 2.0);
-        SDL_FRect d = {(float)(iround(e->x) - g->cam_x) - ox, (float)(iround(e->y) - g->cam_y) - oy, w, h};
-        SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
-                                 e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-        if (g->debug_boxes && e->has_hitbox) {
-            SDL_FRect hb = {(float)(e->x + e->hb_l - g->cam_x), (float)(e->y + e->hb_t - g->cam_y), (float)(e->hb_r - e->hb_l), (float)(e->hb_b - e->hb_t)};
+        const osc_fx_draw *d = &g->fx_draw[i];
+        if (d->kind == 2) {        /* pickup popup: MemoTexto.Get(5), centred, size 10, green (0x48fc96) */
+            texto(g, d->sx, d->sy, tx(g, 5), 'c', 10, rgb(80, 255, 140));
+        } else if (d->kind == 1 && g->fx_tex[d->sprite]) {
+            float w = (float)g->fx_w[d->sprite], h = (float)g->fx_h[d->sprite];
+            /* desenhaefeitos 0x48fb0e: x - Round(w / 2), y - Round(h / 2), or y - h with the f8 flag */
+            float ox = (float)iround(w / 2.0), oy = d->bottom ? h : (float)iround(h / 2.0);
+            SDL_FRect r = {(float)d->sx - ox, (float)d->sy - oy, w, h};
+            SDL_RenderTextureRotated(g->ren, g->fx_tex[d->sprite], NULL, &r, 0.0, NULL,
+                                     d->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+        }
+        if (d->box) {
+            SDL_FRect hb = {(float)d->bx, (float)d->by, (float)d->bw, (float)d->bh};
             SDL_SetRenderDrawColor(g->ren, 255, 200, 0, 255);
             SDL_RenderRect(g->ren, &hb);
         }

@@ -89,6 +89,14 @@ typedef struct {
     int loop_at;
 } osc_effect;
 
+/* what desenhaefeitos drew for a slot in its last pass (see fx_snapshot): kind 0 nothing, 1 sprite, 2 popup text */
+typedef struct {
+    uint8_t kind;
+    int sprite, sx, sy, dir;   /* sx, sy: Round(x) - camX, Round(y) - camY at the moment of drawing */
+    bool bottom, box;
+    int bx, by, bw, bh;        /* debug box */
+} osc_fx_draw;
+
 typedef struct { char name[4]; int char_id; int score; } osc_record;   /* g_records (10 x 12 bytes) */
 
 typedef struct {
@@ -104,6 +112,7 @@ typedef struct {
     int stage_id;
     int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
     osc_effect fx[OSC_MAX_FX];
+    osc_fx_draw fx_draw[OSC_MAX_FX];
     osc_fighter p[3];    /* 1-based like the original */
     int cam_x, cam_y;
     unsigned tick;

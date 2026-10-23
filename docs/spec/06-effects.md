@@ -73,10 +73,11 @@ Every tick, for each live slot:
    so 27 lives 35 ticks and then bursts into three type-28 effects, which
    are freed after `c5` = 20 ticks (30: 25, 31/32: 70) even though 28 and 30
    loop their phase and are never freed by `life`. If the life test already
-   freed the slot the burst does not happen. (The original also adds extra
-   `c4++` steps elsewhere in the same function: type 28 at c4 = 3, 6, 9
-   [with a hit box re-arm] and the orbiting 31/32 every 10th tick; these
-   are not modelled by the port.)
+   freed the slot the burst does not happen. The same function adds extra
+   `c4++` steps earlier in the slot (not gated by the pauses): type 28 at
+   c4 = 3, 6, 9 (hit box re-armed) and the orbiting 31/32 every 10th tick
+   (rule 4 below); a type 28 therefore hits again every ~3 ticks of c4 and a
+   31/32 every 10.
 
 The FPU literals that the decompiler shows as `_DAT_0049056x` are 32-bit
 floats read from the binary: `0x490568` = 1.0, `0x49056c` = 3.0, `0x490570`
@@ -106,14 +107,26 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
 3. **Gravity** (`f9` flag set at spawn for types 3, 4, 6, 21, 22): `y +=
    vy; vy += 4` (`vy` = i16 at rec+0x26, initial −22 for pickups/debris,
    −13 "A" / −17 "B" for Bad Stone), until `y > groundY − 5`: then `y =
-   groundY − 5`, `speed = 0`, `vy = 0`; type 22 (Bad Stone) is flagged done
+   groundY − 5`, `speed = 0`, `vy = 0` (the flag stays set, the clamp just repeats); type 22 (Bad Stone) is flagged done
    and loses its hit box on landing.
 4. **Orbiting** (types 31, 32 — Neves' Phoenix Arrow / Shining Crystal
-   Bit): position is recomputed from the owner each tick, `x = owner.x ±
-   R·cos(angle)`, `y = owner.y − spriteH + …`, with `angle` = counter `c4`;
-   every 10th tick the hit box is re-armed and the counter advances; the
-   effect is removed when the owner leaves state 29 (and type 30 when the
-   owner leaves state 26). Type 34 loses its hit box after phase 13.
+   Bit, `0x48f76f..0x48f8f1`, not gated by the pauses): the position is recomputed
+   from the owner every tick, with `k = c4 / 3.0` (`0x49056c`), `r = Round(70.0 · Cos(k))`
+   (`fcos` at `0x40286c`, 70.0 at `0x490570`): type 31 `x = owner.x + r`,
+   type 32 `x = owner.x − r`, both `y = owner.y − 80.0 + r` (`0x490574`; the
+   y term uses the **same** cosine, so each effect sweeps a diagonal through
+   the owner's chest, 31 up-left/down-right, 32 mirrored, ±70 px in x and y,
+   period 2π·3 ≈ 19 ticks of c4, which advances ~1.1 per tick). Whenever
+   `c4 % 10 == 0` (`c4/10` equals its truncation, `0x40287c`): `hasHitbox := 1`,
+   `c4++` and, only then, the slot is freed if the owner's state is not 29 (so the
+   effects can outlive the state by up to 10 ticks). Type 30 is freed on every tick the owner
+   is not in state 26. Type 34 loses its hit box from phase 14, not gated.
+   Type 24 (`0x48f920`, not gated): `x += Round(2.0 · Cos(phase))` (`0x49057c`), `y −= 1.0`.
+   Type 8 (`0x48f6fb`, not gated): at phase 2 `FUN_004769c4(slot, −45, −150, 0, 45)` and at phase 5
+   `(−45, −220, 0, 45)` — it stores `l, t, r, b` = (−45, −150 / −220, 45, 0) in record `+0x10..+0x1c`
+   (the stdcall pushes `0x2d` then `0`, which land in `r` and `b`); at phase 6 and 12
+   `hasHitbox := 1` and `phase++` (the pillar skips phases 7 and 13 for display and counts
+   them for `life`). Type 28 re-arms at c4 = 3, 6, 9 and steps c4.
 5. **Off-screen cull** [decomp, `0x48edfc`, decomp lines 917-934, last statements of the slot, not gated by
    `g_hitStop`/`g_superPause`]: after the life/`c5` handling every live slot is freed (`type := 0`) when
    `x < camX − 50`, `x > camX + 450` (0x1c2) or `y < camY − 50` (`g_counterE`). There is no lower
@@ -124,7 +137,15 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
 6. Debug: with `g_debugBoxes` the effect's box is drawn (`barra`).
 7. Drawing: sprite `Efeitos[sprite]` at `(x − camX − w/2, y − camY − h/2)`, or `y − camY − h` when `f8`
    (centred horizontally; centred on y by default, `f8` flag = bottom-anchored, standing on y),
-   mirrored list when `dir == 2`; types with `done == 1` draw blinking.
+   mirrored list when `dir == 2`; with `done == 1` the effect is drawn on even `g_ciclo` only (the
+   blink counter at `0x4b44c0`, the byte the decompiler calls `g_counterD`; not the tick counter).
+   The draw is the statement right after the generic motion, **before** the type-5 rise,
+   the collisions, the life test and the cull, so an effect that is removed in that same slot pass
+   (hit, cancel, last life tick) is still drawn once, and one removed by the owner-state tests above
+   is too. The port snapshots the draw data at that point (`fx_snapshot`) and `osc_fx_render` replays it.
+   Type 5 draws no sprite: `texto(Round(x) − camX, Round(y) − camY, MemoTexto.Get(5), size 10, 'c',
+   RGB(80, 255, 140))` ("VITALIDADE"), blinking with `done`, and rises 5 px per tick when not
+   super-paused (a hit stop does not stop it).
 
 ## Who spawns what [decomp, from `05a`]
 
@@ -193,3 +214,68 @@ Drawing (`desenhaefeitos` `0x48fb0e`): the sprite's left edge is
 `Round(x) - Round(w / 2)` and its top `Round(y) - Round(h / 2)`; with the
 spawn flag `f8` (types 2, 7, 8, 23, 34) the top is `Round(y) - h` (bottom
 anchored on `y`).
+
+## desenhaefeitos vs port inventory
+
+Statement blocks of `desenhaefeitos` (`0x48edfc`, decomp
+`re/out/decomp/funcs/0048edfc_TForm1_desenhaefeitos.c`, FPU operands read from the
+disassembly) in execution order against `update_fx` / `osc_fx_render` in `src/game.c`.
+Status is that of the port **before** this audit: **ported** (matched), **missing**,
+**different**; every missing or different block is now ported (column "now").
+Pause gates: `P2` = `g_superPause` (`0x4b57f8`) and `g_hitStop` (`0x4b57f9`) both
+(`frozen` in the port), `P1` = only `g_superPause`, `-` = not gated.
+
+| # | decomp | block | gate | before | now |
+|---|---|---|---|---|---|
+| 1 | 51-53 | loop over the 80 slots, skip `type == 0` | - | ported | ported |
+| 2 | 53-63 | type 1 sprites by phase 0 / 1 / 3 | - | ported | ported |
+| 3 | 64-79 | type 2 sprites 0 / 3 / 6 / 9 / 12 | - | ported | ported |
+| 4 | 80-83 | type 2 `y -= 1.0` | P2 | ported | ported |
+| 5 | 84-91 | types 3 / 4: sprite 10 / 11, `done` when `life − 20 <= phase` | - | sprite ported, `done` **missing** | ported |
+| 6 | 92-94 | type 5: `done` when `life − 10 <= phase` | - | **missing** | ported |
+| 7 | 95-97 | type 6 sprite 12 | - | ported | ported |
+| 8 | 98-109, 122-133, 182-193, 245-256 (types 7, 9, 12, 13, 15, 18, 19, 20) | sprites 0 / 1 / 2 and `phase == 3 → phase := 0` | - | sprites ported, loop **different** | ported |
+| 9 | 110-121 | type 8 sprites 0 / 2 / 5, `done` at phase 5 | - | sprites ported, `done` **missing** | ported |
+| 10 | 134-181, 194-232 (types 10, 11, 14, 16, 17) | sprite tables, no loop | - | ported | ported |
+| 11 | 233-268 | types 18 / 19 / 20 sprites 0 / 1 / 2 (+ loop at 3) | - | see 8 | ported |
+| 12 | 269-307 | type 23 sprites (alternating 57 / 58 every 2 phases, 79 at 22, 60 at 24) | - | ported | ported |
+| 13 | 308-313 | type 24 sprite: phase `<` / `>=` life − 10 → 61 / 62 | - | **different** (always 62) | ported |
+| 14 | 314-322 | type 25 sprite: `< 12` → 63, `12..23` → 64, `>= 24` → 65 | - | **different** (always 65) | ported |
+| 15 | 323-346 | types 26 (66, 67, loop 6), 27 (68, 69, loop 6) | - | sprites ported, loop **different** | ported |
+| 16 | 347-373 | type 28 (70, 71, loop 4), type 29 (72, 73, 74, loop 6) | - | sprites ported, loop **different** | ported |
+| 17 | 374-394 | type 30 sprites 0 / 1 → 75, 4 → 76, loop 5, then `c4 >= c5 − 10 / − 7 / − 4` → 77 / 78 / 79 | - | phase rows ported, the c4 conditions **different** (always 79) | ported |
+| 18 | 395-406 | type 31 sprites 2 / 4 / 5 → 72 / 73 / 74, loop 6 | - | ported (loop **different**) | ported |
+| 19 | 407-421 | type 32: `phase < 2` → 72, 2 → 72, 4 / 5 → 73 / 74, loop 6 | - | **different** (an any-phase row also set 72 at phases 3 and 6) | ported |
+| 20 | 422-439 | type 33 sprites 80..83, loop 6 | - | sprites ported, loop **different** | ported |
+| 21 | 440-460 | type 34 sprites 84..90 every 3 phases | - | ported | ported |
+| 22 | 461-475 | **type 35** sprites '[' `\` ']' '^' '_' = 91..95 at phases 0 / 2 / 4 / 6 / 8 | - | ported (checked) | ported |
+| 23 | 476-490 | **type 36** sprites '`' 'a' 'b' 'c' 'd' = 96..100 at phases 0 / 2 / 4 / 6 / 8 | - | ported (checked) | ported |
+| 24 | 491-496 | type 8 at phases 2 / 5: `FUN_004769c4(slot, −45, −150 / −220, 0, 45)` = box `l, t, r, b` := −45, −150 / −220, 45, 0 | - | **missing** | ported |
+| 25 | 497-500 | type 8 at phases 6 and 12: `hasHitbox := 1`, `phase++` | - | **missing** | ported |
+| 26 | 501-505 | type 28 at c4 = 3, 6, 9: `hasHitbox := 1`, `c4++` | - | **missing** | ported |
+| 27 | 506-519 | type 31: `x = owner.x + Round(70·Cos(c4/3))`, `y = owner.y − 80 + Round(70·Cos(c4/3))` | - | **missing** | ported |
+| 28 | 520-533 | type 32: `x = owner.x − Round(70·Cos(c4/3))`, same `y` | - | **missing** | ported |
+| 29 | 534-546 | types 31 / 32 at `c4 % 10 == 0`: `hasHitbox := 1`, `c4++`, free if owner state ≠ 29 | - | **different** (freed on every tick the owner state ≠ 29, gated by P2) | ported |
+| 30 | 547-549 | type 30 freed when owner state ≠ 26 | - | **different** (gated by P2) | ported |
+| 31 | 550-552 | type 34 loses its box from phase 14 | - | **different** (gated by P2) | ported |
+| 32 | 553-560 | type 24: `x += Round(2.0·Cos(phase))`, `y −= 1.0` | - | **missing** | ported |
+| 33 | 561-577 | gravity (`f9`): `y += vy; vy += 4`; clamp at `groundY − 5` with `speed = vy = 0`; type 22 done + box off | P2 | ported (the port also cleared the `f9` flag; equivalent, y ends at the ground either way) | ported (flag kept) |
+| 34 | 578-596 | `dir` motion, type 19 `y += speed`, type 20 `y += Random(13) − 7` | P2 | ported | ported |
+| 35 | 597-606 | debug box (`DAT_004b58a5`) for every live slot | - | **different** (only armed slots) | ported |
+| 36 | 607-656 | sprite draw (not for type 5): blink with `done` on even `g_ciclo`, `f8` bottom-anchored, mirrored list for `dir == 2` | - | **different**: drawn by the render pass after the whole update (a slot freed in the pass is never seen, type-5 rise already applied), blink with the tick counter | ported (`fx_snapshot`) |
+| 37 | 657-689 | type 5 floating text "VITALIDADE" (`MemoTexto.Get(5)`, size 10, centred, RGB 80,255,140), blinking with `done` | - | **missing** | ported |
+| 38 | 690-692 | type 5 `y −= 5.0` | P1 | **different** (also stopped by the hit stop) | ported |
+| 39 | 694-735 | effect vs effect (overlap strict, both armed, both `damage != 0`, not self; reflector takes over; same owner skip; non-persistent leave a spark and are freed) | - | ported | ported |
+| 40 | 736-888 | effect vs player blocks A (guard), B (hit), C (pickup 3 / 4) | - | ported | ported |
+| 41 | 694-888 | the slot continues to its end after being freed by 25-31 or 39 (a freed effect with a box can still hit this tick; the draw still happens) | - | **different** (the port jumped to the next slot) | ported |
+| 42 | 889-892 | `phase++` unless `life == 99`, freed when `life < phase` | P2 | ported (the loop wrap sat here, see 8) | ported |
+| 43 | 893-916 | `c5` countdown: `c4++`, type 27 arms at `c5 − 2` and bursts three 28s at `c5`, freed at `c5` | P2 | ported | ported |
+| 44 | 917-933 | cull (`x` outside camX − 50..camX + 450, `y < camY − 50`), type 19 box bottom below the ground → spark | - | ported | ported |
+| 45 | `0x476a04` (spawn) | the sprite byte (+3) is **not** written by the spawn: it keeps the previous occupant's value; only type 31 shows it (phases 0 and 1 have no sprite row) | - | **different** (zeroed) | ported |
+
+Totals of the 45 rows: 17 ported (33 and 42 only lose a no-op / the loop wrap that moved to row 8),
+10 missing (5, 6, 9 in part, 24-28, 32, 37) and 18 different (8, 11, 13-20, 29-31, 35, 36, 38, 41,
+45); all now ported. Details of the new rules are in "Life cycle" and "Motion rules" above; the
+constants read from the disassembly are `0x49056c` = 3.0 (the Cos divisor), `0x490570` = 70.0 (radius),
+`0x490574` = 80.0 (y offset), `0x490578` = 10.0 (the `c4 % 10` test), `0x49057c` = 2.0 (type 24),
+`0x490584` = 5.0 (type 5 rise) and the `fcos` routine `0x40286c`.

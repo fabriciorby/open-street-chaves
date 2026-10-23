@@ -11,6 +11,9 @@ faithful port.
    (`g_cfg0`) and the fight number (05, "AI difficulty").
 3. ~~Per-type projectile motion~~ — resolved (06 "Motion rules"); the
    off-screen cull exists and is ported (06 rule 5: x outside camX−50..camX+450, y above camY−50).
+   The last gaps of `desenhaefeitos` are closed too (Neves' orbiting 31/32, Power Geyser box growth
+   and re-arm, Psycho Field re-arm, type 24 wobble, range sprites of 24/25/30, the start-of-tick loop
+   rewind, type-5 popup text, draw-at-slot-time): inventory in 06 "desenhaefeitos vs port inventory".
 4. **HUD coordinates** — transcribed statically into `07b-draw-calls/
    state7_hud.txt` and summarised in `07b-layout.md`; a few operands are
    still `Round()`/`?` (health-fill width, portrait x) → confirm from the
