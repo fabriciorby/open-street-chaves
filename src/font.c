@@ -118,7 +118,40 @@ static font_size *get_size(int size)
     for (int i = 0; i < 95; i++) f->ascii[i].xadvance = floorf(f->ascii[i].xadvance + 0.5f);
     for (int i = 0; i < 96; i++) f->latin1[i].xadvance = floorf(f->latin1[i].xadvance + 0.5f);
     /* GDI draws these sizes without antialiasing: threshold the coverage */
-    for (int i = 0; i < ATLAS * ATLAS; i++) bmp[i] = bmp[i] >= 128 ? 255 : 0;
+    {
+        /* ...but keep GDI's dropout control: a stem 1 px wide that straddles two pixel columns scores ~50% in
+         * each and would vanish. In every row (then column), a run of 1..2 partly covered pixels with no ON
+         * pixel in it or next to it is a lost thin stem: switch on its best-covered pixel. Strokes that
+         * already have an ON pixel are never touched. Only for small text (stems about one pixel wide);
+         * bigger glyphs keep the plain threshold so their curves are not fattened. */
+        unsigned char *cov = malloc((size_t)ATLAS * ATLAS);
+        if (!cov) { free(bmp); return NULL; }
+        memcpy(cov, bmp, (size_t)ATLAS * ATLAS);
+        for (int i = 0; i < ATLAS * ATLAS; i++) bmp[i] = cov[i] >= 128 ? 255 : 0;
+        const int LO = 48;
+        for (int pass = 0; pass < 2 && px <= 16.f; pass++) {
+            const int step = pass ? ATLAS : 1;       /* along the line */
+            const int lstep = pass ? 1 : ATLAS;      /* to the next line */
+            for (int l = 0; l < ATLAS; l++) {
+                for (int k = 0; k < ATLAS; ) {
+                    int idx = l * lstep + k * step;
+                    if (cov[idx] < LO || cov[idx] >= 128) { k++; continue; }
+                    int e = k;
+                    while (e < ATLAS && cov[l * lstep + e * step] >= LO && cov[l * lstep + e * step] < 128) e++;
+                    int before = k > 0 ? bmp[l * lstep + (k - 1) * step] : 0;
+                    int after = e < ATLAS ? bmp[l * lstep + e * step] : 0;
+                    if (e - k <= 2 && !before && !after) {
+                        int best = k;
+                        for (int j = k + 1; j < e; j++)
+                            if (cov[l * lstep + j * step] > cov[l * lstep + best * step]) best = j;
+                        bmp[l * lstep + best * step] = 255;
+                    }
+                    k = e;
+                }
+            }
+        }
+        free(cov);
+    }
     /* alpha -> RGBA (white) */
     Uint32 *rgba = malloc((size_t)ATLAS * ATLAS * 4);
     if (!rgba) { free(bmp); return NULL; }
