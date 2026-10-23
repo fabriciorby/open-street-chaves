@@ -558,8 +558,9 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
     }
     if (g->key_f1 || g->key_f2) {
         bool f1 = g->key_f1;
-        g->key_f1 = g->key_f2 = false;
-        if (g->screen == OSC_SCREEN_ATTRACT) { osc_menu_enter(g, f1 ? 2 : 3); return; }
+        if (g->screen == OSC_SCREEN_ATTRACT) { g->key_f1 = g->key_f2 = false; osc_menu_enter(g, f1 ? 2 : 3); return; }
+        /* in the menus the flags are the exit keys (menu.c); in any other state F1/F2 do nothing */
+        if (g->screen != OSC_SCREEN_MENU_F1 && g->screen != OSC_SCREEN_MENU_F2) g->key_f1 = g->key_f2 = false;
     }
     if (g->key_coin) {
         g->key_coin = false;

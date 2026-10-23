@@ -166,7 +166,6 @@ typedef struct {
     bool cfg_blood, cfg_flash, show_level, show_credits;
     int snd_test, mus_test, menu_cursor;
     SDL_Scancode keymap[2][8];
-    SDL_Scancode last_key;    /* last key pressed (F2 menu assigns it) */
     bool key_f1, key_f2;
     int ending_char;          /* state 10: whose ending */
     int challenge;            /* g_challengeTimer: a second player joined a 1P fight */
@@ -221,6 +220,7 @@ void osc_config_save(osc_game *g);
 int osc_round_time(const osc_game *g);
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
+void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
 void osc_menu_render(osc_game *g);
 void osc_make_ladder(osc_game *g, int char_id);
 int osc_stage_for(osc_game *g, int opponent);

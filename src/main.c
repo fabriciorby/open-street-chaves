@@ -178,7 +178,7 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
     case SDL_EVENT_KEY_DOWN:
         if (e->key.scancode == SDL_SCANCODE_F1) a->game.key_f1 = true;
         if (e->key.scancode == SDL_SCANCODE_F2) a->game.key_f2 = true;
-        if (!e->key.repeat) a->game.last_key = e->key.scancode;
+        if (a->loaded) osc_menu_key(&a->game, e->key.scancode);   /* F2 menu: repeats count, as WM_KEYDOWN */
         if (e->key.scancode == SDL_SCANCODE_5 || e->key.scancode == SDL_SCANCODE_KP_5) a->game.key_coin = true;
         if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.key_start1 = true;
         if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.key_start2 = true;

@@ -31,13 +31,13 @@ each read site to a line is in `mainloop.c` (`(piVar4 + 0xc))(piVar4, N,
 
 ## F1 configuration menu (state 2) [decomp]
 
-Cursor `g_menuCursor` 1..12, moved with up/down (both players' devices),
-values changed with left/right, buttons act on the test items. Labels are
+Cursor `g_menuCursor` 1..12 (wraps), moved with up/down (both players' devices, added),
+values changed with left/right, button 1 plays and button 2 stops the test items (see 07b "Menus reviewed against the binary"). Labels are
 `MemoConfig` lines; saved to `Chaves.dat` on exit (line order = list order):
 
 | cursor | label | variable | values | default |
 |---|---|---|---|---|
-| 1 | Nível do Jogo | `g_cfg0` → file line 0 | 1..8 (slider ×10 px) | 4 |
+| 1 | Nível do Jogo | `g_cfg0` → file line 0 | 1..8 (digits 10 px apart) | 4 |
 | 2 | Tempo do Round | `g_cfg1_mode` → line 1 | 1..4 = 30 / 60 / 90 / 99 s | 3 |
 | 3 | Poder | `g_cfg2` → line 2 | 1 NORMAL, 2 1P MAX, 3 2P MAX, 4 MAX (permanent 3 super stocks) | 1 |
 | 4 | Nível de Dano | `g_damageLevel` → line 3 | 0.3 .. 2.0 step (`_DAT_004aeeb8`, 0.1 [infer]) | 0.9 |
@@ -61,8 +61,8 @@ Labels `MemoConfig[23..32]` ("Configurações de Teclas", Cima, Baixo,
 Esquerda, Direita, Soco Fraco, Chute Fraco, Soco Forte, Chute Forte,
 "F2-SAIR"). Cursor `g_menuCursor` 1..8; any letter/digit/arrow/numpad key
 pressed in FormKeyDown is stored into DXInput's keyboard assign slot for
-that action (P1 only) and the cursor advances. Not persisted in
-`Chaves.dat` (UNKNOWN whether DelphiX saves it elsewhere; assume not).
+that action (P1 only) and the cursor advances (no wrap, stops on 9). Not persisted in
+`Chaves.dat` by the original (nothing writes it); the port saves it as extra lines 10..25.
 
 ## Screen flow [decomp]
 

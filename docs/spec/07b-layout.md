@@ -186,6 +186,68 @@ camY, `g_ciclo`, `g_ciclo2` := 0). Keys: `5` adds a credit (sound 0; during
 the demo or on the records screen it also jumps to the title), `1`/`2`
 with a credit start that player at state 4 (fight 1, select timer 30 s).
 
+## Menus reviewed against the binary (F1 state 2, F2 state 3) [asm, counted call by call]
+
+Source: `DXTimer1Timer` state 2 at 0x4a017d..0x4a1b55, state 3 at 0x4a1b55..0x4a22f5 (draw, then
+`DXInput.Update`, edge tests, clamps), `FormKeyDown` 0x49e2e8 (F1 0x49e42e..0x49e74f, F2 and the key
+assign 0x49e74f..0x49e8b6) and the `Chaves.dat` reader in `FormCreate` (0x49d0c9..0x49d621). The earlier
+port table was lifted from the decompiled listing and was wrong in many places; this section replaces it.
+
+**Call counts** (static call sites in the asm; "run" = calls executed per frame with the default values
+and a valid cursor; port = the same frame counted in `src/menu.c` after the rewrite, before in brackets):
+
+| kind | F1 asm sites / run | F1 port | F2 asm sites / run | F2 port |
+|---|---|---|---|---|
+| `texto` (0x48e720) | 69 / 56 (46 white + 10 blue) | 56 (46) | 19 / 15 | 15 (14) |
+| `barra` (0x48e444) | 3 / 3 (clear, red band, light stripe) | 3 (0) | 1 / 1 | 1 (0) |
+| `barraredonda` (0x48e570) | 1 / 1 | 1 (0) | 0 | 0 |
+| `retangulo` | 0 | 0 | 0 | 0 |
+| `Draw` 0x46161c (Icone) | 0 | 0 | 4 sites / 4 (the four arrows) | 4 |
+| `StretchDraw` / `DrawAlpha` | 0 | 0 | 0 | 0 |
+| sounds | `449cac` play: 2 sites (sound `Count > idx-1`, music via `carregarmusica` 0x491820), `449e68` stop: 1 site (button 2) + 2 in FormKeyDown F1-leave | play 1, play music 1, stop music 2 (leave and button 2) | none | none |
+| value steps | 12 left + 12 right sites, 12 clamps after the input | same | 8 assign stores | same |
+| config file | read: `FormCreate`; write: F1-leave only (`Clear`, 10 `Add`, `SaveToFile("Chaves.dat")`) | same (+ key lines, see below) | none | saved on F2-leave too (port extension) |
+
+**What was different and is fixed** (all in `src/menu.c`, plus the exit keys in `flow.c`/`main.c`):
+
+- **The F1 menu could not be left**: `handle_keys` cleared `key_f1`/`key_f2` in every state before the
+  menu saw them. F1 now leaves state 2 only (saves, resumes the attract cycle at the tick it was
+  interrupted: leaving only sets `g_state := 1`) and F2 leaves state 3 only; the other key does nothing.
+- Highlight colour is `RGB(130,130,255)` (`mov cl,0xff; mov dl,0x82; mov al,0x82`), not yellow, and it is
+  a **second pass**: every row is drawn white first, then the cursor label and each current choice are
+  drawn again on top (10 extra `texto` calls). Level digits step 10 px (`140 + 10(i-1)`), not 20.
+- Damage level: `barraredonda(140,110,300,121, d=5)` white pen / black brush, then
+  `barra(142,112, 142+Round(78*f), 119)` **red RGB(255,0,0)** and `barra(142,113, …, 114)` RGB(255,100,100); the
+  percentage is `Round(f*100)` + "%" at (310,105). `Round` is half-to-even on an 80-bit product.
+  The step is the 80-bit `0.1` (`0x4aeeb8`) added to the double and stored back; the clamps compare against
+  the 80-bit `0.3` (`0x4aeec4`) and the single `2.0` (`0x4aec88`).
+- Cursor: wraps 1 <-> 12 (clamped before). P1 (keyboard) and P2 (joystick) up/down are added separately
+  (both pressing moves two rows); left and right apply to the cursor value **before** the clamp (a Byte:
+  up on row 1 with both devices gives 255, which wraps to 1); left/right/button edges are OR-ed.
+  Left on rows 5, 10, 11, 12 sets 1 (SIM), right sets 0 (NAO); language left/right only switch when
+  the other language is active; test rows only step inside `1..max`.
+- Test rows: only button 1 (bit 0x10) plays (sound `idx-1`, or `carregarmusica(idx)` then play); button 2
+  (bit 0x20) stops the music on any row; the port played on any of the four buttons and had no stop.
+  Entering F1 sets both indexes to 1, leaving stops music and sets both to 0. Maximum of the music row is the
+  number of `Musicas/Musica-NN.wav` files (0x4b58a3, FormCreate counts files; the port hard-coded 6), of the
+  sound row the number of `Sons/Som-NN.wav` files (0x4b58a2, 67 here).
+- F2: only A-Z, 0-9, the arrows and the numpad digits (VK 41..5A, 30..39, 25..28, 60..69) are accepted
+  (the port also took Space, Return, Ctrl, Shift, Win); the cursor does **not** wrap: after the eighth
+  assignment it stays on 9 (the timer clamps to 1..9) and further keys do nothing; auto-repeat events count
+  like any WM_KEYDOWN (the port ignored repeats); the key texts are white at (200, 80+20(i-1)) showing
+  `Chr(VK)` (numpad 0..9 show as `` ` ``, `a`..`i`), only the cursor row's label is blue; arrow icons are drawn at
+  y = 85+20(i-1) (port: 82+). No sound, nothing is written to `Chaves.dat`.
+- `Chaves.dat` reader: bytes are `StrToInt` stored then **clamped** (level 1..8, power 1..4, rounds 1..3,
+  language 1..2, damage 0.3..2.0), time is only accepted as exactly "1".."4", booleans only as exactly "0"
+  or "1", empty lines count as lines, the float accepts the writer's decimal separator (",": pt-BR). The
+  writer emits the same ten lines in CRLF with `FloatToStr` formatting ("0.9", "1"). Lines 10..25 (our key
+  map) are ignored by the original loader. The F2 key map is not saved by the original; the port keeps its
+  extension and also saves on F2-leave.
+
+Still not reproduced: the F1-leave `449e68` call that stops the sound-effect item itself (the port has no
+per-sound stop; effects are short), and the first drawn frame after entering, which in the original is
+drawn before the input of that tick is processed (one tick of lag, not visible).
+
 ## Stage animations (`stage_animations.txt`, `desenhaanimacoes`) [decomp]
 
 Called every fight tick after the background. Each stage draws a few

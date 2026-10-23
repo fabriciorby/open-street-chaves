@@ -24,7 +24,8 @@ faithful port.
    state/timer frame), and the exact spawn boxes of the fireworks.
 7. `healthShown` (+0x48), +0x50, +0x14, +0x7c, +0xac..+0xaf of the player
    record; `Energeticos.dat`, `Mentecapto.dat`; `0x4b449d` (round-end
-   transition style 1..4); `0x4b58a2/a3` (sound/music counts).
+   transition style 1..4). ~~`0x4b58a2/a3`~~ — resolved: FormCreate counts the
+   `Sons/Som-NN.wav` / `Musicas/Musica-NN.wav` files (07b "Menus reviewed").
 8. Language 2 fill order of the memos (verify that constant indices pick
    the right language).
 9. ~~Per-character CPU special choices~~ — resolved: table in `05d`
@@ -61,6 +62,12 @@ faithful port.
     Alive fighters never leave the window (the round-1 jump-in from x 0 / 600 is original, 0x4a44cb).
     (c) The only real divergence was the camera clamp (port: stage image size, original: x 0..200,
     y 0..20), now fixed; effects at such x are removed by the cull of item 3.
+
+14. ~~F1/F2 menus~~ — reviewed call by call against the binary (07b "Menus reviewed against the
+    binary"): layout, colours, wrap, button rules, file format and the F1 exit were wrong or missing
+    in the port and are fixed. Open: the F1-leave stop of the sound-effect item (no per-sound stop in
+    the port), the original's default `Chaves.dat` locale (pt-BR writes "0,9"; the port reads both),
+    and `StrToInt` on a malformed line (the original raises, the port keeps the default).
 
 ## Verification plan (needs Wine or a Windows VM)
 
