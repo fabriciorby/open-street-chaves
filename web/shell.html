@@ -35,13 +35,18 @@
   #dpad i::after { content: ""; position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; background: #000; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
   #dpad .u { left: 35%; top: 4%; } #dpad .d { left: 35%; bottom: 4%; transform: rotate(180deg); }
   #dpad .l { left: 4%; top: 35%; transform: rotate(-90deg); } #dpad .r { right: 4%; top: 35%; transform: rotate(90deg); }
-  #acts { right: 3vmin; bottom: 4vmin; display: grid; grid-template-columns: repeat(2, var(--b)); gap: 2vmin; }
+  #acts { right: 3vmin; bottom: 4vmin; width: calc(var(--b) * 2.6); height: calc(var(--b) * 2.6); }
+  #acts .btn { position: absolute; width: var(--b); }
+  #acts [data-k=KeyX] { left: 50%; top: 0; transform: translateX(-50%); }
+  #acts [data-k=KeyC] { left: 50%; bottom: 0; transform: translateX(-50%); }
+  #acts [data-k=KeyZ] { left: 0; top: 50%; transform: translateY(-50%); }
+  #acts [data-k=KeyV] { right: 0; top: 50%; transform: translateY(-50%); }
   .btn { display: flex; align-items: center; justify-content: center; font: bold 1.3em sans-serif; color: #000; background: #fff8; border: 2px solid #fff; box-sizing: border-box; }
   .btn.on { background: #fff; }
   #acts .btn { height: var(--b); border-radius: 50%; }
   #sys { left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 2vmin; }
-  @media (orientation: portrait) { #sys { bottom: calc(var(--d) + 8vmin); } }
-  #sys .btn { width: var(--s); height: calc(var(--s) * .6); border-radius: 999px; font-size: 1em; }
+  @media (orientation: portrait) { #sys { bottom: calc(max(var(--d), var(--b) * 2.6) + 8vmin); } }
+  #sys .btn { width: auto; padding: 0 3vmin; height: calc(var(--s) * .6); border-radius: 999px; font-size: 1em; }
   #padToggle { position: fixed; top: 6px; right: 6px; z-index: 6; margin: 0; padding: 4px 8px; font-size: .8em; opacity: .5; touch-action: manipulation; }
 </style>
 </head>
@@ -61,10 +66,10 @@
 </div>
 <p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
 <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
-<p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>5</b> coin and <b>1</b>/<b>2</b> start in the middle.</p>
+<p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>FICHA</b> inserts a coin; Z starts.</p>
 <div id="pad">
   <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
-  <div id="sys"><div class="btn" data-k="Digit5">5</div><div class="btn" data-k="Digit1">1P</div><div class="btn" data-k="Digit2">2P</div></div>
+  <div id="sys"><div class="btn" data-k="Digit5">FICHA</div></div>
   <div id="acts"><div class="btn" data-k="KeyZ">Z</div><div class="btn" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
 </div>
 <button id="padToggle">hide pad</button>
