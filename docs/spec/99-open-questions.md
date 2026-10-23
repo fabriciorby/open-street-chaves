@@ -14,13 +14,14 @@ faithful port.
    The last gaps of `desenhaefeitos` are closed too (Neves' orbiting 31/32, Power Geyser box growth
    and re-arm, Psycho Field re-arm, type 24 wobble, range sprites of 24/25/30, the start-of-tick loop
    rewind, type-5 popup text, draw-at-slot-time): inventory in 06 "desenhaefeitos vs port inventory".
-4. **HUD coordinates** — transcribed statically into `07b-draw-calls/
-   state7_hud.txt` and summarised in `07b-layout.md`; a few operands are
-   still `Round()`/`?` (health-fill width, portrait x) → confirm from the
-   assembly (`objdump -d --start-address=…`) or at runtime.
-5. **Select / VS / continue / records layouts** — same status (dumps +
-   summary in 07b); exact pixel values for the parts shown as `{…}`
-   expressions should be evaluated once when porting.
+4. ~~HUD coordinates~~ — resolved: `draw_hud_top` / `draw_hud_bottom` follow
+   DXTimer1Timer 0x4a49ac..0x4a5a61 call by call with the operands read from
+   the assembly (07b-layout "full transcription"); the join prompts (size 10)
+   and the challenger box (0x4ae384: rounded 80,100..320,170 r 10, Get(10..12)
+   at y 100/120/140 size 15 RGB(250,140,140), noPush := 1) checked again.
+5. ~~Select / VS / continue / records layouts~~ — resolved: transcribed call by
+   call (07b "Select, next battle, continue, records, name entry: full
+   transcription"), records gradient and row sizes included.
 6. ~~Intro cinematic and the 15 ending choreographies~~ — transcribed
    (07b "Attract", `07e-endings.txt` via `re/tools/endings_emu.py`, which runs the
    code). Answered in 07b "Endings reviewed against the binary": the ending
@@ -28,12 +29,14 @@ faithful port.
    state/timer each tick and runs the frame selector on it), and the firework
    spawn boxes are type 1 x 130..279 y 100..199, 24 x 150..249 y 60..89,
    25 x 250..309 y 110..129.
-7. `healthShown` (+0x48), +0x50, +0x14, +0x7c, +0xac..+0xaf of the player
-   record; `0x4b449d` (round-end
-   transition style 1..4). ~~`0x4b58a2/a3`~~ — resolved: FormCreate counts the
+7. ~~Remaining record fields~~ — +0x14, +0x1a, +0x8c, +0x94, +0x9f are never
+   referenced by the code; +0x4c/+0x50 are only written (reset per round /
+   by throws, decomp all.pp.c 87393–87400, 95115, 95184), so they have no
+   visible effect; `healthShown` (+0x48) is the lagging red bar (ported);
+   `0x4b449d` (round-end transition style 1..4) is ported (`g->transition`). ~~`0x4b58a2/a3`~~ — resolved: FormCreate counts the
    `Sons/Som-NN.wav` / `Musicas/Musica-NN.wav` files (07b "Menus reviewed").
-8. Language 2 fill order of the memos (verify that constant indices pick
-   the right language).
+8. ~~Language 2 fill order~~ — checked with `--es` on the fight HUD, title,
+   credits and endings: every constant index picks the Spanish line.
 9. ~~Per-character CPU special choices~~ — resolved: table in `05d`
    (constants read from the float literals of `cpu`).
 10. ~~Attract timeline~~ — transcribed from the code and counted call by call
@@ -50,11 +53,9 @@ faithful port.
 12. ~~Special-move sounds and motion~~ — resolved: `06c-special-sounds.txt`
     (every `g_sndIndexA` of the frame selector) and `06d-special-motion.txt`
     (all 196 `sub_47648c` walk calls with their pushed steps, plus the direct
-    x/y and `inAir`/`vy` writes). Still open from the same function: the throw
-    set-ups that place and launch the opponent (decomp lines 871–886, 973–986,
-    1357–1373, 2663–2676; endings 1424, 2715), the `knockdown` flag (+0x69)
-    that special states set every tick (~40 sites, so specials do not knock
-    down yet) and the KO fix near line 302.
+    x/y and `inAir`/`vy` writes). The rest of the function (throw set-ups and
+    endings, the `knockdown` flag stores, the KO landing) is ported too: see
+    the frame-selector inventory in 05 (`06f`, `06g`, `sel_code`, `sel_throws`).
 13. ~~Port checks after 06d~~ — resolved by tracing a 3000-frame CPU fight for 12 pairs with a
     per-tick log. (a) Floor: the 2-12 px under the floor seen in specials (Furtado 27, Madruga 27,
     Glória 28/29, Dona Neves 27) only existed in a log taken before the move clock and gravity
