@@ -1,0 +1,48 @@
+# Deterministic special-move sounds set by the frame selector (0x47d21c): g_sndIndexA = snd when
+# char == ch, state == state and animTimer == timer (checked every tick before the timer advances,
+# exactly like the spawn rows in 06b). snd is the DXWaveListSnd index (Som-(snd+1).wav).
+# ch state timer snd
+1 25 10 14
+1 26 0 15
+1 27 0 16
+1 28 0 17
+1 29 9 18
+2 25 10 20
+2 28 0 22
+4 29 0 28
+5 29 1 32
+5 29 8 32
+5 29 12 32
+6 29 8 34
+8 29 0 42
+9 29 0 46
+11 25 10 50
+11 26 4 51
+11 27 1 52
+12 25 10 53
+12 26 0 54
+12 27 2 55
+12 27 8 55
+12 27 14 56
+13 25 3 57
+13 27 3 58
+13 28 10 41
+13 29 2 59
+14 25 3 60
+14 26 3 61
+14 27 0 62
+14 28 2 60
+15 25 3 63
+15 26 1 64
+15 27 1 65
+15 28 1 66
+15 29 1 66
+# Random-gated, every tick of the state (timer = -1), in this order; each row draws Random(chance)
+# and sets snd when the draw is 0 (a later row's hit overrides an earlier one, as in the original).
+# ch state timer snd chance
+2 28 -1 5 2
+2 28 -1 6 2
+2 28 -1 5 2
+2 28 -1 6 2
+5 28 -1 32 5
+10 25 -1 47 5

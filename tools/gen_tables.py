@@ -268,6 +268,12 @@ for line in read('06b-spawn-offsets.txt').split('\n'):
 def spawn_off(ch, st, typ):
     return offs.get((ch, typ, st)) or offs.get((ch, typ, 0)) or (40, 0, -85, 0)
 spawns = [row + spawn_off(row[0], row[1], row[3]) for row in spawns]
+# 06c: special-move sounds set by the frame selector: (ch, state, timer, snd, chance); chance 0 = deterministic
+fx_sounds = []
+for line in read('06c-special-sounds.txt').split('\n'):
+    m = re.match(r'(\d+) (\d+) (-?\d+) (\d+)(?: (\d+))?$', line)
+    if m:
+        fx_sounds.append((int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5) or 0)))
 fx_types = sorted(fx_init)
 
 # ---------------------------------------------------------------- 07c stage animations
@@ -338,6 +344,7 @@ enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MO
 typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
 typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; int16_t dx; uint8_t rx; int16_t dy; uint8_t ry; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B; offsets from 06b */
+typedef struct { uint8_t ch, state; int8_t timer; uint8_t snd, chance; } osc_fx_sound_row; /* timer -1: every tick, Random(chance)==0 (06c) */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 
 /* text index (07d): memo line -> index of the string constant inside Chaves.exe */
@@ -353,9 +360,11 @@ extern const osc_stage_anim_row osc_stage_anim[%d];
 extern const osc_fx_type osc_fx_types[%d];
 extern const osc_fx_sprite_row osc_fx_sprites[%d];
 extern const osc_fx_spawn_row osc_fx_spawns[%d];
+extern const osc_fx_sound_row osc_fx_sounds[%d];
 #define OSC_N_FX_TYPES %d
 #define OSC_N_FX_SPRITES %d
 #define OSC_N_FX_SPAWNS %d
+#define OSC_N_FX_SOUNDS %d
 
 extern const int8_t osc_frame_offset[16][64];
 extern const osc_anim_row osc_anim[%d];
@@ -375,7 +384,7 @@ extern const osc_ending_row osc_endings[%d];
 #define OSC_N_CPU %d
 #define OSC_N_ENDINGS %d
 #endif
-''' % (len(text_index), len(text_index), len(stage_anim), len(stage_anim), len(fx_types), len(fx_sprites), len(spawns), len(fx_types), len(fx_sprites), len(spawns),
+''' % (len(text_index), len(text_index), len(stage_anim), len(stage_anim), len(fx_types), len(fx_sprites), len(spawns), len(fx_sounds), len(fx_types), len(fx_sprites), len(spawns), len(fx_sounds),
        len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows), len(end_rows),
        len(anim), len(hurt), len(hit), len(moves), len(seqs), len(golpe), len(cpu_rows), len(end_rows))
 
@@ -444,6 +453,10 @@ const osc_fx_spawn_row osc_fx_spawns[%d] = {
 %s
 };
 
+const osc_fx_sound_row osc_fx_sounds[%d] = {
+%s
+};
+
 const osc_stage_anim_row osc_stage_anim[%d] = {
 %s
 };
@@ -453,7 +466,7 @@ const osc_text_index_row osc_text_index[%d] = {
 };
 ''' % (',\n'.join(off_rows), len(anim), rows(anim), len(hurt), rows(hurt), len(hit), rows(hit),
        len(moves), rows(moves), len(seqs), rows(seqs), len(golpe), rows(golpe), len(cpu_rows), rows(cpu_rows), len(end_rows), rows(end_rows),
-       len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns),
+       len(fx_type_rows), rows(fx_type_rows), len(fx_sprites), rows(fx_sprites), len(spawns), rows(spawns), len(fx_sounds), rows(fx_sounds),
        len(stage_anim), rows(stage_anim), len(text_index), rows(text_index))
 
 with open(OUT_H, 'w') as f:

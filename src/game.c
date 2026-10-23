@@ -243,6 +243,17 @@ static int fx_sprite(const osc_effect *e)
     return s;
 }
 
+/* the sounds the frame selector assigns per (char, state, timer); table order = evaluation order (06c) */
+static void fx_sounds_for(osc_game *g, osc_fighter *f)
+{
+    for (int i = 0; i < OSC_N_FX_SOUNDS; i++) {
+        const osc_fx_sound_row *r = &osc_fx_sounds[i];
+        if (r->ch != f->char_id || r->state != f->state) continue;
+        if (r->timer >= 0) { if (r->timer == f->anim_timer) g->snd_pending = r->snd; }
+        else if (osc_random(g, r->chance) == 0) g->snd_pending = r->snd;
+    }
+}
+
 /* spawn the effects the frame selector produces for (char, state, timer) */
 static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
 {
@@ -824,6 +835,7 @@ static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
     if (!paused) {
         select_frame(f);
         fx_spawns_for(g, f, pidx);
+        fx_sounds_for(g, f);
         f->rot += f->rot_step;
     }
     if (f->state != 12 && f->state != 19) { f->rot = 0; f->rot_step = 0; }

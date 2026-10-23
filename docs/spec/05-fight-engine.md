@@ -294,7 +294,9 @@ away, others only act when none is live.
 FormCreate, missing files skipped — so indices shift if a file is absent).
 Observed uses: 0 coin, 4 time over, 5 light whiff, 6 heavy whiff, 7 light
 hit, 8 heavy hit, 9 KO / level-3 hit, 10 block, 12 land after knockdown,
-13 stock gained, 19 super start, 21/23/24 character specials. Voices:
+13 stock gained, 19 super start, 21/23/24 character specials. The per-character special-move sounds that the frame selector
+sets (`g_sndIndexA = N` per character, state and animation timer, plus six
+Random-gated rows) are listed in 06c-special-sounds.txt. Voices:
 `DXWaveListVitoria[2(N−1) + {0: a, 1: b}]` = `Falas/Fala-NN-a/b.wav`,
 N = 1..15, played once at `g_roundEnd == 95` (no hit stop or super
 pause) for each fighter whose wins reached the rounds-to-win setting: the
