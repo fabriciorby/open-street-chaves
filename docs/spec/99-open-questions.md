@@ -29,10 +29,13 @@ faithful port.
    the right language).
 9. ~~Per-character CPU special choices~~ — resolved: table in `05d`
    (constants read from the float literals of `cpu`).
-10. ~~Attract timeline~~ — transcribed from the code (07b). Still
-    approximate in the port: the records-screen gradient and row sizes, the
-    text sizes of the join/challenger prompts, the spark (type 1) spawn
-    spread.
+10. ~~Attract timeline~~ — transcribed from the code and counted call by call
+    against the binary (07b "Attract reviewed against the binary"). The records
+    gradient and row sizes were already exact; the join prompt is size 10, the
+    challenger box is a rounded box with size-15 text (another change), and the
+    hit spark (type 1) is spawned at the exact hit-box centre / effect position
+    with no random spread (0x4a8f2e, 0x48feb2, 0x48fed1; `FUN_00476a04` only sets
+    its life to 3).
 11. ~~Effect spawn offsets~~ — resolved: `06e-selector-spawns.txt`: every
     `FUN_00476a04` call of the frame selector with its guards and offsets. ~~Stage 8 moving
     elements~~ — the passing car and the flickering mice/lights are in 07c

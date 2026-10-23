@@ -1440,7 +1440,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     if (!music) music = iround(osc_random(g, 6 * 10) / 10.0) + 1;   /* 6 = Musicas loaded */
     if (music > 6) music = 6;
     if (music == 6 && stage != 12) music = 1;
-    osc_play_music(g, music);
+    if (g->demo == 0) osc_play_music(g, music);   /* the attract demo starts no music (0x49fdb1) */
 
     g->cam_x = 100; g->cam_y = 20;
     g->timer_sec = osc_round_time(g); g->timer_sub = 25;
@@ -1464,7 +1464,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
-    if (g->demo > 0) { g->timer_sec = 99; g->timer_sub = 25; }   /* attract demo: clock frozen */
+    if (g->demo > 0) { g->timer_sec = g->cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
     if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
         g->no_push = true;
         if (--g->challenge == 0) {
@@ -1521,7 +1521,10 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > 200) g->cam_x = 200;
     if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > 20) g->cam_y = 20;
     bool frozen = g->hit_stop || g->super_pause;
-    if (g->demo > 0) g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;   /* nobody falls in the demo */
+    if (g->demo > 0) {                                                     /* nobody falls in the demo (0x4a4cfe) */
+        g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
+        g->p[1].stocks = g->p[2].stocks = 3;
+    }
     if (g->cfg_power == 2 || g->cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */
     if (g->cfg_power == 3 || g->cfg_power == 4) g->p[2].stocks = 3;
     for (int i = 1; i <= 2; i++) {

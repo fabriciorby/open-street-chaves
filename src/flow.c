@@ -11,7 +11,7 @@
 #include "wav.h"
 #include <math.h>
 
-static int lround_i(double v) { return (int)SDL_lround(v); }
+static int lround_i(double v) { return (int)rint(v); }   /* Delphi Round: half to even */
 
 void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered)
 {
@@ -294,6 +294,8 @@ void osc_go_attract(osc_game *g, int tick)
     g->p[1].human = g->p[2].human = false;
 }
 
+/* State 1 -> 7 (0x49fdb1..0x4a00d4): a CPU-vs-CPU fight with no round intro (g_roundStart = 72), no
+ * HUD (0x4b44d2/d4 = -120 / 60 push both bars off screen), no jump-in and no music. */
 static void start_demo(osc_game *g)
 {
     int stage = lround_i(osc_random(g, 120) / 10.0) + 1;
@@ -309,17 +311,25 @@ static void start_demo(osc_game *g)
     g->demo = 600;
     g->screen = OSC_SCREEN_FIGHT; g->screen_tick = 0;
     osc_fight_start(g, c1, c2, stage);
+    g->no_push = false;
+    g->timer_sec = 99; g->timer_sub = 25;
+    g->round_start = 72; g->round_end = 0;
+    g->hud_y = -120; g->hud_y2 = 60;
+    g->first_hit = true;
 }
 
 static void attract_tick(osc_game *g)
 {
-    int c = g->screen_tick;
-    if (c == 100) g->menu_cam = 0;
-    if (c == 200 && g->n_sounds > 9) osc_play_snd(g, 9);
-    if (g->credits > 0) { g->screen_tick = c = 500; g->menu_cam = -200; }
+    /* The original draws a tick and then updates; the port updates and then draws, so the events the
+     * original runs while drawing (c == 100, the punch sound at 200) fire on the value just reached,
+     * like the camera and the demo trigger, which the original tests after the increment. */
+    if (g->credits > 0) { g->screen_tick = 500; g->menu_cam = -200; }
     g->ciclo++;
     if (g->ciclo > 20) g->ciclo = 0;
     if (g->screen_tick < 1000) g->screen_tick++;
+    int c = g->screen_tick;
+    if (c == 100) g->menu_cam = 0;
+    if (c == 200 && g->n_sounds > 9) osc_play_snd(g, 9);
     if (c > 235) g->menu_cam -= 2;
     if (g->menu_cam < -200) g->menu_cam = -200;
     if (c > 650) start_demo(g);
@@ -363,8 +373,8 @@ static void attract_render(osc_game *g)
             blit_ab(g, 10, 100, (float)(190 - cam));                                          /* Chaves dando soco */
         }
     }
-    /* logo zoom: k = 4 until 400, grows to 24 at 420, shrinks to 2 at 438 */
-    int k = c < 400 ? 4 : c <= 420 ? c - 396 : c <= 438 ? 440 - c : 2;
+    /* logo zoom: k = 4 until 400, grows to 23 at 419, 20 at 420 (the second test wins), shrinks to 2 at 438 */
+    int k = c < 400 ? 4 : c < 420 ? c - 396 : c <= 438 ? 440 - c : 2;
     if (k > 0) {
         int k1 = lround_i(223.0 / k), k2 = lround_i(117.0 / k);
         int li = g->lang == 1 ? 13 : 12;
@@ -379,11 +389,13 @@ static void attract_render(osc_game *g)
         if (c < 500) osc_text_ex(g, (float)((c & 1) ? 200 - 4 * (500 - c) : 200 + 4 * (500 - c)), 170, sub, 'c', 12, 90, 90, 255);
         else osc_text_ex(g, 200, 170, sub, 'c', 12, 90, 90, 255);
     }
-    blit_ab(g, 15, 5, 280);                                                    /* Cybergamba */
-    osc_text_ex(g, 200, 253, osc_text(OSC_MEMO_TEXTO, 25, g->lang), 'c', 8, 255, 255, 255);
-    osc_text_ex(g, 200, 267, osc_text(OSC_MEMO_TEXTO, 30, g->lang), 'c', 8, 255, 255, 255);
+    if (c > 440) {                                                             /* the credit block is inside the c > 440 test */
+        blit_ab(g, 15, 5, 280);                                                /* Cybergamba */
+        osc_text_ex(g, 200, 253, osc_text(OSC_MEMO_TEXTO, 25, g->lang), 'c', 8, 255, 255, 255);
+        osc_text_ex(g, 200, 267, osc_text(OSC_MEMO_TEXTO, 30, g->lang), 'c', 8, 255, 255, 255);
+    }
     if (g->ciclo < 12)
-        osc_text_ex(g, 200, 235, osc_text(OSC_MEMO_TEXTO, g->credits == 0 ? 5 : 6, g->lang), 'c', 12, 255, 255, 255);
+        osc_text_ex(g, 200, 235, osc_text(OSC_MEMO_TEXTO, g->credits == 0 ? 5 : 6, g->lang), 'c', 10, 255, 255, 255);
 }
 
 /* ---- state 8: game over / top 10 (07b-layout.md "Records") ---------------- */
@@ -706,10 +718,17 @@ static void osc_game_render_screen(osc_game *g)
     default:
         osc_fight_render(g);
         if (g->demo > 0) {
-            if (g->demo < 40) fill(g, 0, 0, 400, 320, 0, 0, 0);
-            if (g->ciclo < 20) osc_text_ex(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 12, 255, 255, 255);
-            int li = g->lang == 1 ? 12 : 11;   /* Logo Transparente */
-            if (g->demo < 500 && li < g->n_icone) blit(g, g->icone[li], g->icone_w[li], g->icone_h[li], (float)(390 - g->icone_w[li]), (float)(280 - g->icone_h[li]));
+            /* 0x4aa00f..0x4aa264: venetian wipe over the last 40 ticks, the blinking prompt (size 10),
+             * and the title logo (Abertura 12/13, not Icone) at half size in the bottom right corner */
+            if (g->demo < 40)
+                for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + 40 - g->demo, k_black);
+            if (g->ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 10, k_white);
+            int li = g->lang == 1 ? 13 : 12;
+            if (g->demo < 500 && li < g->n_abertura && g->abertura[li]) {
+                int hw = lround_i(g->abertura_w[li] / 2.0), hh = lround_i(g->abertura_h[li] / 2.0);
+                SDL_FRect d = {(float)(390 - hw), (float)(280 - hh), (float)hw, (float)hh};
+                SDL_RenderTexture(g->ren, g->abertura[li], NULL, &d);
+            }
         }
         break;
     }

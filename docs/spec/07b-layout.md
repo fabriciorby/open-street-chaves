@@ -168,16 +168,21 @@ floor −200); `g_ciclo` wraps at 20 here:
 |---|---|
 | < 100 | screen filled RGB(120,120,250); `Abertura[14]` (Vencedores) at (110,10); line 12 ("VENCEDORES NÃO USAM DROGAS") centred at (200,210), size 16, RGB(250,200,0) |
 | 100–370 | sky: 21 bars `(0, 15i)–(400, 15i+15)` RGB(120+2i, 120+2i, 200); `Abertura[2]` at (50, 50−camY/2), (350, 150−camY/2), (300, 180−camY/2); `[3]` at (50, 47j+73−camY/2), (350, 47j+173−camY/2), (300, 47j+203−camY/2) for j 0..4; `[0]` at (100, 80j−200−camY) and (305, 80j−200−camY) for j 0..6; `[1]` at (39i+113, 32j−200−camY) for i 0..4, j 0..15; black bar (147, −155−camY)–(270, −48−camY) with a white rectangle (149, −153−camY)–(268, −50−camY); `[4]` (Folhagem) at (50i, 220−camY) for i 0..7; people `[7]` at (50i, 245−camY+b), `[5]` at (50i−15, …), `[6]` at (50i+15, …) for i 0..8 with b = 4 while `g_ciclo` < 10; c < 200: `[8]` Chaves at (210, 185+b2−camY) and `[9]` Seu Madruga at (50, 178+b2−camY), b2 = 5 while `g_ciclo` > 10; c = 200: sound 9; c ≥ 200: `[11]` Seu Madruga caindo at (60−4(c−200), 180+2(c−200)−camY) and `[10]` Chaves dando soco at (100, 190−camY) |
-| any | logo zoom factor k: 4 while c < 400, c−396 for 400..420, 440−c for 420..438, then 2; `Logo - PORTUGUES/ESPANHOL` (`[12]`/`[13]` by language) stretched to (205−round(223/k), −100−camY−round(117/k))–(205+…, −100−camY+…) |
+| any | logo zoom factor k: 4 while c < 400, c−396 for 400..419, 440−c for 420..438, then 2; `Logo - PORTUGUES/ESPANHOL` (`[12]`/`[13]` by language) stretched to (205−round(223/k), −100−camY−round(117/k))–(205+…, −100−camY+…) |
 | > 440 | the version string "V1.5A" left-aligned at (320,140), size 8, white; line 21 ("O LUTADOR DA VILA") size 12 RGB(90,90,255) sliding in: x = 200+4(500−c) on even ticks, 200−4(500−c) on odd ticks, fixed at 200 from c = 500 |
-| any | `Abertura[15]` (Cybergamba) at (5,280); line 25 (CRIADO POR …) at (200,253) and line 30 (VERSÃO EM ESPANHOL …) at (200,267), size 8, white; while `g_ciclo` < 12: line 5 ("INSIRA FICHAS") or line 6 ("ENTRE AGORA" with credits) at (200,235) |
-| tick | with credits: c := 500, camY := −200 (title held); c > 650: demo fight (state 7, `g_demo` = 600, both CPU, stage round(Random(120)/10)+1 clamped 1..12, characters round(Random(150)/10)+1 clamped 1..15) |
+| > 440 | `Abertura[15]` (Cybergamba) at (5,280); line 25 (CRIADO POR …) at (200,253) and line 30 (VERSÃO EM ESPANHOL …) at (200,267), size 8, white — all three sit inside the `c > 440` test, nothing of the credit block shows before it |
+| any | while `g_ciclo` < 12: line 5 ("INSIRA FICHAS") or line 6 ("ENTRE AGORA" with credits) at (200,235), **size 10** |
+| tick | with credits: c := 500, camY := −200 (title held). The code draws first and updates after: `g_ciclo2` is incremented, then camY −= 2 is tested on the **new** c (> 235) and the demo on the new c > 650 (the sound at c = 200 and camY := 0 at c = 100 are draw-phase events). Demo start (0x49fdb1): state 7, `g_demo` = 600, `g_roundStart` = 72 (no round intro, no jump-in), `g_noPush` = 0, timers 99/25, `zerardados(1,2)`, `0x4b44d2/d4` = −120/60 (both HUD bars off screen), `g_firstHit` = 1, camX 100; no music is started; stage round(Random(120)/10)+1 clamped 1..12, characters round(Random(150)/10)+1 clamped 1..15 (Round = half to even) |
 
-Demo fight: the clock stays at the configured time, both healths are reset to
-125 every tick, "INSIRA FICHAS" blinks at (200,240) while `g_ciclo` < 20,
-`Icone[11]`/`[12]` (Logo Transparente) sits at (390−w, 280−h) once `g_demo`
-< 500, the screen is black for the last 40 ticks and at `g_demo` < 6 the
-game goes to state 8 (records). Keys: `5` adds a credit (sound 0; during
+Demo fight (0x4aa00f..0x4aa29a, `g_demo` is decremented first): `g_timerA :=
+g_cfg1_mode`, `g_timerB := 25` every tick, both healths 125 and both super
+stocks 3 every tick (0x4a4cfe), no HUD. "INSIRA FICHAS" blinks at (200,240),
+size 10, while `g_ciclo` < 20; once `g_demo` < 500 the title logo
+(`Abertura[12]`/`[13]`, **not** `Icone`) is stretched to half size into
+(390−round(w/2), 280−round(h/2))–(390, 280); for the last 40 ticks a
+venetian wipe `barra(0, 20i, 400, 20i + 40 − g_demo)` for i 0..15 closes the
+screen in black, and at `g_demo` ≤ 5 the game goes to state 8 (records,
+camY, `g_ciclo`, `g_ciclo2` := 0). Keys: `5` adds a credit (sound 0; during
 the demo or on the records screen it also jumps to the title), `1`/`2`
 with a credit start that player at state 4 (fight 1, select timer 30 s).
 
@@ -219,3 +224,31 @@ into rects, fireworks (effects type 1/24/25 spawned at random positions
 in ranges), and `MemoFinais[(char−1)·12 + k]` dialogue lines. The file is
 the transcription; converting each block into a timeline table is left
 as a port-time task (99).
+
+### Attract reviewed against the binary (2026-10-23)
+
+State 1 (0x49f25b..0x4a0178), the demo block of state 7 (0x4aa00f..0x4aa29a)
+and state 8 (0x4ab259..0x4ab647), counted call site by call site:
+
+| kind | asm | port before | port after |
+|---|---|---|---|
+| `Draw` (0x46161c) in state 1 | 19 | 19 | 19 (Cybergamba now inside `c > 440`) |
+| `DrawAlpha` (0x4616c0) logo, state 1 / demo | 2 / 2 (one per language) | 1 (+ `Icone` blit in the demo) | 1 / 1 (`Abertura`, half size in the demo) |
+| `barra` state 1 / demo wipe / records | 4 / 1 loop (16 bars) / 2 loops | 4 / 1 full-screen fill / 2 | 4 / 1 loop / 2 |
+| `retangulo` state 1 | 1 | 1 | 1 |
+| `texto` state 1 / demo / records | 9 / 1 / 2 + 4 per row | 7 sites (the title slide has 3 asm sites) / 1 / same | same, prompt sizes 10 |
+| sound (wave 9, c = 200) | 1 | 1, one tick late | 1 on the tick |
+| demo-start stores (state, demo, noPush, timers, roundStart, roundEnd, hud ×2, firstHit, camX, …) | 21 | 16 (roundStart 0, noPush 1, no HUD offset, no firstHit, music started) | 21 |
+| `Round` sites (state 1) | 10 | 10, half away from zero | 10, half to even |
+
+Differences fixed: the credit block (Cybergamba and the two credit lines) was
+drawn from c = 0; the join prompt was size 12 (it is 10); the logo zoom factor
+at c = 420 was 24 (it is 20: the second test wins); the camera and the demo
+trigger were one tick late (the original tests them after the increment);
+`Round` rounded .5 away from zero; the demo started with the round intro,
+the jump-in, the HUD, the first-hit bonus and a random fight track, and had no
+super stocks; its end was a plain black fill (it is a venetian wipe) and its
+corner logo was `Icone[11/12]` at full size (it is `Abertura[12/13]` at half
+size). The records screen (gradient `RGB(5i+100, 5i+130, 5i+160)`, rows of
+size 15, wipe after 240, camera −5 per tick after 80, return to the title
+after 280) matched call by call and was left as it was.
