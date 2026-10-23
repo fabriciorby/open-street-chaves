@@ -212,7 +212,7 @@ static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, doubl
         /* chip on guard (+0x23): Round(damage / 4), / 15 for the big ones */
         e->chip = iround(e->damage / ((type == 8 || type == 31 || type == 32) ? 15.0 : 4.0));
         e->has_hitbox = t->flags & OSC_FX_HITBOX;
-        e->top_anchor = t->flags & OSC_FX_TOP;
+        e->bottom_anchor = t->flags & OSC_FX_TOP;
         e->gravity = t->flags & OSC_FX_GRAVITY;
         e->persist = t->flags & OSC_FX_PERSIST;
         e->vy = t->vy;
@@ -1570,7 +1570,7 @@ void osc_fx_render(osc_game *g)
         if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
         if (e->done && (g->tick & 1)) continue;
         float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
-        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->top_anchor ? e->y : e->y - h) - g->cam_y), w, h};
+        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->bottom_anchor ? e->y - h : e->y - (int)SDL_lround(h / 2.0)) - g->cam_y), w, h};
         SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
                                  e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
         if (g->debug_boxes && e->has_hitbox) {

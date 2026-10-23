@@ -222,7 +222,7 @@ for line in part_init.split('\n'):
         elif key == 'hasHitbox' and v:
             d['flags'] |= 1
         elif key == 'f8' and v:
-            d['flags'] |= 2      # anchored at the top
+            d['flags'] |= 2      # f8 = bottom-anchored (drawn standing on y); default is centred on y
         elif key == 'f9' and v:
             d['flags'] |= 4      # falls with gravity
         elif key == 'flagA' and v:

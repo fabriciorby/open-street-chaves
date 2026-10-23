@@ -100,8 +100,8 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
    effect is removed when the owner leaves state 29 (and type 30 when the
    owner leaves state 26). Type 34 loses its hit box after phase 13.
 5. Debug: with `g_debugBoxes` the effect's box is drawn (`barra`).
-6. Drawing: sprite `Efeitos[sprite]` at `(x − camX − w/2, y − camY − h)`
-   (centred horizontally, bottom-anchored; `f8` flag anchors at the top),
+6. Drawing: sprite `Efeitos[sprite]` at `(x − camX − w/2, y − camY − h/2)`, or `y − camY − h` when `f8`
+   (centred horizontally; centred on y by default, `f8` flag = bottom-anchored, standing on y),
    mirrored list when `dir == 2`; types with `done == 1` draw blinking.
 
 ## Who spawns what [decomp, from `05a`]

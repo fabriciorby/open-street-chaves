@@ -82,7 +82,7 @@ typedef struct {
     int c4, c5;
     int vy;              /* gravity-driven effects */
     int hb_l, hb_t, hb_r, hb_b;
-    bool has_hitbox, done, persist, top_anchor, gravity;
+    bool has_hitbox, done, persist, bottom_anchor, gravity;
     bool knock;          /* +0x29 the hit knocks down */
     bool reflect;        /* +0x32 turns hostile effects it touches into its owner's */
     int chip;            /* +0x23 damage on guard */
