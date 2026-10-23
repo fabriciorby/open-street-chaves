@@ -59,6 +59,7 @@ static const osc_move_row *find_move(int ch, int move, int state)
 }
 
 static void move_x(osc_game *g, osc_fighter *f, double dx);
+static osc_effect *spawn_fx(osc_game *g, int type, int variant, int owner, double x, double y);
 
 /* ---- setMove (0x4775fc) ------------------------------------------------------- */
 static void set_move(osc_game *g, osc_fighter *f, int move)
@@ -106,7 +107,12 @@ static void set_move(osc_game *g, osc_fighter *f, int move)
     if (r->meter10 && f->meter < OSC_METER_MAX) f->meter += k_meter_unit * r->meter10 / 10.0;
     if (r->strength) f->hit_level = r->strength;
     if (move == 8 || move == 9) f->attacking = false;
-    if (r->snd >= 0) play_snd(g, r->snd);
+    if (r->snd >= 0) g->snd_pending = r->snd;   /* g_sndIndexA: played at the start of the next tick */
+    if (f->char_id == 9 && (move == 20 || move == 21))   /* 0x47b0bb: five dust puffs */
+        for (int k = 0; k < 5; k++) {
+            double x = f->x - 20 + osc_random(g, 40);
+            spawn_fx(g, 2, 0, 0, x, f->y + osc_random(g, 10));
+        }
 }
 
 /* ---- CPU opponent: TForm1.cpu (0x4931ac), calls setMove directly ------------------
@@ -254,23 +260,26 @@ static void fx_sounds_for(osc_game *g, osc_fighter *f)
     }
 }
 
-/* spawn the effects the frame selector produces for (char, state, timer) */
+/* Spawn the effects the frame selector produces for (char, state, timer): every call of
+ * FUN_00476a04 in 0x47d21c..0x48dcbf with its guard (06d). */
 static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
 {
     for (int i = 0; i < OSC_N_FX_SPAWNS; i++) {
         const osc_fx_spawn_row *r = &osc_fx_spawns[i];
         if (r->ch != f->char_id || r->state != f->state) continue;
-        if (r->timer >= 0 ? r->timer != f->anim_timer : f->anim_timer != 0) continue;
-        if (r->variant && f->hit_level && r->variant != f->hit_level) continue;
-        if (r->variant == 2 && !f->hit_level) continue;
-        /* offsets per (char, type) from the frame selector code (06b) */
-        double x, y = f->y + r->dy + (r->ry ? osc_random(g, r->ry) : 0);
-        if (r->type == 1 || r->type == 2) x = f->x - r->dx + (r->rx ? osc_random(g, r->rx) : 0);
-        else {
-            double d = r->dx + (r->rx ? osc_random(g, r->rx) : 0);
-            x = f->facing == 1 ? f->x + d : f->x - d;
+        if (f->anim_timer < r->t_lo || f->anim_timer > r->t_hi) continue;
+        if (r->frame >= 0 && f->frame != r->frame) continue;
+        if (r->face && f->facing != r->face) continue;
+        if (r->lvl && f->hit_level != r->lvl) continue;
+        if (r->mod && f->anim_timer % r->mod) continue;
+        for (int n = 0; n < r->count; n++) {
+            double bx = (r->flags & OSC_SPAWN_CAM_X) ? g->cam_x : (r->flags & OSC_SPAWN_ROUND) ? iround(f->x) : f->x;
+            double by = (r->flags & OSC_SPAWN_CAM_Y) ? g->cam_y : (r->flags & OSC_SPAWN_ROUND) ? iround(f->y) : f->y;
+            double x = bx + r->dx, y = by + r->dy;
+            if (r->rx) x += r->rx > 0 ? osc_random(g, r->rx) : -osc_random(g, -r->rx);
+            if (r->ry) y += r->ry > 0 ? osc_random(g, r->ry) : -osc_random(g, -r->ry);
+            spawn_fx(g, r->type, r->variant, r->owner ? pidx : 0, x, y);
         }
-        spawn_fx(g, r->type, r->variant, pidx, x, y);
     }
 }
 
@@ -1582,7 +1591,9 @@ void osc_fx_render(osc_game *g)
         if (!e->type || e->sprite < 0 || e->sprite >= g->n_fx_tex || !g->fx_tex[e->sprite]) continue;
         if (e->done && (g->tick & 1)) continue;
         float w = (float)g->fx_w[e->sprite], h = (float)g->fx_h[e->sprite];
-        SDL_FRect d = {(float)(e->x - w / 2 - g->cam_x), (float)((e->bottom_anchor ? e->y - h : e->y - (int)SDL_lround(h / 2.0)) - g->cam_y), w, h};
+        /* desenhaefeitos 0x48fb0e: x - Round(w / 2), y - Round(h / 2), or y - h with the f8 flag */
+        float ox = (float)iround(w / 2.0), oy = e->bottom_anchor ? h : (float)iround(h / 2.0);
+        SDL_FRect d = {(float)(iround(e->x) - g->cam_x) - ox, (float)(iround(e->y) - g->cam_y) - oy, w, h};
         SDL_RenderTextureRotated(g->ren, g->fx_tex[e->sprite], NULL, &d, 0.0, NULL,
                                  e->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
         if (g->debug_boxes && e->has_hitbox) {

@@ -33,8 +33,8 @@ faithful port.
     approximate in the port: the records-screen gradient and row sizes, the
     text sizes of the join/challenger prompts, the spark (type 1) spawn
     spread.
-11. ~~Effect spawn offsets~~ — resolved: `06b-spawn-offsets.txt` from the
-    frame-selector code (`re/tools/spawnoffsets.py`). ~~Stage 8 moving
+11. ~~Effect spawn offsets~~ — resolved: `06d-selector-spawns.txt`: every
+    `FUN_00476a04` call of the frame selector with its guards and offsets. ~~Stage 8 moving
     elements~~ — the passing car and the flickering mice/lights are in 07c
     (`xmul`, `yjit` columns).
 

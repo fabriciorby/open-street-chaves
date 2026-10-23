@@ -146,3 +146,28 @@ table and before drawing, unless `g_superPause`/`g_hitStop` is set:
 
 The "?" rows need the move names matched against `04-moves.md` by reading
 the spawning state in `05a` — pending.
+
+## Spawn calls of the frame selector (`06d-selector-spawns.txt`) [objdump]
+
+The frame selector `0x47d21c..0x48dcbf` calls `FUN_00476a04` at 106 sites
+(the first decompiled listing showed only 61 and merged the rest). Register
+convention: `al` type, `edx` variant string (`"A"`/`"B"`/nil), `cl` owner (0 =
+none; dust, sparks and the Bruxa/Chaves effects 1, 2 spawn without owner),
+stack: `x` then `y` as doubles. Every site sits under a guard chain of
+character (`+0x10`), state (`+0x6b`), animation timer (`+0x74`, `==`, `>=`,
+`>`, `<` or none), facing (`+0x6d`), hit level (`+0x6f`) and sometimes the
+current frame (`+0x6c`) or an even-timer test. Facing and level pairs are
+separate call sites, with x offsets of both signs; one site (Bruxa's second
+variant "B") uses -60 where its mirror uses +40. Some sites sit inside loops
+that spawn 3, 5 or 8 puffs. Jaiminho's super (state 28, timer 10) spawns five
+type-17 effects, one on him and four at `g_camX + 0x50/0xa0/0xf0/0x140`,
+`g_camY + 0x6e`. Paty's moves 20 and 21 spawn five dust puffs from `setMove`
+(`0x47b0bb`). The old table keyed rows by (char, state, timer) with `*` meaning
+timer 0, so lunges (Chaves' Burn Knuckle, type 16 from timer 9 on), dust
+trails and the Jaiminho extras never fired, and both hit levels of the
+projectile specials shared one offset.
+
+Drawing (`desenhaefeitos` `0x48fb0e`): the sprite's left edge is
+`Round(x) - Round(w / 2)` and its top `Round(y) - Round(h / 2)`; with the
+spawn flag `f8` (types 2, 7, 8, 23, 34) the top is `Round(y) - h` (bottom
+anchored on `y`).

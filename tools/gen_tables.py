@@ -241,33 +241,12 @@ for t in fx_init:
     if fx_init[t]['speedB'] == 0:
         fx_init[t]['speedB'] = fx_init[t]['speedA']
 
-# spawns from the frame selector: (char, state, timer, type, variant)
-CT = {'\\a': 7, '\\b': 8, '\\t': 9, '\\n': 10, '\\v': 11, '\\f': 12, '\\r': 13}
-spawns = set()
-char = None
-for line in read('05a-anim-tables.txt').split('\n'):
-    m = re.match(r'## char (\d+)', line)
-    if m:
-        char = int(m.group(1))
+# spawns from the frame selector (06d)
+spawns = []
+for line in read('06d-selector-spawns.txt').split('\n'):
+    if line.startswith('#') or not line.strip():
         continue
-    m = re.match(r"  state\s+(\d+) timer\s+(\*|\d+)\s*: FUN_00476a04\('([^']+)',\(uint \*\)(\"([AB])\"|0x0),", line)
-    if not m:
-        continue
-    lit = m.group(3)
-    typ = CT.get(lit, int(lit[2:], 16) if lit.startswith('\\x') else ord(lit[-1]))
-    variant = m.group(5)
-    spawns.add((char, int(m.group(1)), -1 if m.group(2) == '*' else int(m.group(2)), typ,
-                0 if variant is None else (1 if variant == 'A' else 2)))
-spawns = sorted(spawns)
-# 06b: spawn offsets per (char, type[, state])
-offs = {}
-for line in read('06b-spawn-offsets.txt').split('\n'):
-    m = re.match(r'(\d+) (\d+) (-?\d+) (\d+) (-?\d+) (\d+)(?: (\d+))?$', line)
-    if m:
-        offs[(int(m.group(1)), int(m.group(2)), int(m.group(7) or 0))] = tuple(int(m.group(i)) for i in range(3, 7))
-def spawn_off(ch, st, typ):
-    return offs.get((ch, typ, st)) or offs.get((ch, typ, 0)) or (40, 0, -85, 0)
-spawns = [row + spawn_off(row[0], row[1], row[3]) for row in spawns]
+    spawns.append(tuple(int(x) for x in line.split()))
 # 06c: special-move sounds set by the frame selector: (ch, state, timer, snd, chance); chance 0 = deterministic
 fx_sounds = []
 for line in read('06c-special-sounds.txt').split('\n'):
@@ -343,7 +322,8 @@ enum { OSC_MOVE_ONGROUND = 1, OSC_MOVE_NOT_INAIR = 2, OSC_MOVE_SUPER = 4, OSC_MO
 /* effects (06): per type init, (phase -> sprite) rows, spawns from the frame selector */
 typedef struct { uint8_t type, life, speedA, speedB, damage, flags, c5, loop_at; int8_t vy; int16_t l, t, r, b; } osc_fx_type;
 typedef struct { uint8_t type; int8_t phase; uint8_t sprite; } osc_fx_sprite_row;   /* phase -1 = any */
-typedef struct { uint8_t ch, state; int8_t timer; uint8_t type, variant; int16_t dx; uint8_t rx; int16_t dy; uint8_t ry; } osc_fx_spawn_row; /* variant 0 none, 1 A, 2 B; offsets from 06b */
+typedef struct { uint8_t ch, state; int16_t t_lo, t_hi, frame; uint8_t face, lvl, mod, count, owner, type, variant, flags; int16_t dx, rx, dy, ry; } osc_fx_spawn_row; /* 06d; variant 0 none, 1 A, 2 B */
+enum { OSC_SPAWN_ROUND = 1, OSC_SPAWN_CAM_X = 2, OSC_SPAWN_CAM_Y = 4 };
 typedef struct { uint8_t ch, state; int8_t timer; uint8_t snd, chance; } osc_fx_sound_row; /* timer -1: every tick, Random(chance)==0 (06c) */
 enum { OSC_FX_HITBOX = 1, OSC_FX_TOP = 2, OSC_FX_GRAVITY = 4, OSC_FX_FLAGA = 8, OSC_FX_PERSIST = 16 };
 

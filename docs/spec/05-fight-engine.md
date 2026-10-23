@@ -331,3 +331,11 @@ ticks (human, CPU, human, CPU) show three lines of the dialogue memo (form
 field 0x300) from line `(humanChar − 1)·12 + 0/3/6/9`, size 10, at (115,
 168 + 14k) for the human and (120, 223 + 14k) for the CPU. The human's
 first button takes 5 more ticks off while more than 10 are left.
+
+Selector effects: `06d-selector-spawns.txt` holds all 106 spawn call sites of the
+frame selector with their guards (see `06-effects.md`). The selector's
+`g_sndIndexA` writes are in `06c-special-sounds.txt`, including the throw
+supers' hit sounds (Madruga states 29 and 31, Chiquinha and Barriga state 30:
+`Random(4 or 6) == 0` for sound 7, 8, 9 in turn, the last one wins). `setMove`
+writes the move's sound into `g_sndIndexA` too (played at the start of the next
+tick, not immediately).
