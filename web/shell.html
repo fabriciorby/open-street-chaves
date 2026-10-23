@@ -6,25 +6,39 @@
 <title>open-street-chaves</title>
 <style>
   body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-  canvas { width: 800px; height: 600px; image-rendering: pixelated; background: #000; margin-top: 16px; }
+  /* the canvas size comes from layout() in the script (--cw/--ch, always 4:3); 800x600 until then */
+  canvas { width: var(--cw, 800px); height: var(--ch, 600px); image-rendering: pixelated; background: #000; display: block; }
+  #stage { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  #stage:fullscreen, #stage:-webkit-full-screen { background: #000; justify-content: center; width: 100%; height: 100%; }
+  /* toolbar under the canvas (after the game started); on touch devices it floats top-right */
+  #tools { display: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; box-sizing: border-box; width: 100%; max-width: 1200px; padding: 4px 8px; font-size: .8em; opacity: .85; }
+  #keys { margin-right: auto; line-height: 1.9; }
+  #keys kbd { display: inline-block; min-width: 1.1em; padding: 0 5px; margin: 0 1px; border: 1px solid #888; border-bottom-width: 2px; border-radius: 4px; background: #222; color: #fff; font: bold 1em/1.4 sans-serif; text-align: center; }
+  #keys .sep { opacity: .5; margin: 0 4px; }
+  #ctl { display: flex; align-items: center; gap: 6px; }
+  html.touch #keys { display: none; }
+  html.playing #tools { display: flex; }
+  html.fs:not(.touch) #tools { display: none; }
+  #tools button, #tools select { font-size: 1em; padding: 2px 8px; margin: 0; touch-action: manipulation; }
+  #fs { display: none; }
+  html.canfs #fs { display: inline-block; }
+  html.touch #scalebox { display: none; }
+  html.touch #tools { position: fixed; top: 6px; right: 6px; z-index: 6; padding: 0; width: auto; opacity: .5; }
+  #padToggle { display: none; }
   p, #picker { max-width: 800px; }
   #picker { margin: 12px 0; padding: 16px; border: 2px dashed #666; border-radius: 8px; text-align: center; }
   #picker.over { border-color: #fc0; background: #222; }
   button { font-size: 1em; padding: 6px 12px; margin: 4px; }
   code { color: #fc0; }
-  /* small screens: scale the 4:3 canvas to the width; landscape phones fill the height instead */
-  @media (max-width: 800px) { canvas { width: 100vw; height: 75vw; margin-top: 0; } }
-  @media (orientation: landscape) and (max-height: 600px) {
-    canvas { width: min(100vw, calc(100vh * 4 / 3)); width: min(100vw, calc(100dvh * 4 / 3)); height: auto; aspect-ratio: 4 / 3; margin-top: 0; }
-  }
   /* on-screen gamepad (touch devices, after the game started) */
-  #pad, #padToggle { display: none; }
+  #pad { display: none; }
   html.touch.playing { overflow: hidden; overscroll-behavior: none; }
-  html.touch.playing #pad, html.touch.playing #padToggle { display: block; }
-  html.touch .keys { display: none; }
+  html.touch.playing #pad { display: block; }
+  html.touch.playing #padToggle { display: inline-block; }
+  html.touch .keys, html.playing .keys { display: none; }
   html:not(.touch) .touchhint { display: none; }
   @media (orientation: landscape) and (max-height: 600px) { html.touch.playing .touchhint { display: none; } }
-  #pad, #padToggle, #pad * { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  #pad, #tools, #pad * { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
   #pad { position: fixed; left: 0; right: 0; bottom: 0; top: 0; pointer-events: none; opacity: .35; z-index: 5;
          --d: min(38vw, 46vh); --b: min(17vw, 22vh); --s: min(12vw, 16vh); }
   #pad.hidden { display: none !important; }
@@ -47,16 +61,30 @@
   #sys { left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 2vmin; }
   @media (orientation: portrait) { #sys { bottom: calc(max(var(--d), var(--b) * 2.6) + 8vmin); } }
   #sys .btn { width: auto; padding: 0 3vmin; height: calc(var(--s) * .6); border-radius: 999px; font-size: 1em; }
-  #padToggle { position: fixed; top: 6px; right: 6px; z-index: 6; margin: 0; padding: 4px 8px; font-size: .8em; opacity: .5; touch-action: manipulation; }
 </style>
 </head>
 <body>
+<div id="stage">
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<div id="tools">
+  <span id="keys"><kbd>5</kbd> ficha<span class="sep">·</span><kbd>1</kbd>/<kbd>2</kbd> start<span class="sep">·</span><kbd>setas</kbd> + <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd> (P1)<span class="sep">·</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd> (P2)<span class="sep">·</span><kbd>F1</kbd>/<kbd>F2</kbd> menus</span>
+  <span id="ctl"><span id="scalebox"><label for="scale">Escala:</label>
+  <select id="scale"><option value="fit">Ajustar</option><option value="2x">2x</option><option value="3x">3x</option><option value="pixel">Pixel perfeito</option></select></span>
+  <button id="fs">Tela cheia</button>
+  <button id="padToggle">esconder controle</button></span>
+</div>
+<div id="pad">
+  <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+  <div id="sys"><div class="btn" data-k="Digit5">FICHA</div></div>
+  <div id="acts"><div class="btn" data-k="KeyZ">Z</div><div class="btn" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
+</div>
+</div>
 <div id="picker">
   <p><b>open-street-chaves</b> needs your own copy of <i>Street Chaves 1.5A</i>. Drop the game folder
   (the one with <code>Chaves.exe</code>, <code>Lutadores</code>, <code>Cenarios</code>…) or its
   <code>.zip</code> here, or pick it below. The files are read in your browser only, never uploaded, and kept
-  in this browser's storage so the next visit starts at once.</p>
+  in this browser's storage so the next visit starts at once.
+  <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
   <button id="pickFolder">Choose folder</button>
   <button id="pickZip">Choose .zip</button>
   <button id="forget" style="display:none">Forget stored game files</button>
@@ -64,15 +92,8 @@
   <input type="file" id="zip" accept=".zip,application/zip" style="display:none">
   <p id="status"></p>
 </div>
-<p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
-<code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
+<p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.</p>
 <p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>FICHA</b> inserts a coin; Z starts.</p>
-<div id="pad">
-  <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
-  <div id="sys"><div class="btn" data-k="Digit5">FICHA</div></div>
-  <div id="acts"><div class="btn" data-k="KeyZ">Z</div><div class="btn" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
-</div>
-<button id="padToggle">hide pad</button>
 <script>
   var setStatus = function (t) { document.getElementById('status').textContent = t; };
   var Module = {
@@ -125,7 +146,8 @@
     document.getElementById('picker').style.display = 'none';
     Module.ccall('osc_web_data_ready', null, [], []);
     Module.canvas.focus();
-    if (isTouch) document.documentElement.classList.add('playing');
+    document.documentElement.classList.add('playing');
+    layout();
   }
   function readFiles(files, done) {
     var out = [], pending = files.length;
@@ -226,9 +248,55 @@
     window.addEventListener('blur', releaseAll);
     window.addEventListener('pagehide', releaseAll);
     var tg = document.getElementById('padToggle');
-    tg.onclick = function () { releaseAll(); var h = pad.classList.toggle('hidden'); tg.textContent = h ? 'show pad' : 'hide pad'; };
+    tg.onclick = function () { releaseAll(); var h = pad.classList.toggle('hidden'); tg.textContent = h ? 'mostrar controle' : 'esconder controle'; tg.blur(); document.getElementById('canvas').focus(); };
   }
   if (isTouch) setupPad();
+  /* canvas size: SDL (resizable window, CSS-sized canvas) copies the CSS size into the backbuffer on every window
+     'resize' and the 400x300 logical image is re-rendered at that size, so scaling stays crisp (1 CSS px = 1 backbuffer px).
+     layout() sets --cw/--ch (4:3) and fires a synthetic resize so SDL notices; our own listener runs before SDL's. */
+  var cv = document.getElementById('canvas'), de = document.documentElement, stage = document.getElementById('stage'), scaleSel = document.getElementById('scale');
+  var mode = 'fit', lastW = 0;
+  try { mode = localStorage.getItem('osc.scale') || 'fit'; } catch (e) {}
+  if (!/^(fit|2x|3x|pixel)$/.test(mode)) mode = 'fit';
+  scaleSel.value = mode;
+  function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement; }
+  function layout() {
+    var W = de.clientWidth, H = window.innerHeight, playing = de.classList.contains('playing');
+    var reserve = playing && !isTouch && !fsEl() ? document.getElementById('tools').offsetHeight + 4 : 0;
+    var fit = Math.max(160, Math.min(W, Math.floor((H - reserve) * 4 / 3)));
+    var w = !playing ? Math.min(W, 800) : fsEl() ? fit : mode === '2x' ? 800 : mode === '3x' ? 1200 : mode === 'pixel' ? Math.max(400, Math.floor(fit / 400) * 400) : fit;
+    if (playing && !fsEl() && (mode === '2x' || mode === '3x')) w = Math.min(w, W);
+    if (w === lastW) return;
+    lastW = w;
+    de.style.setProperty('--cw', w + 'px');
+    de.style.setProperty('--ch', Math.round(w * 3 / 4) + 'px');
+    var ev = new Event('resize'); ev.osc = true;
+    window.dispatchEvent(ev);
+  }
+  window.addEventListener('resize', function (e) { if (!e.osc) layout(); });
+  scaleSel.onchange = function () {
+    mode = scaleSel.value;
+    try { localStorage.setItem('osc.scale', mode); } catch (e) {}
+    layout(); scaleSel.blur(); cv.focus();
+  };
+  var fsBtn = document.getElementById('fs');
+  if (stage.requestFullscreen || stage.webkitRequestFullscreen) de.classList.add('canfs');
+  fsBtn.onclick = function () {
+    if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    else {
+      var r = (stage.requestFullscreen || stage.webkitRequestFullscreen).call(stage);
+      if (r && r.catch) r.catch(function () {});
+    }
+    fsBtn.blur(); cv.focus();
+  };
+  function fsChange() {
+    de.classList.toggle('fs', !!fsEl());
+    fsBtn.textContent = fsEl() ? 'Sair da tela cheia' : 'Tela cheia';
+    lastW = 0; layout(); cv.focus();
+  }
+  document.addEventListener('fullscreenchange', fsChange);
+  document.addEventListener('webkitfullscreenchange', fsChange);
+  layout();
   function wire() {
     var picker = document.getElementById('picker');
     document.getElementById('pickFolder').onclick = function () { document.getElementById('folder').click(); };
