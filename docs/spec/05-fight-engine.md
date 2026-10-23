@@ -4,9 +4,12 @@ Legend: **[decomp]** read from Ghidra pseudocode (analysis artifact, not
 source), **[infer]** interpretation, **UNKNOWN** not established. Generated
 tables (regenerate with the scripts in `re/tools/`):
 
-- `05a-anim-tables.txt` — per character: `(state, animTimer) → frame`,
-  hurt boxes per frame, hit boxes per `(state, timer)`, and other actions
-  done by the frame selector (position changes, effect spawns).
+- `05a-anim-tables.txt` — per character: hurt boxes per frame and hit boxes per
+  `(state, timer)` set by the frame selector.
+- `06f-selector-frames.txt` — the selector's 421 frame stores as guarded rows
+  (state, timer range, hit level, parity, current frame, random).
+- `06g-selector-stores.txt` — its field stores (knockdown, invuln, vy, hitstun,
+  hits, opponent state ...) as guarded rows.
 - `05b-move-setup.txt` — per move id: allowed previous states, new state,
   duration, meter gain, sound.
 - `05c-frame-offsets.txt` — per character and frame: horizontal draw offset.
@@ -343,19 +346,42 @@ tick, not immediately).
 The selector also moves the fighter in the special states (`sub_47648c` walks, direct x / y / vy / `inAir`
 writes): see `06d-special-motion.txt`.
 
+### Order of evaluation inside the selector
+
+The selector is one function; per character the asm runs the frame stores, the field stores, the
+walks and y moves, then the effect spawns and sounds, then that character's hurt and hit boxes. The
+port keeps this order: `sel_frames` (06f), `sel_stores` (06g rows, then the hand-written bodies in
+`sel_code`), `special_motion` (06d), `sel_run_turn`, spawns (06e), sounds (06c), boxes (05a). Delphi
+threads the last `if` of a then-block straight to the end label of the next `jmp`; reading a guard
+therefore needs that jump redirected, otherwise the rows get the wrong condition. Only about ten
+true `or` sites remain (Madruga 26 and 28/29, Girafales opp.state 17 or 19, Furtado 26, Florinda's
+sound, blocking), each is two rows.
+
+Quirks. Frame stores use base-less frame numbers (P1 style, the asm adds 0x32 for P2). Byte values
+that the asm treats as signed must be read as `int8` (vy 250 is -6, 226 is -30; rotStep 65511 is
+-25). Field `+0x94` is never written anywhere in the exe, so it is always 0: Bruxa's state 2 row
+guarded by `+0x94 == 1` is dead, the `== 0` one always holds.
+
+Throw supers (Madruga 29 and 31, Chiquinha 30, Barriga 30). While the throw runs the thrower pins the
+victim in front of itself: frame 26 + Random(2), timer 0, duration 5, vy 0, y + 10 clamped to the
+ground, x +- (distance + Random(n) * k); `hits` and `comboTimer` count up. At the last tick (timer >
+dur - 2) the victim takes damage x `g_damageLevel`, `setMove(victim, 10)`, and the hitstun, vy and
+rotStep of that throw; the thrower ends in `setMove(19)` (Madruga 31, state 26) or `setMove(21)`
+(Barriga, state 27), Chiquinha leaps (state 12). Madruga 28 and 29 pick a random distinct victim
+frame in 41..43. The bodies are `sel_throws` in `src/game.c`.
+
 ### Inventory of the frame selector `0x47d21c..0x48dcbf` (asm vs port) [objdump]
 
 | statement kind | in the asm | in the port |
 |---|---|---|
 | `FUN_00476a04` effect spawn | 106 sites (+1 in `setMove`) | all (06e) |
 | `sub_476870` hurt box / `FUN_004768f8` hit box | 305 / 379 | all (`05a`) |
-| frame store `+0x6c` | 421: 379-row anim table; 14 are guarded by hit level, 29 by an even-timer or current-frame test (alternating frames), 4 are random, 4 pick the victim's frame in a throw | the table only: the alternating, level-guarded and throw frames are missing |
+| frame store `+0x6c` | 421 | 411 in 06f (413 rows, the two `or` sites take two), 9 in the throw bodies, 1 dead (`+0x94 == 1`) |
 | `g_sndIndexA` writes | 51 | all (`06c`, with the throw supers' hit sounds) |
-| `sub_47648c` (move_x) | 196 | other session (06d-special-motion) |
-| direct `x`/`y` stores (`fstp`) | 80 (35 self y, 10 self x, 8 + 8 on the opponent, throw and teleport lifts) | y rules by the other session; the throw ones (opponent lifted and shaken) not ported |
-| `setMove` (`0x4775fc`) | 6, all in the throw supers (victim move 10, own move 0x13 / 0x15) | not ported |
-| player fields `+0x68`, `+0x69` (knockdown), `+0x6a`, `+0x6b`, `+0x6d`, `+0x6e`, `+0x70`, `+0x72`, `+0x74`, `+0x76`, `+0x78` (vy), `+0x92` (invuln), `+0x93`, `+0x95`, `+0x96`, `+0x18` | 2, 38, 23, 4, 4, 7, 4, 9, 10, 5, 31, 20, 1, 4, 4, 6 | not ported (only `+0x78` partly by the other session) |
-| health store `+0x40` (throw super hit) | 4 | not ported |
-| globals `g_hitStop` `0x4b0e84`, `0x4b0fc8`, `0x4b0d68` | 5, 4, 1 | not ported |
-| `Random` | 86 (spawn offsets, sound draws, random frames, throw shake) | spawn offsets and sound draws |
-| `Round`, `0x40287c` (trunc, even-timer tests), `Cos` | 5, 18, 1 | the Round of Bruxa's dust base; the parity tests are the `mod` column of 06e; `Cos` (`0x48af09`) not ported |
+| `sub_47648c` (move_x) | 196 | all (06d) |
+| other player stores, 241 | 111 table stores, 19 code stores, 72 in the throw bodies, 38 x / y, 1 blocking | 06g (117 rows) and `sel_code` / `sel_throws`; x / y by 06d (the KO landing `y = ground` is in `sel_code`) |
+| health store `+0x40` (throw super hit) | 4 | all (`sel_throws`) |
+| globals `g_hitStop`, `0x4b0fc8` (flash), `0x4b0d68` (shake) | 5, 4, 1 | all |
+| `setMove` (`0x4775fc`) | 6, all in the throw supers (victim move 10, own move 0x13 / 0x15) | all |
+| `Random` | 86 | all |
+| `Round`, `0x40287c` (trunc, parity tests), `Cos` | 5, 18, 1 | all (parity tests are the `mod` column of 06e / 06f; `Cos` in 06d) |

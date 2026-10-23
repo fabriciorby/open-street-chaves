@@ -283,18 +283,192 @@ static void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx)
     }
 }
 
-/* ---- frame selector (0x47d21c) + boxes ------------------------------------- */
-static void select_frame(osc_fighter *f)
+/* ---- frame selector (0x47d21c) -------------------------------------------------------------
+ * One function in the original: the frame stores (06f), the field stores (06g and the code below),
+ * the effect spawns (06e), the sounds (06c), then the hurt and hit boxes (05a). */
+static bool sel_cmp(int op, double a, double b)
 {
-    bool have_char_rows = false;
-    for (int i = 0; i < OSC_N_ANIM; i++)
-        if (osc_anim[i].ch == f->char_id && osc_anim[i].state == f->state) { have_char_rows = true; break; }
-    int ch = have_char_rows ? f->char_id : 0;
+    switch (op) {
+    case 1: return a == b;
+    case 2: return a >= b;
+    case 3: return a > b;
+    case 4: return a < b;
+    case 5: return a <= b;
+    }
+    return true;
+}
+
+static bool sel_extra(const osc_fighter *f, const osc_fighter *o, int xf, int xo, int xv)
+{
+    if (!xf) return true;
+    double a = xf == 1 ? f->hits : xf == 2 ? f->combo_timer : xf == 3 ? o->state : f->y;
+    return sel_cmp(xo, a, xv);
+}
+
+static void sel_apply(osc_fighter *t, int field, int val)
+{
+    switch (field) {
+    case OSC_SF_KNOCKDOWN: t->knockdown = val != 0; break;
+    case OSC_SF_INAIR: t->in_air = val != 0; break;
+    case OSC_SF_JUMPDIR: t->jump_dir = val; break;
+    case OSC_SF_HITSTUN: t->hitstun = val; break;
+    case OSC_SF_TIMER: t->anim_timer = val; break;
+    case OSC_SF_VY: t->vy = val; break;
+    case OSC_SF_INVULN: t->invuln = val != 0; break;
+    }
+}
+
+/* the victim of a throw super, flailing and pinned in front of the thrower (0x47f270..0x47f3b6; the same
+ * code in the four throws, only the distance differs: dist + Random(rn) * mul) */
+static void throw_hold(osc_game *g, osc_fighter *f, osc_fighter *o, double dist, int rn, int mul)
+{
+    o->frame = 26 + osc_random(g, 2);
+    o->anim_timer = 0; o->anim_dur = 5; o->vy = 0;
+    o->y += 10.0;
+    if (o->y > OSC_GROUND_Y) o->y = OSC_GROUND_Y;
+    if (f->facing == 1) o->x = f->x + dist + osc_random(g, rn) * mul;
+    if (f->facing == 2) o->x = f->x - dist - osc_random(g, rn) * mul;
+}
+
+/* the victim spins away at the end of a throw super: rotStep -spin / +spin by the victim's side */
+static void throw_spin(osc_fighter *o, int spin)
+{
+    if (o->facing == 1) o->rot_step = -spin;
+    if (o->facing == 2) o->rot_step = spin;
+}
+
+/* flash of the screen (g_shakeHit 0x4b449b) with config line 7 on */
+static void throw_flash(osc_game *g, int chance)
+{
+    if (g->cfg_flash && osc_random(g, chance) == 0) g->flash = 3;
+}
+
+/* Seu Madruga 28/29, 31, Chiquinha 30 and Sr. Barriga 30: the thrower grabs and shakes the opponent,
+ * the last tick (timer > dur - 2) deals the damage and throws him (0x47f13c..0x47fa57, 0x480890..0x480dc0,
+ * 0x484dd7..0x48522d). The hit sounds and sparks are in 06c / 06e. */
+static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
+{
+    int ch = f->char_id, st = f->state;
+    bool last = f->anim_timer > f->anim_dur - 2;
+    if (ch == 2 && (st == 28 || st == 29)) {
+        /* a new random frame 41..43 every tick, never the same twice */
+        int fr;
+        do fr = 41 + osc_random(g, 3); while (fr == f->frame);
+        f->frame = fr;
+    }
+    if (ch == 2 && st == 29) {
+        throw_flash(g, 6);
+        f->hitstun = 0;
+        throw_hold(g, f, o, 40.0, 2, 8);
+        f->hits++; f->combo_timer = 20;
+        if (last) {
+            f->damage = 20;
+            o->health -= f->damage * g->damage_level;
+            set_move(g, o, 10);
+            o->hitstun = 30;
+        }
+    }
+    if (ch == 2 && st == 31) {
+        f->hitstun = 0;
+        f->frame = 1 + osc_random(g, 45);
+        throw_flash(g, 5);
+        throw_hold(g, f, o, 40.0, 2, 8);
+        f->hits += 2; f->combo_timer = 43;
+        if (osc_random(g, 30) == 0 && o->health > 0.0) g->hit_stop = 5;
+        if (last) {
+            f->damage = 47;
+            o->health -= f->damage * g->damage_level;
+            f->state = 1; f->frame = 38;
+            g->hit_stop = 5;
+            set_move(g, f, 19);
+            set_move(g, o, 10);
+            f->attacking = false;
+            o->hitstun = 28; o->vy = -30;
+            throw_spin(o, 25);
+        }
+    }
+    if (ch == 3 && st == 30) {
+        f->hitstun = 0;
+        throw_flash(g, 5);
+        throw_hold(g, f, o, 65.0, 3, 5);
+        f->hits++; f->combo_timer = 43;
+        if (osc_random(g, 20) == 0 && o->health > 0.0) g->hit_stop = 5;
+        if (last) {
+            f->damage = 36;
+            o->health -= f->damage * g->damage_level;
+            f->vy = -28; f->in_air = true;
+            f->state = 12; f->anim_timer = 0; f->anim_dur = 99;
+            set_move(g, o, 10);
+            o->hitstun = 30;
+            throw_spin(o, 15);
+        }
+    }
+    if (ch == 7 && st == 30) {
+        f->hitstun = 0;
+        f->frame = 1 + osc_random(g, 46);
+        throw_flash(g, 5);
+        if (osc_random(g, 3) == 0) g->hit_stop = 3 + osc_random(g, 3);
+        throw_hold(g, f, o, 40.0, 2, 8);
+        f->hits++; f->combo_timer = 43;
+        if (last) {
+            f->damage = 36;
+            o->health -= f->damage * g->damage_level;
+            f->state = 1; f->frame = 12;
+            if (o->health > 0.0) g->hit_stop = 5;
+            f->anim_timer = 0; f->vy = -48; f->in_air = true;
+            set_move(g, f, 21);
+            set_move(g, o, 10);
+            o->hitstun = 30; o->vy = -35;
+            throw_spin(o, 25);
+        }
+    }
+}
+
+/* The other stores of the selector that are not table rows (the motion of the special moves,
+ * x / y / vy / inAir, is special_motion, 06d). */
+static void sel_code(osc_game *g, osc_fighter *f, osc_fighter *o)
+{
+    int ch = f->char_id, st = f->state, t = f->anim_timer;
+    /* 0x47db6a: a knocked-out fighter lies still */
+    if (st == 20 && f->vy == 0 && f->health <= 0.0) { f->anim_timer = 0; f->y = OSC_GROUND_Y; }
+    /* 0x47e540: Chaves' state 29 shakes the street once */
+    if (ch == 1 && st == 29 && t == 9) g->shake = 20;
+    sel_throws(g, f, o);
+}
+
+static void sel_frames(osc_game *g, osc_fighter *f)
+{
     for (int i = 0; i < OSC_N_ANIM; i++) {
         const osc_anim_row *r = &osc_anim[i];
-        if (r->ch != ch || r->state != f->state) continue;
-        if (r->timer < 0 || r->timer == f->anim_timer) f->frame = r->frame;
+        if (r->state != f->state || (r->ch && r->ch != f->char_id) || (r->ch_ne && r->ch_ne == f->char_id)) continue;
+        if (f->anim_timer < r->t_lo || f->anim_timer > r->t_hi) continue;
+        if (r->lvl && f->hit_level != r->lvl) continue;
+        if (r->mod && (((r->psrc ? g->ciclo : f->anim_timer) % r->mod == 0) == (r->meq != 0))) continue;
+        if (r->cur > 0 && f->frame != r->cur) continue;
+        if (r->cur < 0 && f->frame == -r->cur) continue;
+        if (r->chance && osc_random(g, r->chance) != 0) continue;
+        f->frame = r->frame + (r->kind ? osc_random(g, r->rnd) : 0);
     }
+}
+
+static void sel_stores(osc_game *g, osc_fighter *f, osc_fighter *o)
+{
+    for (int i = 0; i < OSC_N_SEL_STORE; i++) {
+        const osc_sel_store_row *r = &osc_sel_store[i];
+        if (r->ch && r->ch != f->char_id) continue;
+        if (r->state != f->state || f->anim_timer < r->t_lo || f->anim_timer > r->t_hi) continue;
+        if (r->face && f->facing != r->face) continue;
+        if (r->lvl && f->hit_level != r->lvl) continue;
+        if (r->cur && f->frame != r->cur) continue;
+        if (!sel_extra(f, o, r->xf1, r->xo1, r->xv1) || !sel_extra(f, o, r->xf2, r->xo2, r->xv2) ||
+            !sel_extra(f, o, r->xf3, r->xo3, r->xv3)) continue;
+        sel_apply(r->who ? o : f, r->field, r->val);
+    }
+    sel_code(g, f, o);
+}
+
+static void sel_boxes(osc_fighter *f)
+{
     for (int i = 0; i < OSC_N_HURT; i++) {
         const osc_hurt_row *r = &osc_hurt[i];
         if (r->ch != f->char_id || r->frame != f->frame) continue;
@@ -312,6 +486,35 @@ static void select_frame(osc_fighter *f)
         f->chip = r->p4;
     }
     if (f->state == 21 || f->state == 22) f->blocking = true;
+}
+
+static void special_motion(osc_game *g, osc_fighter *f);
+
+/* 0x489db8: Furtado's run turns at random after the edge test (the walk itself is special_motion) */
+static void sel_run_turn(osc_game *g, osc_fighter *f)
+{
+    if (f->char_id == 12 && f->state == 23 && f->anim_timer % 8 == 0 && osc_random(g, 2) == 0) {
+        if (f->facing == 1) f->facing = 2;
+        else if (f->facing == 2) f->facing = 1;
+    }
+}
+
+static void select_frame(osc_game *g, osc_fighter *f)
+{
+    sel_frames(g, f);
+    sel_stores(g, f, opp(g, f));
+    special_motion(g, f);
+    sel_run_turn(g, f);
+    fx_spawns_for(g, f, f == &g->p[1] ? 1 : 2);
+    fx_sounds_for(g, f);
+    sel_boxes(f);
+}
+
+/* the pose alone (select and ending screens): frame and boxes, no side effects on the fight */
+static void select_pose(osc_game *g, osc_fighter *f)
+{
+    sel_frames(g, f);
+    sel_boxes(f);
 }
 
 /* ---- walking with body push (sub_47648c) ---------------------------------- */
@@ -584,7 +787,7 @@ static void melee_step(osc_game *g, osc_fighter *a)
             if (a->hit_level == 1) g->hit_stop = osc_random(g, 4) + 5;
             if (a->hit_level == 2) g->hit_stop = osc_random(g, 4) + 7;
         }
-        select_frame(v);
+        select_frame(g, v);
     }
     /* the attacker bounces off a cornered victim */
     if (!g->no_push) {
@@ -689,7 +892,7 @@ static void update_fx(osc_game *g)
                 }
                 if (!e->persist) e->type = 0;
                 e->has_hitbox = false;
-                select_frame(v);
+                select_frame(g, v);
             }
             /* pickups dropped by the passer-by: 20 or 30 health (0x490308) */
             if ((e->type == 3 || e->type == 4) && e->phase > 13 && v->health > 0.0 && !g->no_push) {
@@ -997,7 +1200,7 @@ static void special_motion(osc_game *g, osc_fighter *f)
 }
 
 /* ---- desenhalutador's logic part (0x490bb8): facing, frame, spin ---------------- */
-static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
+static void fighter_frame(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
     bool paused = g->hit_stop || g->super_pause;
@@ -1006,10 +1209,7 @@ static void fighter_frame(osc_game *g, osc_fighter *f, int pidx)
         if (f->x >= o->x) f->facing = 2;
     }
     if (!paused) {
-        select_frame(f);
-        special_motion(g, f);
-        fx_spawns_for(g, f, pidx);
-        fx_sounds_for(g, f);
+        select_frame(g, f);
         f->rot += f->rot_step;
     }
     if (f->state != 12 && f->state != 19) { f->rot = 0; f->rot_step = 0; }
@@ -1269,7 +1469,6 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         return;
     }
     g->p[1].in = in1; g->p[2].in = in2;
-
     /* round 1: both fighters jump in from the stage edges (0x4a44cb) */
     if (g->round_no == 1 && g->round_start == 0) {
         for (int i = 1; i <= 2; i++) {
@@ -1356,8 +1555,8 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     for (int i = 1; i <= 2; i++) counters(g, &g->p[i]);
     stage_objects(g);
     /* fighters in drawing order: the one who hit last goes on top */
-    if (g->p[1].on_top) { fighter_frame(g, &g->p[2], 2); fighter_frame(g, &g->p[1], 1); }
-    else { fighter_frame(g, &g->p[1], 1); fighter_frame(g, &g->p[2], 2); }
+    if (g->p[1].on_top) { fighter_frame(g, &g->p[2]); fighter_frame(g, &g->p[1]); }
+    else { fighter_frame(g, &g->p[1]); fighter_frame(g, &g->p[2]); }
     if (!frozen && !g->challenge && !g->no_push)
         for (int i = 1; i <= 2; i++) defend(g, &g->p[i]);
     update_fx(g);
@@ -1920,7 +2119,7 @@ void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int tim
     if (!f->strip || !f->strip->count) return;
     f->x = x; f->y = y; f->state = state; f->anim_timer = timer; f->in_air = false; f->rot = 0;
     f->sprite_h = k_sprite_h[f->char_id];
-    select_frame(f);
+    select_pose(g, f);
     draw_fighter(g, f);
 }
 

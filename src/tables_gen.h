@@ -3,7 +3,13 @@
 #define OSC_TABLES_GEN_H
 #include <stdint.h>
 
-typedef struct { uint8_t ch, state; int8_t timer; uint8_t frame; } osc_anim_row;     /* timer -1 = any */
+/* frame stores of the selector (06f): ch 0 = any, ch_ne = any but; parity of the timer (psrc 0) or g_ciclo (1); cur > 0 frame is, < 0 frame is not;
+ * kind 1 adds Random(rnd) */
+typedef struct { uint8_t ch, ch_ne, state; int16_t t_lo, t_hi; uint8_t lvl, mod, meq, psrc; int16_t cur; uint8_t chance, kind, frame, rnd; } osc_anim_row;
+/* field stores of the selector (06g): extra tests xf 1 hits 2 comboTimer 3 opponent state 4 y, xo 1 == 2 >= 3 > 4 < 5 <= */
+typedef struct { uint8_t ch, state; int16_t t_lo, t_hi; uint8_t face, lvl; int16_t cur; uint8_t xf1, xo1; int16_t xv1; uint8_t xf2, xo2; int16_t xv2; uint8_t xf3, xo3; int16_t xv3; uint8_t who, field, op; int16_t val; } osc_sel_store_row;
+enum { OSC_SF_ATTACKING = 1, OSC_SF_KNOCKDOWN, OSC_SF_INAIR, OSC_SF_STATE, OSC_SF_FACING, OSC_SF_JUMPDIR, OSC_SF_DAMAGE, OSC_SF_HITSTUN,
+       OSC_SF_TIMER, OSC_SF_DUR, OSC_SF_VY, OSC_SF_INVULN, OSC_SF_BLOCKING, OSC_SF_HITS, OSC_SF_COMBO, OSC_SF_ROTSTEP };
 typedef struct { uint8_t ch, frame; int16_t l, b, r, t; } osc_hurt_row;             /* from sprite top-left */
 typedef struct { uint8_t ch, state, timer, p4, dmg, level, atk; int16_t b, r, t, l; } osc_hit_row;
 typedef struct { uint8_t ch, move; uint32_t from_mask; uint8_t state, dur, meter10; int8_t snd; uint8_t flags, needs_fx, strength; } osc_move_row;
@@ -47,7 +53,8 @@ extern const osc_fx_sound_row osc_fx_sounds[57];
 #define OSC_N_FX_SOUNDS 57
 
 extern const int8_t osc_frame_offset[16][64];
-extern const osc_anim_row osc_anim[379];
+extern const osc_anim_row osc_anim[413];
+extern const osc_sel_store_row osc_sel_store[117];
 extern const osc_hurt_row osc_hurt[305];
 extern const osc_hit_row osc_hit[379];
 extern const osc_move_row osc_moves[177];
@@ -55,7 +62,8 @@ extern const osc_seq_row osc_seqs[187];
 extern const osc_golpe_row osc_golpe[186];
 extern const osc_cpu_row osc_cpu[86];
 extern const osc_ending_row osc_endings[154];
-#define OSC_N_ANIM 379
+#define OSC_N_ANIM 413
+#define OSC_N_SEL_STORE 117
 #define OSC_N_HURT 305
 #define OSC_N_HIT 379
 #define OSC_N_MOVES 177
