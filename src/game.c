@@ -2158,5 +2158,5 @@ void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int tim
     draw_fighter(g, f);
 }
 
-void osc_spawn_fx(osc_game *g, int type, int x, int y) { spawn_fx(g, type, 0, 1, x, y); }
+void osc_spawn_fx(osc_game *g, int type, int x, int y) { spawn_fx(g, type, 0, 0, x, y); }   /* endings: owner 0 */
 void osc_fx_tick(osc_game *g) { update_fx(g); }

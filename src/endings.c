@@ -9,6 +9,12 @@
 
 static const int k_base[16] = {0, 0, 44, 88, 125, 166, 210, 254, 298, 342, 386, 430, 474, 518, 562, 606};
 
+/* The picture of the tick last run: the original draws, spawns and rolls the flash colours inside
+ * DXTimer1Timer, so the work is done in the tick and render only replays it (render can run
+ * more or less often than the tick). */
+static int s_c;               /* counter of the last tick, as the original drew it */
+static int s_flash_g[OSC_N_ENDINGS], s_flash_b[OSC_N_ENDINGS];
+
 static void fillr(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
 {
     SDL_FRect d = {x1, y1, x2 - x1, y2 - y1};
@@ -20,7 +26,7 @@ void osc_ending_start(osc_game *g, int ch)
 {
     g->ending_char = ch < 1 || ch > 15 ? 1 : ch;
     g->screen = OSC_SCREEN_ENDING;
-    g->screen_tick = 0;
+    g->screen_tick = 0; s_c = 0;
     g->cam_x = 0; g->cam_y = 0;
     memset(g->fx, 0, sizeof g->fx);
     g->p[1].in_prev = g->p[2].in_prev = 0xff;
@@ -36,42 +42,54 @@ void osc_ending_seek(osc_game *g, int tick)
         if (r->op == OSC_END_STAGE) osc_load_stage(g, r->a);
         else if (r->op == OSC_END_CHAR) osc_load_fighter(g, r->a, r->b);
     }
-    g->screen_tick = tick;
+    g->screen_tick = tick; s_c = tick;
 }
 
 static bool row_active(const osc_ending_row *r, int c)
 {
-    if (r->alt) return c <= r->to || c >= r->from;
     return c >= r->from && c <= r->to;
+}
+
+static void spawn_row(osc_game *g, int type)
+{
+    int x, y;
+    if (type == 1) { x = osc_random(g, 150) + 130; y = osc_random(g, 100) + 100; }
+    else if (type == 25) { x = osc_random(g, 60) + 250; y = osc_random(g, 20) + 110; }
+    else { x = osc_random(g, 100) + 150; y = osc_random(g, 30) + 60; }
+    osc_spawn_fx(g, type, x, y);
 }
 
 void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     if (g->screen == OSC_SCREEN_CREDITS) {
+        /* state 11 draws, then counts: 201 frames, then state 9 with both countdown bytes at 0 ("FIM DO JOGO") */
         g->screen_tick++;
         if (g->screen_tick > 200) {
             g->screen = OSC_SCREEN_CONTINUE; g->screen_tick = 0;
-            g->timer_sec = 9; g->timer_sub = 25;
+            g->timer_sec = 0; g->timer_sub = 0;
         }
         return;
     }
     int c = g->screen_tick;
-    uint8_t pressed = (uint8_t)((in1 & ~g->p[1].in_prev) | (in2 & ~g->p[2].in_prev));
     g->p[1].in_prev = in1; g->p[2].in_prev = in2;
-    /* loads at exact ticks */
+    /* loads, spawns and flash colours of this tick, in the order of the code */
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
-        if (r->ch != g->ending_char || r->from != r->to || r->from != c) continue;
-        if (r->op == OSC_END_STAGE) osc_load_stage(g, r->a);
-        else if (r->op == OSC_END_CHAR) osc_load_fighter(g, r->a, r->b);
+        if (r->ch != g->ending_char || !row_active(r, c)) continue;
+        if (r->from == r->to && r->op == OSC_END_STAGE) osc_load_stage(g, r->a);
+        else if (r->from == r->to && r->op == OSC_END_CHAR) osc_load_fighter(g, r->a, r->b);
+        else if (r->op == OSC_END_SPAWN && !(r->chance && osc_random(g, r->chance) != 0)) spawn_row(g, r->a);
+        else if (r->op == OSC_END_FLASH) { s_flash_g[i] = osc_random(g, 255); s_flash_b[i] = osc_random(g, 255); }
     }
+    s_c = c;
     osc_fx_tick(g);
     g->screen_tick++;
     if (g->screen_tick > 2200) {
         g->screen = OSC_SCREEN_CREDITS; g->screen_tick = 0; g->ciclo = 0;
         return;
     }
-    if (pressed & (OSC_IN_B1 | OSC_IN_B2 | OSC_IN_B3 | OSC_IN_B4)) {
+    /* a held button 1 of a human player skips to the end of the 100-tick block (level, not edge) */
+    if (((in1 & OSC_IN_B1) && g->p[1].human) || ((in2 & OSC_IN_B1) && g->p[2].human)) {
         for (int i = 0; i < 21; i++)
             if (g->screen_tick > i * 100 + 5 && g->screen_tick < i * 100 + 85) { g->screen_tick = i * 100 + 85; break; }
     }
@@ -94,7 +112,7 @@ static void credits_render(osc_game *g)
 void osc_ending_render(osc_game *g)
 {
     if (g->screen == OSC_SCREEN_CREDITS) { credits_render(g); return; }
-    int c = g->screen_tick;
+    int c = s_c;
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
     if (g->stage) {
@@ -104,12 +122,11 @@ void osc_ending_render(osc_game *g)
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
         if (r->ch != g->ending_char || !row_active(r, c)) continue;
-        if (r->chance && osc_random(g, r->chance) != 0) continue;
         switch (r->op) {
         case OSC_END_FIGHTER: osc_draw_fighter_at(g, r->a, r->b, r->c, r->d, r->e); break;
         case OSC_END_SHADOW:
             if (g->n_fx_tex > 0 && g->fx_tex[0]) {
-                SDL_FRect d = {(float)r->a, (float)r->b, (float)(r->c - r->a), (float)(r->d - r->b)};
+                SDL_FRect d = {(float)r->a, (float)r->b, (float)(r->c - r->a), (float)(r->d - r->b)};   /* l t r b */
                 SDL_SetTextureAlphaMod(g->fx_tex[0], 70);
                 SDL_RenderTexture(g->ren, g->fx_tex[0], NULL, &d);
                 SDL_SetTextureAlphaMod(g->fx_tex[0], 255);
@@ -122,22 +139,8 @@ void osc_ending_render(osc_game *g)
             }
             break;
         case OSC_END_BLACK: fillr(g, 0, 0, 400, 300, 0, 0, 0); break;
-        case OSC_END_FLASH: fillr(g, 50, 50, 350, 220, 255, (Uint8)osc_random(g, 255), (Uint8)osc_random(g, 255)); break;
-        case OSC_END_SPAWN:
-            if (r->a == 1) {
-                int x = osc_random(g, 150) + 130;
-                int y = osc_random(g, 100) + 100;
-                osc_spawn_fx(g, 1, x, y);
-            } else if (r->a == 25) {
-                int x = osc_random(g, 60) + 250;
-                int y = osc_random(g, 20) + 110;
-                osc_spawn_fx(g, 25, x, y);
-            } else {
-                int x = osc_random(g, 100) + 150;
-                int y = osc_random(g, 30) + 60;
-                osc_spawn_fx(g, r->a, x, y);
-            }
-            break;
+        case OSC_END_FLASH: fillr(g, 50, 50, 350, 220, 255, (Uint8)s_flash_g[i], (Uint8)s_flash_b[i]); break;
+        case OSC_END_SPAWN: break;   /* spawned by the tick */
         default: break;
         }
     }
@@ -148,8 +151,8 @@ void osc_ending_render(osc_game *g)
     fillr(g, 0, 50, 50, 220, 0, 0, 0);
     fillr(g, 350, 50, 400, 220, 0, 0, 0);
     /* dialogue: segment k of 200 ticks, speaker tag + 3 lines */
+    if (c >= 2200) return;   /* the dialogue is drawn for c < 2200 */
     int k = c / 200;
-    if (k > 10) k = 10;
     int base = k_base[g->ending_char] + 4 * k;
     const char *tag = osc_text(OSC_MEMO_DIALOGO, base, g->lang);
     int speaker = (tag && tag[0] >= 'A' && tag[0] <= 'O') ? tag[0] - 'A' + 1 : 0;

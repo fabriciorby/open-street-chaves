@@ -19,9 +19,12 @@ faithful port.
    summary in 07b); exact pixel values for the parts shown as `{…}`
    expressions should be evaluated once when porting.
 6. ~~Intro cinematic and the 15 ending choreographies~~ — transcribed
-   (07b "Attract", `07e-endings.txt` via `re/tools/endings.py`). Open:
-   whether the ending fighters animate (the port shows the scripted
-   state/timer frame), and the exact spawn boxes of the fireworks.
+   (07b "Attract", `07e-endings.txt` via `re/tools/endings_emu.py`, which runs the
+   code). Answered in 07b "Endings reviewed against the binary": the ending
+   fighters do not animate by themselves (desenhalutador is given a fixed
+   state/timer each tick and runs the frame selector on it), and the firework
+   spawn boxes are type 1 x 130..279 y 100..199, 24 x 150..249 y 60..89,
+   25 x 250..309 y 110..129.
 7. `healthShown` (+0x48), +0x50, +0x14, +0x7c, +0xac..+0xaf of the player
    record; `0x4b449d` (round-end
    transition style 1..4). ~~`0x4b58a2/a3`~~ — resolved: FormCreate counts the

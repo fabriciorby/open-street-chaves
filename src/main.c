@@ -95,13 +95,14 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
         else if (strcmp(argv[i], "--es") == 0) lang = 1;
         else if (strcmp(argv[i], "--tick") == 0 && i + 1 < argc) start_tick = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--battle") == 0 && i + 1 < argc) battle = (int)SDL_strtol(argv[++i], NULL, 10);
+        else if (strcmp(argv[i], "--ending") == 0 && i + 1 < argc) { start_screen = OSC_SCREEN_ENDING; c1 = (int)SDL_strtol(argv[++i], NULL, 10); }   /* --ending N [--tick T]: character N's ending from tick T */
         else if (strcmp(argv[i], "--screen") == 0 && i + 1 < argc) start_screen = (int)SDL_strtol(argv[++i], NULL, 10);
         else if (strcmp(argv[i], "--press") == 0 && i + 1 < argc && n_press < 16) {   /* --press 60:5 (tick:key name) */
             const char *spec = argv[++i], *colon = strchr(spec, ':');
             if (colon) { press_tick[n_press] = SDL_strtol(spec, NULL, 10); press_key[n_press] = SDL_GetScancodeFromName(colon + 1); n_press++; }
         }
         else if (strcmp(argv[i], "--help") == 0) {
-            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N --battle N] [--tick N] [--screen N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
+            SDL_Log("usage: open-street-chaves --data <Street Chaves folder> [--2p] [--es] [--fight --p1 N --p2 N --stage N --battle N] [--tick N] [--screen N] [--ending N] [--frames N --screenshot f.bmp] [--demo] [--autofire] [--boxes]");
             return SDL_APP_SUCCESS;
         }
     }
@@ -149,6 +150,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
     if (a->loaded && !(direct || demo) && (start_screen == OSC_SCREEN_MENU_F1 || start_screen == OSC_SCREEN_MENU_F2)) osc_menu_enter(&a->game, start_screen);
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_ENDING) { osc_ending_start(&a->game, c1); osc_ending_seek(&a->game, start_tick); }
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CREDITS) { a->game.screen = OSC_SCREEN_CREDITS; a->game.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
         osc_game *g = &a->game;
