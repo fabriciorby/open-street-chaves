@@ -2044,12 +2044,11 @@ void osc_fight_render(osc_game *g)
     if (g->flash_on) barra(g, 0, 0, 400, 300, rgb(255, 0, 0));
     if (g->show_moves) osc_movelist_render(g);   /* 0x4aa31c, state 7 only */
     if (g->challenge > 0) {
-        SDL_FRect box = {80, 100, 240, 70};
-        SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255); SDL_RenderFillRect(g->ren, &box);
-        SDL_SetRenderDrawColor(g->ren, 255, 255, 255, 255); SDL_RenderRect(g->ren, &box);
-        osc_text_ex(g, 200, 100, osc_text(OSC_MEMO_TEXTO, 9, g->lang), 'c', 12, 255, 255, 255);    /* ESPERE ... */
-        osc_text_ex(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 10, g->lang), 'c', 12, 255, 255, 255);   /* ALGUÉM ENTROU */
-        osc_text_ex(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 11, g->lang), 'c', 12, 255, 255, 255);   /* NO COMBATE ! */
+        osc_rgb pink = rgb(250, 140, 140);
+        barraredonda(g, 80, 100, 320, 170, 10, k_white, k_black);                   /* 0x4ae384 */
+        texto(g, 200, 100, osc_text(OSC_MEMO_TEXTO, 9, g->lang), 'c', 15, pink);    /* ESPERE ... */
+        texto(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 10, g->lang), 'c', 15, pink);   /* ALGUÉM ENTROU */
+        texto(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 11, g->lang), 'c', 15, pink);   /* NO COMBATE ! */
     }
 }
 

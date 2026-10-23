@@ -61,7 +61,7 @@ extern const osc_move_row osc_moves[177];
 extern const osc_seq_row osc_seqs[187];
 extern const osc_golpe_row osc_golpe[186];
 extern const osc_cpu_row osc_cpu[86];
-extern const osc_ending_row osc_endings[154];
+extern const osc_ending_row osc_endings[160];
 #define OSC_N_ANIM 413
 #define OSC_N_SEL_STORE 117
 #define OSC_N_HURT 305
@@ -70,5 +70,5 @@ extern const osc_ending_row osc_endings[154];
 #define OSC_N_SEQS 187
 #define OSC_N_GOLPE 186
 #define OSC_N_CPU 86
-#define OSC_N_ENDINGS 154
+#define OSC_N_ENDINGS 160
 #endif

@@ -124,8 +124,19 @@ void osc_ending_render(osc_game *g)
         case OSC_END_BLACK: fillr(g, 0, 0, 400, 300, 0, 0, 0); break;
         case OSC_END_FLASH: fillr(g, 50, 50, 350, 220, 255, (Uint8)osc_random(g, 255), (Uint8)osc_random(g, 255)); break;
         case OSC_END_SPAWN:
-            if (r->a == 1) osc_spawn_fx(g, 1, osc_random(g, 150) + 130, osc_random(g, 100) + 100);
-            else osc_spawn_fx(g, r->a, osc_random(g, 100) + 150, osc_random(g, 30) + 60);
+            if (r->a == 1) {
+                int x = osc_random(g, 150) + 130;
+                int y = osc_random(g, 100) + 100;
+                osc_spawn_fx(g, 1, x, y);
+            } else if (r->a == 25) {
+                int x = osc_random(g, 60) + 250;
+                int y = osc_random(g, 20) + 110;
+                osc_spawn_fx(g, 25, x, y);
+            } else {
+                int x = osc_random(g, 100) + 150;
+                int y = osc_random(g, 30) + 60;
+                osc_spawn_fx(g, r->a, x, y);
+            }
             break;
         default: break;
         }
