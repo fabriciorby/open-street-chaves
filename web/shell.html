@@ -26,22 +26,36 @@
   @media (orientation: landscape) and (max-height: 600px) { html.touch.playing .touchhint { display: none; } }
   #pad, #padToggle, #pad * { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
   #pad { position: fixed; left: 0; right: 0; bottom: 0; top: 0; pointer-events: none; opacity: .35; z-index: 5;
-         --d: min(38vw, 46vh); --b: min(17vw, 22vh); --s: min(12vw, 16vh); }
+         --d: min(36vw, 42vh); --a: min(44vw, 44vh); --b: calc(var(--a) * .37); --pw: min(24vw, 30vh); --ph: min(11vw, 14vh); }
+  @media (orientation: landscape) { #pad { --d: min(30vw, 40vh); --a: min(34vw, 42vh); --pw: min(12vw, 18vh); --ph: min(4.5vw, 7vh); } }
   #pad.hidden { display: none !important; }
   #pad > * { pointer-events: auto; position: absolute; }
-  #dpad { left: 3vmin; bottom: 4vmin; width: var(--d); height: var(--d); border-radius: 50%; background: #fff3; border: 2px solid #fff; }
-  #dpad i { position: absolute; width: 30%; height: 30%; border-radius: 6px; background: #fff4; }
-  #dpad i.on { background: #fff; }
-  #dpad i::after { content: ""; position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; background: #000; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-  #dpad .u { left: 35%; top: 4%; } #dpad .d { left: 35%; bottom: 4%; transform: rotate(180deg); }
-  #dpad .l { left: 4%; top: 35%; transform: rotate(-90deg); } #dpad .r { right: 4%; top: 35%; transform: rotate(90deg); }
-  #acts { right: 3vmin; bottom: 4vmin; display: grid; grid-template-columns: repeat(2, var(--b)); gap: 2vmin; }
-  .btn { display: flex; align-items: center; justify-content: center; font: bold 1.3em sans-serif; color: #000; background: #fff8; border: 2px solid #fff; box-sizing: border-box; }
-  .btn.on { background: #fff; }
-  #acts .btn { height: var(--b); border-radius: 50%; }
-  #sys { left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 2vmin; }
-  @media (orientation: portrait) { #sys { bottom: calc(var(--d) + 8vmin); } }
-  #sys .btn { width: var(--s); height: calc(var(--s) * .6); border-radius: 999px; font-size: 1em; }
+  /* SNES cross: dark plus in a light round recess; each arm lights up when pressed */
+  #dpad { left: 3vmin; bottom: 4vmin; width: var(--d); height: var(--d); border-radius: 50%; background: #e6e6ee; border: 3px solid #fff; box-shadow: inset 0 0 0 4px #b8b8c4; box-sizing: border-box; }
+  #dpad i, #dpad b { position: absolute; background: #3c3c44; }
+  #dpad b { left: 33%; top: 33%; width: 34%; height: 34%; }
+  #dpad i { width: 34%; height: 34%; }
+  #dpad i.on { background: #000; }
+  #dpad i::after { content: ""; position: absolute; left: 26%; top: 24%; width: 48%; height: 40%; background: #8a8a96; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  #dpad i.on::after { background: #fff; }
+  #dpad .u { left: 33%; top: 11%; border-radius: 6px 6px 0 0; } #dpad .d { left: 33%; bottom: 11%; transform: rotate(180deg); border-radius: 6px 6px 0 0; }
+  #dpad .l { left: 11%; top: 33%; transform: rotate(-90deg); border-radius: 6px 6px 0 0; } #dpad .r { right: 11%; top: 33%; transform: rotate(90deg); border-radius: 6px 6px 0 0; }
+  /* SNES face buttons: diamond on a tilted grey plate */
+  #acts { right: 3vmin; bottom: 4vmin; width: var(--a); height: var(--a); }
+  #acts::before { content: ""; position: absolute; left: -2%; right: -2%; top: 18%; bottom: 18%; border-radius: 999px; background: #c4c4cc; border: 3px solid #fff; transform: rotate(-30deg); pointer-events: none; }
+  .btn { display: flex; align-items: center; justify-content: center; font: bold 1.3em sans-serif; box-sizing: border-box; }
+  #acts .btn { position: absolute; width: var(--b); height: var(--b); border-radius: 50%; color: #fff; border: 2px solid #fff; background: #5a4fcf; }
+  #acts .btn.lt { background: #c8c2f0; color: #2a2560; }
+  #acts .btn.on { background: #fff; color: #000; }
+  #acts [data-k=KeyX] { left: calc(50% - var(--b) / 2); top: 2%; } #acts [data-k=KeyC] { left: calc(50% - var(--b) / 2); bottom: 2%; }
+  #acts [data-k=KeyZ] { left: 2%; top: calc(50% - var(--b) / 2); } #acts [data-k=KeyV] { right: 2%; top: calc(50% - var(--b) / 2); }
+  /* Select/Start style pills: slim slanted pill, generous touch box, small italic label */
+  #sys { left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 1vmin; }
+  @media (orientation: portrait) { #sys { bottom: calc(max(var(--d), var(--a)) + 8vmin); } }
+  #sys .btn { position: relative; width: var(--pw); height: calc(var(--ph) * 2.2); flex-direction: column; justify-content: center; gap: 6px; font: italic bold .65em sans-serif; letter-spacing: .08em; color: #fff; }
+  #sys .btn::before { content: ""; width: 70%; height: var(--ph); max-height: 22px; border-radius: 999px; background: #55555e; border: 2px solid #fff; transform: rotate(-25deg); box-sizing: border-box; }
+  #sys .btn.on::before { background: #fff; }
+  @media (orientation: landscape) { #sys { bottom: 0; } #sys .btn { font-size: .55em; gap: 2px; } }
   #padToggle { position: fixed; top: 6px; right: 6px; z-index: 6; margin: 0; padding: 4px 8px; font-size: .8em; opacity: .5; touch-action: manipulation; }
 </style>
 </head>
@@ -61,11 +75,11 @@
 </div>
 <p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
 <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
-<p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>5</b> coin and <b>1</b>/<b>2</b> start in the middle.</p>
+<p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>FICHA</b> to insert a coin and <b>START</b> to play.</p>
 <div id="pad">
-  <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
-  <div id="sys"><div class="btn" data-k="Digit5">5</div><div class="btn" data-k="Digit1">1P</div><div class="btn" data-k="Digit2">2P</div></div>
-  <div id="acts"><div class="btn" data-k="KeyZ">Z</div><div class="btn" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
+  <div id="dpad"><b></b><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+  <div id="sys"><div class="btn" data-k="Digit5">FICHA</div><div class="btn" data-k="Digit1">START</div></div>
+  <div id="acts"><div class="btn lt" data-k="KeyZ">Z</div><div class="btn lt" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
 </div>
 <button id="padToggle">hide pad</button>
 <script>

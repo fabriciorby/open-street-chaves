@@ -69,7 +69,7 @@ Pre-built binaries for every platform are produced by GitHub Actions on each
 push (see the *Actions* tab → artifacts). The web build asks for your game
 folder (or its `.zip`, by picker or drag and drop); the files are read in the
 browser only and cached in its IndexedDB storage.
-On touch devices a semi-transparent on-screen gamepad (D-pad, Z X C V, coin, 1P/2P) appears once the game starts.
+On touch devices a semi-transparent on-screen gamepad (D-pad, Z X C V, FICHA coin, START) appears once the game starts.
 
 ### Web build on GitHub Pages
 
