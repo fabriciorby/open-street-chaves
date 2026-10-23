@@ -34,6 +34,7 @@ add_executable(open-street-chaves
   src/menu.c
   src/font.c
   src/endings.c
+  src/movelist.c
 )
 # Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.
 set_target_properties(open-street-chaves PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)

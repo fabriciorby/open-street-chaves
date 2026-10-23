@@ -21,5 +21,7 @@ void osc_text_free(void);
 /* Memo line as in docs/spec/07, language 0 = Portuguese, 1 = Spanish. UTF-8. */
 const char *osc_text(int memo, int line, int lang);
 int osc_text_count(void);
+/* Raw string constant by its index in CODE order (docs/spec/07d); "" when out of range. */
+const char *osc_text_const(int index);
 
 #endif

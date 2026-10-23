@@ -110,6 +110,12 @@ typedef struct {
     int hit_stop, super_pause;
     int timer_sec, timer_sub;
     bool paused, no_push, debug_boxes;
+    bool timer_off;          /* DXTimer1.Enabled = false: set after the tick that ends with g_paused == 1 */
+    bool show_moves;         /* g_showMoves: G drew the move list */
+    int speed_delay;         /* g_speedDelay = DXTimer1.Interval in ms, 0..80 (- / = keys) */
+    int speed_overlay;       /* g_speedOverlayTimer: ticks left of the VELOCIDADE bar */
+    bool speed_overlay_draw; /* the bar was drawn in the last tick */
+    int view_dx;             /* DXDraw1.Left, -40..40 (, / . keys) */
     uint32_t rng;        /* Delphi RandSeed */
     osc_wav music;
     bool has_music;
@@ -192,6 +198,8 @@ void osc_fight_render(osc_game *g);
 void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered);
 /* TForm1.texto: align 'c' centred, 'e' right-aligned, else left; size in points of the original font. */
 void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b);
+void osc_movelist_render(osc_game *g);   /* G: mostragolpe */
+void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G */
 int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
 void osc_play_snd(osc_game *g, int idx);
 void osc_go_attract(osc_game *g, int tick);

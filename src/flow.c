@@ -591,7 +591,7 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
     }
 }
 
-void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
+static void game_tick_body(osc_game *g, uint8_t in1, uint8_t in2)
 {
     handle_keys(g, in1, in2);
     switch (g->screen) {
@@ -619,6 +619,46 @@ void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
     }
 }
 
+/* FormKeyDown (0x49e2e8): speed, picture shift, pause and the move list */
+void osc_game_key(osc_game *g, SDL_Keycode key)
+{
+    if (key == SDLK_MINUS && g->speed_delay < 0x50) g->speed_delay++;
+    if (key == SDLK_EQUALS && g->speed_delay >= 1) g->speed_delay--;
+    if (key == SDLK_MINUS || key == SDLK_EQUALS) g->speed_overlay = 30;
+    if (key == SDLK_COMMA && g->view_dx > -40) g->view_dx--;
+    if (key == SDLK_PERIOD && g->view_dx < 40) g->view_dx++;
+    bool p = key == SDLK_P, gk = key == SDLK_G && g->screen == OSC_SCREEN_FIGHT;
+    if (p || gk) {
+        if (!g->paused) {
+            g->paused = true;
+            if (gk) g->show_moves = true;
+        } else {
+            g->timer_off = false;   /* DXTimer1.Enabled := True */
+            g->paused = false;
+            g->show_moves = false;
+        }
+    }
+}
+
+/* DXTimer1Timer: the whole tick, then the VELOCIDADE bar (0x4ae1bd) and, if g_paused,
+ * DXTimer1.Enabled := False so the last frame stays on screen. */
+void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
+{
+    if (g->timer_off) return;
+    game_tick_body(g, in1, in2);
+    g->speed_overlay_draw = g->speed_overlay > 0 && g->screen != OSC_SCREEN_MENU_F1 && g->screen != OSC_SCREEN_MENU_F2;
+    if (g->speed_overlay_draw) g->speed_overlay--;
+    if (g->paused) g->timer_off = true;
+}
+
+static void speed_bar(osc_game *g)
+{
+    texto(g, 200, 260, osc_text_const(1642), 'c', 8, k_white);   /* VELOCIDADE */
+    int v = 238 - (int)nearbyint(g->speed_delay / 1.05);
+    barra(g, 160, 278, 240, 280, k_white);
+    barra(g, v, 275, v + 2, 283, rgb(255, 50, 50));
+}
+
 static void osc_game_render_screen(osc_game *g);
 
 static void footer(osc_game *g)
@@ -639,6 +679,7 @@ void osc_game_render(osc_game *g)
 {
     osc_game_render_screen(g);
     if (g->screen != OSC_SCREEN_MENU_F1 && g->screen != OSC_SCREEN_MENU_F2) footer(g);
+    if (g->speed_overlay_draw) speed_bar(g);
 }
 
 static void osc_game_render_screen(osc_game *g)

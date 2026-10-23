@@ -89,6 +89,11 @@ void osc_text_free(void)
 
 int osc_text_count(void) { return g_count; }
 
+const char *osc_text_const(int index)
+{
+    return index >= 0 && index < g_count ? g_strs[index] : "";
+}
+
 const char *osc_text(int memo, int line, int lang)
 {
     if (memo < 0 || memo > 6) return "";

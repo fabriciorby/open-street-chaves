@@ -889,6 +889,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     memset(g, 0, sizeof *g);
     g->ai_p2 = ai_p2;
     g->lang = lang;
+    g->speed_delay = OSC_TICK_MS;   /* FormCreate: g_speedDelay = 28 */
     g->ren = ren;
     g->rng = (uint32_t)SDL_GetTicksNS();
     SDL_strlcpy(g->data_dir, data_dir, sizeof g->data_dir);
@@ -1081,7 +1082,6 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
-    if (g->paused) return;
     if (g->demo > 0) { g->timer_sec = 99; g->timer_sub = 25; }   /* attract demo: clock frozen */
     if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
         g->no_push = true;
@@ -1667,6 +1667,7 @@ void osc_fight_render(osc_game *g)
     draw_round_texts(g);
     draw_dialogue(g);
     if (g->flash_on) barra(g, 0, 0, 400, 300, rgb(255, 0, 0));
+    if (g->show_moves) osc_movelist_render(g);   /* 0x4aa31c, state 7 only */
     if (g->challenge > 0) {
         SDL_FRect box = {80, 100, 240, 70};
         SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255); SDL_RenderFillRect(g->ren, &box);

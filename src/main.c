@@ -9,7 +9,7 @@
  *                      [--demo] [--boxes]
  *
  * Keys: P1 arrows + Z X C V, P2 W A S D + F G H J (weak punch, weak kick,
- * strong punch, strong kick), P pause, B toggle hit boxes, Esc quit.
+ * strong punch, strong kick), P pause, G move list, - = speed, , . shift picture, B toggle hit boxes, Esc quit.
  */
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL.h>
@@ -42,7 +42,6 @@ typedef struct {
     bool autofire; /* scripted P1 fireballs for headless tests */
 } app;
 
-static const Uint64 TICK_NS = (Uint64)OSC_TICK_MS * 1000000ull;
 
 static uint8_t read_input(const bool *k, const SDL_Scancode *map)
 {
@@ -184,7 +183,7 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
         if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.key_start1 = true;
         if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.key_start2 = true;
         if (e->key.key == SDLK_ESCAPE) return SDL_APP_SUCCESS;
-        if (e->key.key == SDLK_P && !e->key.repeat) a->game.paused = !a->game.paused;
+        if (a->loaded && !(e->key.repeat && (e->key.key == SDLK_P || e->key.key == SDLK_G))) osc_game_key(&a->game, e->key.key);   /* - = , . repeat like WM_KEYDOWN */
         if (e->key.key == SDLK_B && !e->key.repeat) a->game.debug_boxes = !a->game.debug_boxes;
         if (e->key.scancode < SDL_SCANCODE_COUNT) a->keys[e->key.scancode] = true;
         break;
@@ -244,6 +243,8 @@ SDL_AppResult SDL_AppIterate(void *state)
         a->last_ns = SDL_GetTicksNS();
     }
 #endif
+    /* DXTimer1.Interval = g_speedDelay ms; 0 runs one tick per frame */
+    const Uint64 TICK_NS = (Uint64)(a->game.speed_delay > 0 ? a->game.speed_delay : 1) * 1000000ull;
     Uint64 now = SDL_GetTicksNS();
     a->acc_ns += now - a->last_ns;
     a->last_ns = now;
@@ -257,16 +258,26 @@ SDL_AppResult SDL_AppIterate(void *state)
             uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
             uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[1]) | pad_input(a->pads[1]));
             for (int i = 0; i < a->n_press; i++) {   /* scripted key taps for headless tests */
-                if (a->press_tick[i] == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_DOWN; ev.key.scancode = a->press_key[i]; SDL_AppEvent(a, &ev); }
-                if (a->press_tick[i] + 3 == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_UP; ev.key.scancode = a->press_key[i]; SDL_AppEvent(a, &ev); }
+                if (a->press_tick[i] == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_DOWN; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }
+                if (a->press_tick[i] + 3 == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_UP; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }
             }
             a->ticks_run++;
             osc_game_tick(&a->game, in1, in2);
         }
         a->acc_ns -= TICK_NS;
+        if (a->game.speed_delay == 0) a->acc_ns = 0;
     }
     if (a->loaded) {
+        /* DXDraw1.Left shift: the 400x300 picture slides, the form behind it is black */
+        int dx = a->game.view_dx;
+        SDL_SetRenderViewport(a->ren, NULL); SDL_SetRenderClipRect(a->ren, NULL);
+        if (dx) {
+            SDL_SetRenderDrawColor(a->ren, 0, 0, 0, 255); SDL_RenderClear(a->ren);
+            SDL_Rect vp = {dx, 0, OSC_SCREEN_W, OSC_SCREEN_H}, clip = {-dx, 0, OSC_SCREEN_W, OSC_SCREEN_H};
+            SDL_SetRenderViewport(a->ren, &vp); SDL_SetRenderClipRect(a->ren, &clip);
+        }
         osc_game_render(&a->game);
+        SDL_SetRenderViewport(a->ren, NULL); SDL_SetRenderClipRect(a->ren, NULL);
     } else {
         SDL_SetRenderDrawColor(a->ren, 40, 0, 0, 255);
         SDL_RenderClear(a->ren);
