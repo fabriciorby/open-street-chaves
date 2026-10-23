@@ -8,17 +8,22 @@
   body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
   /* the canvas size comes from layout() in the script (--cw/--ch, always 4:3); 800x600 until then */
   canvas { width: var(--cw, 800px); height: var(--ch, 600px); image-rendering: pixelated; background: #000; display: block; }
-  #stage { display: flex; flex-direction: column; align-items: center; }
+  #stage { display: flex; flex-direction: column; align-items: center; width: 100%; }
   #stage:fullscreen, #stage:-webkit-full-screen { background: #000; justify-content: center; width: 100%; height: 100%; }
   /* toolbar under the canvas (after the game started); on touch devices it floats top-right */
-  #tools { display: none; align-items: center; gap: 6px; padding: 4px 0; font-size: .8em; opacity: .75; }
+  #tools { display: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; box-sizing: border-box; width: 100%; max-width: 1200px; padding: 4px 8px; font-size: .8em; opacity: .85; }
+  #keys { margin-right: auto; line-height: 1.9; }
+  #keys kbd { display: inline-block; min-width: 1.1em; padding: 0 5px; margin: 0 1px; border: 1px solid #888; border-bottom-width: 2px; border-radius: 4px; background: #222; color: #fff; font: bold 1em/1.4 sans-serif; text-align: center; }
+  #keys .sep { opacity: .5; margin: 0 4px; }
+  #ctl { display: flex; align-items: center; gap: 6px; }
+  html.touch #keys { display: none; }
   html.playing #tools { display: flex; }
   html.fs:not(.touch) #tools { display: none; }
   #tools button, #tools select { font-size: 1em; padding: 2px 8px; margin: 0; touch-action: manipulation; }
   #fs { display: none; }
   html.canfs #fs { display: inline-block; }
   html.touch #scalebox { display: none; }
-  html.touch #tools { position: fixed; top: 6px; right: 6px; z-index: 6; padding: 0; opacity: .5; }
+  html.touch #tools { position: fixed; top: 6px; right: 6px; z-index: 6; padding: 0; width: auto; opacity: .5; }
   #padToggle { display: none; }
   p, #picker { max-width: 800px; }
   #picker { margin: 12px 0; padding: 16px; border: 2px dashed #666; border-radius: 8px; text-align: center; }
@@ -30,7 +35,7 @@
   html.touch.playing { overflow: hidden; overscroll-behavior: none; }
   html.touch.playing #pad { display: block; }
   html.touch.playing #padToggle { display: inline-block; }
-  html.touch .keys { display: none; }
+  html.touch .keys, html.playing .keys { display: none; }
   html:not(.touch) .touchhint { display: none; }
   @media (orientation: landscape) and (max-height: 600px) { html.touch.playing .touchhint { display: none; } }
   #pad, #tools, #pad * { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -62,10 +67,11 @@
 <div id="stage">
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
 <div id="tools">
-  <span id="scalebox"><label for="scale">Escala:</label>
+  <span id="keys"><kbd>5</kbd> ficha<span class="sep">·</span><kbd>1</kbd>/<kbd>2</kbd> start<span class="sep">·</span><kbd>setas</kbd> + <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd> (P1)<span class="sep">·</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd> (P2)<span class="sep">·</span><kbd>F1</kbd>/<kbd>F2</kbd> menus</span>
+  <span id="ctl"><span id="scalebox"><label for="scale">Escala:</label>
   <select id="scale"><option value="fit">Ajustar</option><option value="2x">2x</option><option value="3x">3x</option><option value="pixel">Pixel perfeito</option></select></span>
   <button id="fs">Tela cheia</button>
-  <button id="padToggle">hide pad</button>
+  <button id="padToggle">esconder controle</button></span>
 </div>
 <div id="pad">
   <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
@@ -77,7 +83,8 @@
   <p><b>open-street-chaves</b> needs your own copy of <i>Street Chaves 1.5A</i>. Drop the game folder
   (the one with <code>Chaves.exe</code>, <code>Lutadores</code>, <code>Cenarios</code>…) or its
   <code>.zip</code> here, or pick it below. The files are read in your browser only, never uploaded, and kept
-  in this browser's storage so the next visit starts at once.</p>
+  in this browser's storage so the next visit starts at once.
+  <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
   <button id="pickFolder">Choose folder</button>
   <button id="pickZip">Choose .zip</button>
   <button id="forget" style="display:none">Forget stored game files</button>
@@ -85,8 +92,7 @@
   <input type="file" id="zip" accept=".zip,application/zip" style="display:none">
   <p id="status"></p>
 </div>
-<p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
-<code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
+<p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.</p>
 <p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>FICHA</b> inserts a coin; Z starts.</p>
 <script>
   var setStatus = function (t) { document.getElementById('status').textContent = t; };
@@ -242,7 +248,7 @@
     window.addEventListener('blur', releaseAll);
     window.addEventListener('pagehide', releaseAll);
     var tg = document.getElementById('padToggle');
-    tg.onclick = function () { releaseAll(); var h = pad.classList.toggle('hidden'); tg.textContent = h ? 'show pad' : 'hide pad'; tg.blur(); document.getElementById('canvas').focus(); };
+    tg.onclick = function () { releaseAll(); var h = pad.classList.toggle('hidden'); tg.textContent = h ? 'mostrar controle' : 'esconder controle'; tg.blur(); document.getElementById('canvas').focus(); };
   }
   if (isTouch) setupPad();
   /* canvas size: SDL (resizable window, CSS-sized canvas) copies the CSS size into the backbuffer on every window
