@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>open-street-chaves</title>
 <style>
   body { margin: 0; background: #111; color: #ddd; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
@@ -11,6 +12,37 @@
   #picker.over { border-color: #fc0; background: #222; }
   button { font-size: 1em; padding: 6px 12px; margin: 4px; }
   code { color: #fc0; }
+  /* small screens: scale the 4:3 canvas to the width; landscape phones fill the height instead */
+  @media (max-width: 800px) { canvas { width: 100vw; height: 75vw; margin-top: 0; } }
+  @media (orientation: landscape) and (max-height: 600px) {
+    canvas { width: min(100vw, calc(100vh * 4 / 3)); width: min(100vw, calc(100dvh * 4 / 3)); height: auto; aspect-ratio: 4 / 3; margin-top: 0; }
+  }
+  /* on-screen gamepad (touch devices, after the game started) */
+  #pad, #padToggle { display: none; }
+  html.touch.playing { overflow: hidden; overscroll-behavior: none; }
+  html.touch.playing #pad, html.touch.playing #padToggle { display: block; }
+  html.touch .keys { display: none; }
+  html:not(.touch) .touchhint { display: none; }
+  @media (orientation: landscape) and (max-height: 600px) { html.touch.playing .touchhint { display: none; } }
+  #pad, #padToggle, #pad * { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  #pad { position: fixed; left: 0; right: 0; bottom: 0; top: 0; pointer-events: none; opacity: .35; z-index: 5;
+         --d: min(38vw, 46vh); --b: min(17vw, 22vh); --s: min(12vw, 16vh); }
+  #pad.hidden { display: none !important; }
+  #pad > * { pointer-events: auto; position: absolute; }
+  #dpad { left: 3vmin; bottom: 4vmin; width: var(--d); height: var(--d); border-radius: 50%; background: #fff3; border: 2px solid #fff; }
+  #dpad i { position: absolute; width: 30%; height: 30%; border-radius: 6px; background: #fff4; }
+  #dpad i.on { background: #fff; }
+  #dpad i::after { content: ""; position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; background: #000; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  #dpad .u { left: 35%; top: 4%; } #dpad .d { left: 35%; bottom: 4%; transform: rotate(180deg); }
+  #dpad .l { left: 4%; top: 35%; transform: rotate(-90deg); } #dpad .r { right: 4%; top: 35%; transform: rotate(90deg); }
+  #acts { right: 3vmin; bottom: 4vmin; display: grid; grid-template-columns: repeat(2, var(--b)); gap: 2vmin; }
+  .btn { display: flex; align-items: center; justify-content: center; font: bold 1.3em sans-serif; color: #000; background: #fff8; border: 2px solid #fff; box-sizing: border-box; }
+  .btn.on { background: #fff; }
+  #acts .btn { height: var(--b); border-radius: 50%; }
+  #sys { left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 2vmin; }
+  @media (orientation: portrait) { #sys { bottom: calc(var(--d) + 8vmin); } }
+  #sys .btn { width: var(--s); height: calc(var(--s) * .6); border-radius: 999px; font-size: 1em; }
+  #padToggle { position: fixed; top: 6px; right: 6px; z-index: 6; margin: 0; padding: 4px 8px; font-size: .8em; opacity: .5; touch-action: manipulation; }
 </style>
 </head>
 <body>
@@ -27,8 +59,15 @@
   <input type="file" id="zip" accept=".zip,application/zip" style="display:none">
   <p id="status"></p>
 </div>
-<p>Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
+<p class="keys">Keys: <b>5</b> coin, <b>1</b>/<b>2</b> start, arrows + Z X C V (P1), WASD + F G H J (P2), F1/F2 menus on the title.
 <code>.rar</code> archives cannot be unpacked in the browser: extract them first.</p>
+<p class="touchhint">Touch: D-pad on the left (slide for diagonals), Z X C V on the right, <b>5</b> coin and <b>1</b>/<b>2</b> start in the middle.</p>
+<div id="pad">
+  <div id="dpad"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i></div>
+  <div id="sys"><div class="btn" data-k="Digit5">5</div><div class="btn" data-k="Digit1">1P</div><div class="btn" data-k="Digit2">2P</div></div>
+  <div id="acts"><div class="btn" data-k="KeyZ">Z</div><div class="btn" data-k="KeyX">X</div><div class="btn" data-k="KeyC">C</div><div class="btn" data-k="KeyV">V</div></div>
+</div>
+<button id="padToggle">hide pad</button>
 <script>
   var setStatus = function (t) { document.getElementById('status').textContent = t; };
   var Module = {
@@ -81,6 +120,7 @@
     document.getElementById('picker').style.display = 'none';
     Module.ccall('osc_web_data_ready', null, [], []);
     Module.canvas.focus();
+    if (isTouch) document.documentElement.classList.add('playing');
   }
   function readFiles(files, done) {
     var out = [], pending = files.length;
@@ -119,6 +159,71 @@
     }
     return out;
   }
+  /* on-screen gamepad: feeds synthetic key events to window, where SDL's Emscripten backend listens
+     (default SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT); it reads code (scancode), key, keyCode/which */
+  var isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouch) document.documentElement.classList.add('touch');
+  var KEYS = {
+    ArrowUp: ['ArrowUp', 38], ArrowDown: ['ArrowDown', 40], ArrowLeft: ['ArrowLeft', 37], ArrowRight: ['ArrowRight', 39],
+    KeyZ: ['z', 90], KeyX: ['x', 88], KeyC: ['c', 67], KeyV: ['v', 86], Digit5: ['5', 53], Digit1: ['1', 49], Digit2: ['2', 50]
+  };
+  var held = {}, owned = {};   /* held: code -> press count; owned: pointerId -> codes it holds */
+  function sendKey(type, code) {
+    var k = KEYS[code], ev = new KeyboardEvent(type, { key: k[0], code: code, keyCode: k[1], which: k[1], bubbles: true, cancelable: true });
+    if (ev.keyCode !== k[1]) { /* engines that ignore keyCode in the init dict */
+      Object.defineProperty(ev, 'keyCode', { get: function () { return k[1]; } });
+      Object.defineProperty(ev, 'which', { get: function () { return k[1]; } });
+    }
+    window.dispatchEvent(ev);
+  }
+  function press(code) { if (!held[code]) sendKey('keydown', code); held[code] = (held[code] || 0) + 1; }
+  function release(code) { if (!held[code]) return; if (--held[code] === 0) sendKey('keyup', code); }
+  function setOwned(id, codes) {
+    var old = owned[id] || [];
+    codes.forEach(function (c) { if (old.indexOf(c) < 0) press(c); });
+    old.forEach(function (c) { if (codes.indexOf(c) < 0) release(c); });
+    if (codes.length) owned[id] = codes; else delete owned[id];
+  }
+  function releaseAll() { Object.keys(owned).forEach(function (id) { setOwned(id, []); }); document.querySelectorAll('#pad .on').forEach(function (e) { e.classList.remove('on'); }); }
+  function setupPad() {
+    var pad = document.getElementById('pad'), dpad = document.getElementById('dpad');
+    function buzz() { if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {} }
+    function dirs(ev) {
+      var r = dpad.getBoundingClientRect(), dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2), out = [];
+      if (Math.sqrt(dx * dx + dy * dy) < r.width * 0.12) return out;   /* dead zone */
+      var ax = Math.abs(dx), ay = Math.abs(dy);
+      if (ax > ay * 0.41) out.push(dx < 0 ? 'ArrowLeft' : 'ArrowRight');   /* 8 sectors of 45 degrees */
+      if (ay > ax * 0.41) out.push(dy < 0 ? 'ArrowUp' : 'ArrowDown');
+      return out;
+    }
+    function lights(codes) {
+      [['u', 'ArrowUp'], ['d', 'ArrowDown'], ['l', 'ArrowLeft'], ['r', 'ArrowRight']].forEach(function (p) {
+        dpad.querySelector('.' + p[0]).classList.toggle('on', codes.indexOf(p[1]) >= 0);
+      });
+    }
+    function dmove(ev) { var c = dirs(ev); if (!owned[ev.pointerId]) buzz(); setOwned(ev.pointerId, c); lights(c); }
+    dpad.addEventListener('pointerdown', function (ev) { ev.preventDefault(); dpad.setPointerCapture(ev.pointerId); dmove(ev); });
+    dpad.addEventListener('pointermove', function (ev) { if (ev.pointerId in owned || dpad.hasPointerCapture(ev.pointerId)) dmove(ev); });
+    function dend(ev) { setOwned(ev.pointerId, []); lights([]); }
+    dpad.addEventListener('pointerup', dend);
+    dpad.addEventListener('pointercancel', dend);
+    dpad.addEventListener('lostpointercapture', dend);
+    Array.prototype.forEach.call(pad.querySelectorAll('.btn'), function (b) {
+      b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); b.setPointerCapture(ev.pointerId); b.classList.add('on'); buzz(); setOwned(ev.pointerId, [b.dataset.k]); });
+      function up(ev) { b.classList.remove('on'); setOwned(ev.pointerId, []); }
+      b.addEventListener('pointerup', up);
+      b.addEventListener('pointercancel', up);
+      b.addEventListener('lostpointercapture', up);
+    });
+    pad.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    ['gesturestart', 'dblclick'].forEach(function (n) { document.addEventListener(n, function (e) { if (pad.contains(e.target)) e.preventDefault(); }); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) releaseAll(); });
+    window.addEventListener('blur', releaseAll);
+    window.addEventListener('pagehide', releaseAll);
+    var tg = document.getElementById('padToggle');
+    tg.onclick = function () { releaseAll(); var h = pad.classList.toggle('hidden'); tg.textContent = h ? 'show pad' : 'hide pad'; };
+  }
+  if (isTouch) setupPad();
   function wire() {
     var picker = document.getElementById('picker');
     document.getElementById('pickFolder').onclick = function () { document.getElementById('folder').click(); };
