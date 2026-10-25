@@ -2117,6 +2117,38 @@ static void draw_dialogue(osc_game *g)
     }
 }
 
+/* hand-coded draws of desenhaanimacoes that are not table rows (world coords, minus camera) */
+static void stage_anim_at(osc_game *g, int item, int x, int y)
+{
+    if (item >= g->n_anim_tex || !g->anim_tex[item]) return;
+    SDL_FRect d = {(float)(x - g->cam_x), (float)(y - g->cam_y), (float)g->anim_w[item], (float)g->anim_h[item]};
+    SDL_RenderTexture(g->ren, g->anim_tex[item], NULL, &d);
+}
+
+/* called after each table row of the stage (whether or not that row was drawn): the rows
+ * missing from 07c sit in the original right after these ones */
+static void stage_anim_extra(osc_game *g, const osc_stage_anim_row *r)
+{
+    int c1 = g->p[1].char_id, c2 = g->p[2].char_id;
+    if (r->stage_mask == 1024 && r->item == 38) {            /* 0x49c44c: Anim 39 */
+        if (c1 != 11 && c2 != 11 && c1 != 2 && c2 != 2)
+            stage_anim_at(g, 39, 150 + osc_random(g, 2), 138);
+    } else if (r->stage_mask == 2048 && r->item == 75) {     /* 0x49c520: Anim 76, before Anim 77 */
+        if (c1 != 14 && c2 != 14)
+            stage_anim_at(g, 76, 120 + osc_random(g, 2), 82);
+    } else if (r->stage_mask == 256 && r->item == 26) {      /* 0x49bf04: five flickering lights, last of stage 8 */
+        for (int i = 1; i <= 5; i++) {
+            int r3 = osc_random(g, 3), r2 = osc_random(g, 2);
+            int base = iround((g->p[1].x + g->p[2].x) / 2.0) - 60;
+            stage_anim_at(g, 18, base + 15 * i + r2, 269 - 4 * r3);
+        }
+    } else if (r->stage_mask == 4096 && r->item == 40 && r->ciclo_lo == 23) {   /* 0x49c7fa: Icone[13], every tick */
+        if (13 < g->n_icone && g->icone[13])
+            draw_tex(g, g->icone[13], (float)(225 - g->cam_x),
+                     (float)(134 - iround(-cos((g->ciclo - 11) / 5.0) * 70.0) - g->cam_y), 255, false);
+    }
+}
+
 void osc_fight_render(osc_game *g)
 {
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
@@ -2136,16 +2168,19 @@ void osc_fight_render(osc_game *g)
         for (int i = 0; i < OSC_N_STAGE_ANIM; i++) {
             const osc_stage_anim_row *r = &osc_stage_anim[i];
             if (!(r->stage_mask & (1u << g->stage_id))) continue;
-            if (g->ciclo < r->ciclo_lo || g->ciclo > r->ciclo_hi) continue;
-            if (r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char)) continue;
-            SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
-                                          : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
-            if (!t) continue;
-            int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
-            int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
-            int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
-            SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
-            SDL_RenderTexture(g->ren, t, NULL, &d);
+            if (g->ciclo >= r->ciclo_lo && g->ciclo <= r->ciclo_hi &&
+                !(r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char))) {
+                SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
+                                              : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
+                if (t) {
+                    int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
+                    int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
+                    int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
+                    SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
+                    SDL_RenderTexture(g->ren, t, NULL, &d);
+                }
+            }
+            stage_anim_extra(g, r);
         }
     }
     draw_hud_top(g);

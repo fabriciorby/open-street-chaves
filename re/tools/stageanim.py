@@ -39,11 +39,14 @@ for line in open(sys.argv[1]):
     for s in stages:
         mask |= 1 << s
     lo, hi = 0, 255
-    for a, op, b in re.findall(r"(?:(0x[0-9a-f]+|\d+) < \(byte\)g_counterD|\(byte\)g_counterD (<) (0x[0-9a-f]+|\d+))", cond):
+    # bounds are numeric or char literals ('\b', '\t', '\x0f' ...)
+    B = r"(0x[0-9a-f]+|\d+|'[^']+')"
+    bnd = lambda v: lit(v[1:-1]) if v.startswith("'") else int(v, 0)
+    for a, b in re.findall(B + r" < \(byte\)g_counterD|\(byte\)g_counterD < " + B, cond):
         if a:
-            lo = max(lo, int(a, 0) + 1)
+            lo = max(lo, bnd(a) + 1)
         elif b:
-            hi = min(hi, int(b, 0) - 1)
+            hi = min(hi, bnd(b) - 1)
     notc = re.search(r"DAT_004b4(4f8|5a8) != '([^']+)'", cond)
     notc = lit(notc.group(2)) if notc else 0
     c = re.search(r'item\((0x308|0x338),(0x[0-9a-f]+|\d+)\)\},SURFACE,(.*)\);$', call)
