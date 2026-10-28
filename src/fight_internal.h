@@ -37,4 +37,8 @@ void defend(osc_game *g, osc_fighter *f);
 bool chance(osc_game *g, double c, double k);
 void cpu_think(osc_game *g, osc_fighter *f);
 
+/* selector.c */
+void select_pose(osc_game *g, osc_fighter *f);
+void special_motion(osc_game *g, osc_fighter *f);
+
 #endif
