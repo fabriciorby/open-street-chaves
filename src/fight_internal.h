@@ -41,4 +41,9 @@ void cpu_think(osc_game *g, osc_fighter *f);
 void select_pose(osc_game *g, osc_fighter *f);
 void special_motion(osc_game *g, osc_fighter *f);
 
+/* commands.c */
+bool held(const osc_fighter *f, const char *dir);
+void sequences(osc_game *g, osc_fighter *f);
+void input_dispatch(osc_game *g, osc_fighter *f);
+
 #endif
