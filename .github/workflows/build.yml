@@ -7,6 +7,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  tables:
+    name: Generated tables in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate
+        run: python3 tools/gen_tables.py
+      - name: Check no diff
+        run: git diff --exit-code src/tables_gen.c src/tables_gen.h
+
   windows:
     name: Windows (MSVC)
     runs-on: windows-latest

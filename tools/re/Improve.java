@@ -2,7 +2,7 @@
 //  * defines Delphi long-string literals (refcount -1 header) found in CODE
 //  * marks the DATA pointer table (pointers to unit globals) as constant so
 //    the decompiler resolves *PTR_xxx to the global itself
-//  * applies global names from globals.txt ("<hexaddr> <name> [type]")
+//  * applies global names from data/globals.txt ("<hexaddr> <name> [type]")
 //@category StreetChaves
 
 import ghidra.app.script.GhidraScript;

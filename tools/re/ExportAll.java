@@ -2,8 +2,8 @@
 // every function, then writes decompiled C for every function plus string
 // and global cross-reference listings.
 //
-// Script args: <names.txt> <outdir>
-//   names.txt lines: "<hexaddr> <name>"
+// Script args: <data/names.txt> <outdir>
+//   data/names.txt lines: "<hexaddr> <name>"
 //@category StreetChaves
 
 import ghidra.app.decompiler.DecompInterface;

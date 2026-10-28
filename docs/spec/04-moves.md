@@ -3,7 +3,7 @@
 Legend: **[static]** bytes/metadata, **[decomp]** Ghidra pseudocode (not
 source), **[infer]** interpretation, **UNKNOWN** not established.
 
-Generated detail tables (regenerate with `re/tools/seqtables.py`):
+Generated detail tables (regenerate with `tools/re/seqtables.py`):
 `04a-move-tables.txt` — per character, every `sequencia(from → to)`
 transition with its direction conditions, and every `golpe` mapping
 `(button, sequence state) → move id`.

@@ -23,7 +23,7 @@ faithful port.
    call (07b "Select, next battle, continue, records, name entry: full
    transcription"), records gradient and row sizes included.
 6. ~~Intro cinematic and the 15 ending choreographies~~ — transcribed
-   (07b "Attract", `07e-endings.txt` via `re/tools/endings_emu.py`, which runs the
+   (07b "Attract", `07e-endings.txt` via `tools/re/endings_emu.py`, which runs the
    code). Answered in 07b "Endings reviewed against the binary": the ending
    fighters do not animate by themselves (desenhalutador is given a fixed
    state/timer each tick and runs the frame selector on it), and the firework

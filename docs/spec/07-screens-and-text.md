@@ -9,7 +9,7 @@ option changes.
 > `07a-texts.txt` and the `07b-draw-calls/` dumps are **not committed** to
 > the public repository (they contain CyberGamba's creative text and raw
 > decompiler output). Regenerate them locally from your own `Chaves.exe`
-> with `re/tools/` (see 00); the port extracts the game text from the
+> with `tools/re/` (see 00); the port extracts the game text from the
 > executable at runtime instead of shipping it.
 
 ## Text tables [decomp]
