@@ -1,6 +1,7 @@
 #include "game.h"
 #include "canvas.h"
 #include "config.h"
+#include "unlocks.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -1442,30 +1443,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
     g->sel[1] = 1; g->sel[2] = 2;
-    {   /* FormCreate: unlock files next to the game */
-        char upath[1200];
-        load_path(upath, sizeof upath, g->data_dir, "Churros.dat");
-        g->unlock_churros = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Gentalha.dat");
-        g->unlock_gentalha = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Energeticos.dat");
-        g->unlock_energeticos = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Satanas.dat");
-        g->unlock_satanas = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Fadiga.dat");
-        g->unlock_fadiga = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Mentecapto.dat");
-        g->unlock_mentecapto = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Bruxa.dat");
-        g->unlock_bruxa = SDL_GetPathInfo(upath, NULL);
-        g->unlock_sc = 0;
-        for (int n = 1; n <= 12; n++) {      /* the last file found wins */
-            char nm[16];
-            snprintf(nm, sizeof nm, "SC%02d.dat", n);
-            load_path(upath, sizeof upath, g->data_dir, nm);
-            if (SDL_GetPathInfo(upath, NULL)) g->unlock_sc = n;
-        }
-    }
+    osc_unlocks_load(g);
     g->p1_in = false;   /* nobody has joined until a start button */
     g->p2_in = false;
     return true;
