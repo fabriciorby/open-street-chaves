@@ -46,4 +46,7 @@ bool held(const osc_fighter *f, const char *dir);
 void sequences(osc_game *g, osc_fighter *f);
 void input_dispatch(osc_game *g, osc_fighter *f);
 
+/* combat.c */
+void melee_step(osc_game *g, osc_fighter *a);
+
 #endif
