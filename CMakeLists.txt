@@ -29,6 +29,7 @@ add_executable(open-street-chaves
   src/game.c
   src/assets.c
   src/effects.c
+  src/fight.c
   src/fight_draw.c
   src/hud.c
   src/fighter.c

@@ -201,24 +201,17 @@ enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, O
        OSC_SCREEN_NAME = 12 };
 
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir);
-/* Start a fight: characters 1..15, stage 1..12 (0 = by opponent), round 1. */
-bool osc_fight_start(osc_game *g, int char1, int char2, int stage);
 void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_game_render(osc_game *g);
 void osc_game_shutdown(osc_game *g);
-/* fight-screen internals used by flow.c */
-void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_movelist_render(osc_game *g);   /* G: mostragolpe */
 void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G */
-int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
-void osc_play_snd(osc_game *g, int idx);
 void osc_go_attract(osc_game *g, int tick);
 /* endings.c */
 void osc_ending_start(osc_game *g, int ch);
 void osc_ending_seek(osc_game *g, int tick);
 void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_ending_render(osc_game *g);
-/* game.c helpers for the scripts */
 /* menu.c */
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);

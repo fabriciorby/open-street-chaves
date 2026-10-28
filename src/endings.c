@@ -7,6 +7,7 @@
 #include "assets.h"
 #include "effects.h"
 #include "fight_draw.h"
+#include "fight.h"
 #include "game.h"
 #include "canvas.h"
 #include "tables_gen.h"
