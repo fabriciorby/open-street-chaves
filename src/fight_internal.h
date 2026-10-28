@@ -30,4 +30,11 @@ void fx_sounds_for(osc_game *g, osc_fighter *f);
 void fx_spawns_for(osc_game *g, osc_fighter *f, int pidx);
 void update_fx(osc_game *g);
 
+/* game.c */
+void defend(osc_game *g, osc_fighter *f);
+
+/* cpu.c */
+bool chance(osc_game *g, double c, double k);
+void cpu_think(osc_game *g, osc_fighter *f);
+
 #endif
