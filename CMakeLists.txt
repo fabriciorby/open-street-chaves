@@ -42,6 +42,9 @@ add_executable(open-street-chaves
   src/exetext.c
   src/exeimg.c
   src/flow.c
+  src/screen_select.c
+  src/screen_vs.c
+  src/screen_continue.c
   src/text.c
   src/menu.c
   src/config.c
