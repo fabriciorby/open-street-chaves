@@ -153,7 +153,7 @@ static void fx_snapshot(osc_game *g, int i, const osc_effect *e)
     memset(d, 0, sizeof *d);
     d->sx = iround(e->x) - g->cam_x;
     d->sy = iround(e->y) - g->cam_y;
-    if (g->debug_boxes) {   /* 0x48fa5b: every live slot, whether armed or not */
+    if (g->flow.debug_boxes) {   /* 0x48fa5b: every live slot, whether armed or not */
         d->box = true;
         d->bx = (int)(e->x + e->hb_l - g->cam_x); d->by = (int)(e->y + e->hb_t - g->cam_y);
         d->bw = e->hb_r - e->hb_l; d->bh = e->hb_b - e->hb_t;

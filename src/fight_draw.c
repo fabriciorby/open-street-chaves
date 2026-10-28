@@ -24,7 +24,7 @@ static void draw_fighter(osc_game *g, const osc_fighter *f)
     SDL_FRect dst = {dx, dy, (float)w, (float)s->h};
     SDL_RenderTextureRotated(g->ren, s->tex[f->frame], NULL, &dst, (double)f->rot, NULL,
                              f->facing == 1 ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL);
-    if (g->debug_boxes) {
+    if (g->flow.debug_boxes) {
         SDL_FRect hb = {(float)(f->x + f->hurt_l - g->cam_x), (float)(f->y - f->sprite_h + f->hurt_t - g->cam_y),
                         (float)(f->hurt_r - f->hurt_l), (float)(f->hurt_b - f->hurt_t)};
         SDL_SetRenderDrawColor(g->ren, 50, 50, 255, 255);
@@ -142,7 +142,7 @@ void osc_fight_render(osc_game *g)
     draw_round_texts(g);
     draw_dialogue(g);
     if (g->flash_on) barra(g, 0, 0, 400, 300, rgb(255, 0, 0));
-    if (g->show_moves) osc_movelist_render(g);   /* 0x4aa31c, state 7 only */
+    if (g->flow.show_moves) osc_movelist_render(g);   /* 0x4aa31c, state 7 only */
     if (g->challenge > 0) {
         osc_rgb pink = rgb(250, 140, 140);
         barraredonda(g, 80, 100, 320, 170, 10, k_white, k_black);                   /* 0x4ae384 */

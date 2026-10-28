@@ -31,8 +31,8 @@ void osc_make_ladder(osc_game *g, int ch)
     for (int slot = 1; slot <= 7; slot++) {
         int c;
         do { c = osc_random(g, 15) + 1; } while (!avail[c]);
-        g->ladder[slot] = c;
+        g->flow.ladder[slot] = c;
         avail[c] = false;
     }
-    g->ladder[8] = rival[ch];
+    g->flow.ladder[8] = rival[ch];
 }

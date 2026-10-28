@@ -76,8 +76,8 @@ void draw_hud_top(osc_game *g)
             }
         }
         /* an empty side invites a second player */
-        if (!f->human && g->demo == 0 && g->ciclo < 15) {
-            if (g->credits == 0) texto(g, 200 + s * 100, 0, tx(g, 6), 'c', 10, k_white);          /* INSIRA FICHAS */
+        if (!f->human && g->flow.demo == 0 && g->ciclo < 15) {
+            if (g->flow.credits == 0) texto(g, 200 + s * 100, 0, tx(g, 6), 'c', 10, k_white);          /* INSIRA FICHAS */
             else if (!g->no_push) texto(g, 200 + s * 100, 0, tx(g, 7), 'c', 10, k_white);      /* ENTRE AGORA */
         }
         const char *name = osc_text(OSC_MEMO_NOMES, c, g->settings.lang);

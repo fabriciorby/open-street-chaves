@@ -29,12 +29,12 @@ static int s_resume_tick, s_resume_cam, s_resume_ciclo, s_n_music;
 /* ---- state 2: F1 menu ------------------------------------------------------ */
 void osc_menu_enter(osc_game *g, int which)
 {
-    if (g->screen == OSC_SCREEN_ATTRACT) { s_resume_tick = g->screen_tick; s_resume_cam = g->menu_cam; s_resume_ciclo = g->ciclo; }
-    g->screen = which == 2 ? OSC_SCREEN_MENU_F1 : OSC_SCREEN_MENU_F2;
-    g->menu_cursor = 1;
+    if (g->flow.screen == OSC_SCREEN_ATTRACT) { s_resume_tick = g->flow.screen_tick; s_resume_cam = g->flow.menu_cam; s_resume_ciclo = g->ciclo; }
+    g->flow.screen = which == 2 ? OSC_SCREEN_MENU_F1 : OSC_SCREEN_MENU_F2;
+    g->flow.menu_cursor = 1;
     g->p[1].in_prev = g->p[2].in_prev = 0xff;
     if (which == 2) {
-        g->snd_test = g->mus_test = 1;   /* g_sndIndexA / g_sndFlagB := 1 */
+        g->flow.snd_test = g->flow.mus_test = 1;   /* g_sndIndexA / g_sndFlagB := 1 */
         /* 0x4b58a3: FormCreate counts Musicas/Musica-NN.wav */
         s_n_music = 0;
         for (int n = 1; n < 100; n++) {
@@ -49,13 +49,13 @@ void osc_menu_enter(osc_game *g, int which)
 
 static void menu_leave(osc_game *g)
 {
-    if (g->screen == OSC_SCREEN_MENU_F1) {
+    if (g->flow.screen == OSC_SCREEN_MENU_F1) {
         osc_audio_stop_music();          /* the test sound and music are stopped, then both indexes := 0 */
-        g->snd_test = g->mus_test = 0;
+        g->flow.snd_test = g->flow.mus_test = 0;
     }
     osc_config_save(g);
-    g->screen = OSC_SCREEN_ATTRACT;
-    g->screen_tick = s_resume_tick; g->menu_cam = s_resume_cam; g->ciclo = s_resume_ciclo;
+    g->flow.screen = OSC_SCREEN_ATTRACT;
+    g->flow.screen_tick = s_resume_tick; g->flow.menu_cam = s_resume_cam; g->ciclo = s_resume_ciclo;
 }
 
 /* FPU extended arithmetic of the original: x +/- 0.1 (an 80-bit constant) stored back as a double */
@@ -69,7 +69,7 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
     /* edge of each device against last tick's state (Players[].0xac.. bytes); P1 = keyboard, P2 = joystick */
     uint8_t e1 = (uint8_t)(in1 & ~g->p[1].in_prev), e2 = (uint8_t)(in2 & ~g->p[2].in_prev);
     g->p[1].in_prev = in1; g->p[2].in_prev = in2;
-    uint8_t c = (uint8_t)g->menu_cursor;   /* a Byte: P1 and P2 both pressing up at 1 gives 255 */
+    uint8_t c = (uint8_t)g->flow.menu_cursor;   /* a Byte: P1 and P2 both pressing up at 1 gives 255 */
     if (e1 & OSC_IN_UP) c--;
     if (e1 & OSC_IN_DOWN) c++;
     if (e2 & OSC_IN_UP) c--;
@@ -83,8 +83,8 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
         case 5: g->settings.cfg_blood = true; break;
         case 6: g->settings.rounds_to_win--; break;
         case 7: g->settings.lang = 0; break;
-        case 8: if (g->snd_test > 1) g->snd_test--; break;
-        case 9: if (g->mus_test > 1) g->mus_test--; break;
+        case 8: if (g->flow.snd_test > 1) g->flow.snd_test--; break;
+        case 9: if (g->flow.mus_test > 1) g->flow.mus_test--; break;
         case 10: g->settings.cfg_flash = true; break;
         case 11: g->settings.show_level = true; break;
         case 12: g->settings.show_credits = true; break;
@@ -99,36 +99,36 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
         case 5: g->settings.cfg_blood = false; break;
         case 6: g->settings.rounds_to_win++; break;
         case 7: g->settings.lang = 1; break;
-        case 8: if (g->snd_test < g->assets.n_sounds) g->snd_test++; break;
-        case 9: if (g->mus_test < s_n_music) g->mus_test++; break;
+        case 8: if (g->flow.snd_test < g->assets.n_sounds) g->flow.snd_test++; break;
+        case 9: if (g->flow.mus_test < s_n_music) g->flow.mus_test++; break;
         case 10: g->settings.cfg_flash = false; break;
         case 11: g->settings.show_level = false; break;
         case 12: g->settings.show_credits = false; break;
         }
     }
     if ((e1 | e2) & OSC_IN_B1) {   /* only the first button plays */
-        if (c == 8 && g->assets.n_sounds > g->snd_test - 1) osc_play_snd(g, g->snd_test - 1);
-        if (c == 9) osc_play_music(g, g->mus_test);
+        if (c == 8 && g->assets.n_sounds > g->flow.snd_test - 1) osc_play_snd(g, g->flow.snd_test - 1);
+        if (c == 9) osc_play_music(g, g->flow.mus_test);
     }
     if ((e1 | e2) & OSC_IN_B2) osc_audio_stop_music();   /* the second button stops the music, on any row */
     /* the clamps run after the input; the cursor wraps */
     if (c < 1) c = 12;
     if (c > 12) c = 1;
-    g->menu_cursor = c;
+    g->flow.menu_cursor = c;
     g->settings.cfg_time_mode = clampi(g->settings.cfg_time_mode, 1, 4);
     g->settings.level = clampi(g->settings.level, 1, 8);
     g->settings.cfg_power = clampi(g->settings.cfg_power, 1, 4);
     if (0.3L > (long double)g->settings.damage_level) g->settings.damage_level = 0.3;
     if (g->settings.damage_level > 2.0) g->settings.damage_level = 2.0;
     g->settings.rounds_to_win = clampi(g->settings.rounds_to_win, 1, 3);
-    if (g->snd_test < 1) g->snd_test = 1;
-    if (g->snd_test > g->assets.n_sounds) g->snd_test = g->assets.n_sounds;
+    if (g->flow.snd_test < 1) g->flow.snd_test = 1;
+    if (g->flow.snd_test > g->assets.n_sounds) g->flow.snd_test = g->assets.n_sounds;
 }
 
 static void f1_render(osc_game *g)
 {
     char buf[48];
-    int c = g->menu_cursor;
+    int c = g->flow.menu_cursor;
     const osc_rgb w = k_white;
     barra(g, 0, 0, 400, 300, k_black);
     texto(g, 200, 5, osc_text(OSC_MEMO_CONFIG, 1, g->settings.lang), 'c', 15, w);
@@ -156,9 +156,9 @@ static void f1_render(osc_game *g)
     cfgtxt(g, 10, 150, 14, w); cfgtxt(g, 140, 150, 15, w); cfgtxt(g, 230, 150, 16, w);
     /* 8, 9 tests: "n / max" */
     cfgtxt(g, 10, 165, 17, w);
-    snprintf(buf, sizeof buf, "%d / %d", g->snd_test, g->assets.n_sounds); ltxt(g, 140, 165, buf, w);
+    snprintf(buf, sizeof buf, "%d / %d", g->flow.snd_test, g->assets.n_sounds); ltxt(g, 140, 165, buf, w);
     cfgtxt(g, 10, 180, 18, w);
-    snprintf(buf, sizeof buf, "%d / %d", g->mus_test, s_n_music); ltxt(g, 140, 180, buf, w);
+    snprintf(buf, sizeof buf, "%d / %d", g->flow.mus_test, s_n_music); ltxt(g, 140, 180, buf, w);
     /* 10..12 Flash, Mostrar Nível, Mostrar Creditos */
     for (int i = 0; i < 3; i++) {
         cfgtxt(g, 10, 195 + 15 * i, 19 + i, w);
@@ -192,10 +192,10 @@ static bool f2_key_ok(SDL_Scancode k)
 
 void osc_menu_key(osc_game *g, SDL_Scancode k)
 {
-    if (g->screen != OSC_SCREEN_MENU_F2 || !f2_key_ok(k)) return;
-    uint8_t c = (uint8_t)g->menu_cursor;
+    if (g->flow.screen != OSC_SCREEN_MENU_F2 || !f2_key_ok(k)) return;
+    uint8_t c = (uint8_t)g->flow.menu_cursor;
     if (c >= 1 && c <= 8) g->settings.keymap[0][c - 1] = k;
-    g->menu_cursor = (uint8_t)(c + 1);
+    g->flow.menu_cursor = (uint8_t)(c + 1);
 }
 
 /* the character Delphi's Chr(VK) gives for the key; the numpad's VK 60..69 are ` and a..i */
@@ -211,8 +211,8 @@ static char vk_char(SDL_Scancode k)
 
 static void f2_tick(osc_game *g)
 {
-    if (g->menu_cursor < 1) g->menu_cursor = 1;
-    if (g->menu_cursor > 9) g->menu_cursor = 9;
+    if (g->flow.menu_cursor < 1) g->flow.menu_cursor = 1;
+    if (g->flow.menu_cursor > 9) g->flow.menu_cursor = 9;
 }
 
 static void f2_render(osc_game *g)
@@ -231,20 +231,20 @@ static void f2_render(osc_game *g)
             ltxt(g, 200, 60 + 20 * i, s[0] ? s : SDL_GetScancodeName(k), w);
         }
     }
-    if (g->menu_cursor >= 1 && g->menu_cursor <= 8) cfgtxt(g, 50, 60 + 20 * g->menu_cursor, 23 + g->menu_cursor, k_blue);
+    if (g->flow.menu_cursor >= 1 && g->flow.menu_cursor <= 8) cfgtxt(g, 50, 60 + 20 * g->flow.menu_cursor, 23 + g->flow.menu_cursor, k_blue);
     texto(g, 200, 280, osc_text(OSC_MEMO_CONFIG, 32, g->settings.lang), 'c', 11, w);   /* F2-SAIR */
 }
 
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     /* F1 leaves state 2 only and F2 leaves state 3 only; the other key does nothing there */
-    bool leave = g->screen == OSC_SCREEN_MENU_F1 ? g->key_f1 : g->key_f2;
-    g->key_f1 = g->key_f2 = false;
+    bool leave = g->flow.screen == OSC_SCREEN_MENU_F1 ? g->flow.key_f1 : g->flow.key_f2;
+    g->flow.key_f1 = g->flow.key_f2 = false;
     if (leave) { menu_leave(g); return; }
-    if (g->screen == OSC_SCREEN_MENU_F1) f1_tick(g, in1, in2); else f2_tick(g);
+    if (g->flow.screen == OSC_SCREEN_MENU_F1) f1_tick(g, in1, in2); else f2_tick(g);
 }
 
 void osc_menu_render(osc_game *g)
 {
-    if (g->screen == OSC_SCREEN_MENU_F1) f1_render(g); else f2_render(g);
+    if (g->flow.screen == OSC_SCREEN_MENU_F1) f1_render(g); else f2_render(g);
 }

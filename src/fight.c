@@ -69,22 +69,22 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     if (!music) music = iround(osc_random(g, 6 * 10) / 10.0) + 1;   /* 6 = Musicas loaded */
     if (music > 6) music = 6;
     if (music == 6 && stage != 12) music = 1;
-    if (g->demo == 0) osc_play_music(g, music);   /* the attract demo starts no music (0x49fdb1) */
+    if (g->flow.demo == 0) osc_play_music(g, music);   /* the attract demo starts no music (0x49fdb1) */
 
     g->cam_x = 100; g->cam_y = 20;
     g->timer_sec = osc_round_time(g); g->timer_sub = 25;
     g->round_no = 1;
     if (g->fight_no < 1) g->fight_no = 1;
     g->round_start = 0; g->round_end = 0; g->no_push = true; g->hit_stop = 0; g->super_pause = 0;
-    g->match_over = 0;
+    g->flow.match_over = 0;
     g->p[1].wins = g->p[2].wins = 0;
     g->p[1].on_top = true; g->p[2].on_top = false;
     g->mover.active = false; g->mover.freq = 330;
     g->first_hit = false; g->dialogo = 0; g->shake = 0; g->flash = 0; g->flash_on = false;
     g->snd_pending = 0; g->sp_draw = false;
     g->p[1].ai_pref = g->p[2].ai_pref = 200;
-    g->screen = OSC_SCREEN_FIGHT;
-    g->screen_tick = 0;
+    g->flow.screen = OSC_SCREEN_FIGHT;
+    g->flow.screen_tick = 0;
     SDL_Log("fight %d: %s vs %s at %s", g->fight_no, osc_text(OSC_MEMO_NOMES, char1, g->settings.lang),
             osc_text(OSC_MEMO_NOMES, char2, g->settings.lang), osc_text(OSC_MEMO_CENARIOS, stage - 1, g->settings.lang));
     return true;
@@ -94,14 +94,14 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
     if (g->settings.unlocks.mentecapto) { g->hud_y = -90; g->hud_y2 = 40; }   /* top of DXTimer1Timer */
-    if (g->demo > 0) { g->timer_sec = g->settings.cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
+    if (g->flow.demo > 0) { g->timer_sec = g->settings.cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
     if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
         g->no_push = true;
         if (--g->challenge == 0) {
-            g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 0;
-            g->sel_locked[1] = g->sel_locked[2] = 0; g->timer_sec = 20; g->timer_sub = 25;
-            g->p[1].human = g->p1_in; g->p[2].human = g->p2_in; g->settings.ai_p2 = !g->p2_in;
-            g->sel[1] = g->p[1].char_id; g->sel[2] = g->p[2].char_id;
+            g->flow.screen = OSC_SCREEN_SELECT; g->flow.screen_tick = 0; g->flow.sel_sub = 0;
+            g->flow.sel_locked[1] = g->flow.sel_locked[2] = 0; g->timer_sec = 20; g->timer_sub = 25;
+            g->p[1].human = g->flow.p1_in; g->p[2].human = g->flow.p2_in; g->settings.ai_p2 = !g->flow.p2_in;
+            g->flow.sel[1] = g->p[1].char_id; g->flow.sel[2] = g->p[2].char_id;
             g->no_push = false;
         }
         return;
@@ -151,7 +151,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (g->cam_x < 0) g->cam_x = 0; if (g->cam_x > 200) g->cam_x = 200;
     if (g->cam_y < 0) g->cam_y = 0; if (g->cam_y > 20) g->cam_y = 20;
     bool frozen = g->hit_stop || g->super_pause;
-    if (g->demo > 0) {                                                     /* nobody falls in the demo (0x4a4cfe) */
+    if (g->flow.demo > 0) {                                                     /* nobody falls in the demo (0x4a4cfe) */
         g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
         g->p[1].stocks = g->p[2].stocks = 3;
     }
@@ -298,7 +298,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             g->p[1].on_top = true; g->p[2].on_top = false; g->mover.active = false;
             g->timer_sec = osc_round_time(g); g->timer_sub = 25; g->cam_x = 100;
         }
-        if (decided && g->round_end > 220) g->match_over = g->p[1].wins >= g->settings.rounds_to_win ? 1 : 2;
+        if (decided && g->round_end > 220) g->flow.match_over = g->p[1].wins >= g->settings.rounds_to_win ? 1 : 2;
     }
 
     /* body hits, then the clocks and the physics (0x4a85ec..0x4a99d8) */

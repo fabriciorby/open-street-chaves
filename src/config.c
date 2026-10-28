@@ -34,7 +34,7 @@ static void apply_defaults(osc_game *g)
     g->settings.level = 4; g->settings.cfg_time_mode = 3; g->settings.cfg_power = 1; g->settings.damage_level = 0.9;
     g->settings.cfg_blood = true; g->settings.rounds_to_win = 2; g->settings.lang = 0; g->settings.cfg_flash = true;
     g->settings.show_level = true; g->settings.show_credits = true;
-    g->snd_test = 0; g->mus_test = 0;
+    g->flow.snd_test = 0; g->flow.mus_test = 0;
 }
 
 /* StrToInt stored into a Byte (the original does not range-check before the clamps) */

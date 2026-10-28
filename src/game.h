@@ -148,31 +148,9 @@ typedef struct {
     osc_unlocks unlocks;
 } osc_settings;
 
+/* Screen flow of the arcade cabinet: which screen is up, who joined, menus, records, plus the host's
+ * debug / presentation toggles. Nothing here is needed to simulate a fight. */
 typedef struct {
-    SDL_Renderer *ren;
-    char data_dir[1024];
-    osc_assets assets;
-    osc_settings settings;
-    int stage_id;
-    int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
-    osc_effect fx[OSC_MAX_FX];
-    osc_fx_draw fx_draw[OSC_MAX_FX];
-    osc_fighter p[3];    /* 1-based like the original */
-    int cam_x, cam_y;
-    unsigned tick;
-    int hit_stop, super_pause;
-    int timer_sec, timer_sub;
-    bool paused, no_push, debug_boxes;
-    bool timer_off;          /* DXTimer1.Enabled = false: set after the tick that ends with g_paused == 1 */
-    bool show_moves;         /* g_showMoves: G drew the move list */
-    int speed_delay;         /* g_speedDelay = DXTimer1.Interval in ms, 0..80 (- / = keys) */
-    int speed_overlay;       /* g_speedOverlayTimer: ticks left of the VELOCIDADE bar */
-    bool speed_overlay_draw; /* the bar was drawn in the last tick */
-    int view_dx;             /* DXDraw1.Left, -40..40 (, / . keys) */
-    uint32_t rng;        /* Delphi RandSeed */
-    int round_start, round_end;
-    int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
-
     /* screens (07) */
     int screen;              /* osc_screen */
     int screen_tick;
@@ -180,9 +158,6 @@ typedef struct {
     int ladder[9];           /* ladder[1..7] opponents, ladder[8] rival */
     int match_over;          /* 0 running, 1 P1 won, 2 P2 won */
     bool p1_in, p2_in;       /* humans who joined */
-    bool first_hit;          /* 0x4b57f4: the round's first attack was landed */
-    int hud_y, hud_y2;       /* 0x4b44d2 / 0x4b44d4: top and bottom HUD offsets (slide out at round end) */
-    int transition;          /* 0x4b449d: 1..4, wipe between rounds */
 
     /* coin-op flow (01, 07): attract, demo fight, records */
     int credits;
@@ -198,6 +173,40 @@ typedef struct {
     int snd_test, mus_test, menu_cursor;
     bool key_f1, key_f2;
     int ending_char;          /* state 10: whose ending */
+    /* host toggles (not part of the original's fight state) */
+    bool debug_boxes;
+    bool show_moves;         /* g_showMoves: G drew the move list */
+    int speed_delay;         /* g_speedDelay = DXTimer1.Interval in ms, 0..80 (- / = keys) */
+    int speed_overlay;       /* g_speedOverlayTimer: ticks left of the VELOCIDADE bar */
+    bool speed_overlay_draw; /* the bar was drawn in the last tick */
+    int view_dx;             /* DXDraw1.Left, -40..40 (, / . keys) */
+} osc_flow;
+
+typedef struct {
+    SDL_Renderer *ren;
+    char data_dir[1024];
+    osc_assets assets;
+    osc_settings settings;
+    osc_flow flow;
+    int stage_id;
+    int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
+    osc_effect fx[OSC_MAX_FX];
+    osc_fx_draw fx_draw[OSC_MAX_FX];
+    osc_fighter p[3];    /* 1-based like the original */
+    int cam_x, cam_y;
+    unsigned tick;
+    int hit_stop, super_pause;
+    int timer_sec, timer_sub;
+    bool paused, no_push;
+    bool timer_off;          /* DXTimer1.Enabled = false: set after the tick that ends with g_paused == 1 */
+    uint32_t rng;        /* Delphi RandSeed */
+    int round_start, round_end;
+    int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
+
+    bool first_hit;          /* 0x4b57f4: the round's first attack was landed */
+    int hud_y, hud_y2;       /* 0x4b44d2 / 0x4b44d4: top and bottom HUD offsets (slide out at round end) */
+    int transition;          /* 0x4b449d: 1..4, wipe between rounds */
+
     int challenge;            /* g_challengeTimer: a second player joined a 1P fight */
     /* stage objects (05 "Stage objects") */
     struct { int x, y, speed, kind, freq; bool active; } mover;   /* 0x4b57c8: crosses stages 1 and 2 */

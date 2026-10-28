@@ -22,9 +22,9 @@ static int s_flash_g[OSC_N_ENDINGS], s_flash_b[OSC_N_ENDINGS];
 
 void osc_ending_start(osc_game *g, int ch)
 {
-    g->ending_char = ch < 1 || ch > 15 ? 1 : ch;
-    g->screen = OSC_SCREEN_ENDING;
-    g->screen_tick = 0; s_c = 0;
+    g->flow.ending_char = ch < 1 || ch > 15 ? 1 : ch;
+    g->flow.screen = OSC_SCREEN_ENDING;
+    g->flow.screen_tick = 0; s_c = 0;
     g->cam_x = 0; g->cam_y = 0;
     memset(g->fx, 0, sizeof g->fx);
     g->p[1].in_prev = g->p[2].in_prev = 0xff;
@@ -36,11 +36,11 @@ void osc_ending_seek(osc_game *g, int tick)
 {
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
-        if (r->ch != g->ending_char || r->from != r->to || r->from > tick) continue;
+        if (r->ch != g->flow.ending_char || r->from != r->to || r->from > tick) continue;
         if (r->op == OSC_END_STAGE) osc_load_stage(g, r->a);
         else if (r->op == OSC_END_CHAR) osc_load_fighter(g, r->a, r->b);
     }
-    g->screen_tick = tick; s_c = tick;
+    g->flow.screen_tick = tick; s_c = tick;
 }
 
 static bool row_active(const osc_ending_row *r, int c)
@@ -59,21 +59,21 @@ static void spawn_row(osc_game *g, int type)
 
 void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
-    if (g->screen == OSC_SCREEN_CREDITS) {
+    if (g->flow.screen == OSC_SCREEN_CREDITS) {
         /* state 11 draws, then counts: 201 frames, then state 9 with both countdown bytes at 0 ("FIM DO JOGO") */
-        g->screen_tick++;
-        if (g->screen_tick > 200) {
-            g->screen = OSC_SCREEN_CONTINUE; g->screen_tick = 0;
+        g->flow.screen_tick++;
+        if (g->flow.screen_tick > 200) {
+            g->flow.screen = OSC_SCREEN_CONTINUE; g->flow.screen_tick = 0;
             g->timer_sec = 0; g->timer_sub = 0;
         }
         return;
     }
-    int c = g->screen_tick;
+    int c = g->flow.screen_tick;
     g->p[1].in_prev = in1; g->p[2].in_prev = in2;
     /* loads, spawns and flash colours of this tick, in the order of the code */
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
-        if (r->ch != g->ending_char || !row_active(r, c)) continue;
+        if (r->ch != g->flow.ending_char || !row_active(r, c)) continue;
         if (r->from == r->to && r->op == OSC_END_STAGE) osc_load_stage(g, r->a);
         else if (r->from == r->to && r->op == OSC_END_CHAR) osc_load_fighter(g, r->a, r->b);
         else if (r->op == OSC_END_SPAWN && !(r->chance && osc_random(g, r->chance) != 0)) spawn_row(g, r->a);
@@ -81,15 +81,15 @@ void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2)
     }
     s_c = c;
     osc_fx_tick(g);
-    g->screen_tick++;
-    if (g->screen_tick > 2200) {
-        g->screen = OSC_SCREEN_CREDITS; g->screen_tick = 0; g->ciclo = 0;
+    g->flow.screen_tick++;
+    if (g->flow.screen_tick > 2200) {
+        g->flow.screen = OSC_SCREEN_CREDITS; g->flow.screen_tick = 0; g->ciclo = 0;
         return;
     }
     /* a held button 1 of a human player skips to the end of the 100-tick block (level, not edge) */
     if (((in1 & OSC_IN_B1) && g->p[1].human) || ((in2 & OSC_IN_B1) && g->p[2].human)) {
         for (int i = 0; i < 21; i++)
-            if (g->screen_tick > i * 100 + 5 && g->screen_tick < i * 100 + 85) { g->screen_tick = i * 100 + 85; break; }
+            if (g->flow.screen_tick > i * 100 + 5 && g->flow.screen_tick < i * 100 + 85) { g->flow.screen_tick = i * 100 + 85; break; }
     }
 }
 
@@ -109,7 +109,7 @@ static void credits_render(osc_game *g)
 
 void osc_ending_render(osc_game *g)
 {
-    if (g->screen == OSC_SCREEN_CREDITS) { credits_render(g); return; }
+    if (g->flow.screen == OSC_SCREEN_CREDITS) { credits_render(g); return; }
     int c = s_c;
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
@@ -119,7 +119,7 @@ void osc_ending_render(osc_game *g)
     }
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
-        if (r->ch != g->ending_char || !row_active(r, c)) continue;
+        if (r->ch != g->flow.ending_char || !row_active(r, c)) continue;
         switch (r->op) {
         case OSC_END_FIGHTER: osc_draw_fighter_at(g, r->a, r->b, r->c, r->d, r->e); break;
         case OSC_END_SHADOW:
@@ -151,7 +151,7 @@ void osc_ending_render(osc_game *g)
     /* dialogue: segment k of 200 ticks, speaker tag + 3 lines */
     if (c >= 2200) return;   /* the dialogue is drawn for c < 2200 */
     int k = c / 200;
-    int base = k_base[g->ending_char] + 4 * k;
+    int base = k_base[g->flow.ending_char] + 4 * k;
     const char *tag = osc_text(OSC_MEMO_DIALOGO, base, g->settings.lang);
     int speaker = (tag && tag[0] >= 'A' && tag[0] <= 'O') ? tag[0] - 'A' + 1 : 0;
     if (speaker) {

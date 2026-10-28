@@ -15,7 +15,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     memset(g, 0, sizeof *g);
     g->settings.ai_p2 = ai_p2;
     g->settings.lang = lang;
-    g->speed_delay = OSC_TICK_MS;   /* FormCreate: g_speedDelay = 28 */
+    g->flow.speed_delay = OSC_TICK_MS;   /* FormCreate: g_speedDelay = 28 */
     g->ren = ren;
     g->rng = (uint32_t)SDL_GetTicksNS();
     SDL_strlcpy(g->data_dir, data_dir, sizeof g->data_dir);
@@ -24,19 +24,19 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     {
         static const char *names[10] = {"CHV", "SMD", "CHQ", "QUI", "DFL", "PGR", "SBR", "B71", "PTY", "NHO"};
         for (int i = 0; i < 10; i++) {
-            memcpy(g->records[i].name, names[i], 4);
-            g->records[i].char_id = i + 1;
-            g->records[i].score = i == 0 ? 10000 : 8500 - 500 * i;
+            memcpy(g->flow.records[i].name, names[i], 4);
+            g->flow.records[i].char_id = i + 1;
+            g->flow.records[i].score = i == 0 ? 10000 : 8500 - 500 * i;
         }
     }
     osc_font_init(ren);
     osc_config_load(g);
-    g->screen = OSC_SCREEN_ATTRACT;
-    g->screen_tick = 0;
-    g->sel[1] = 1; g->sel[2] = 2;
+    g->flow.screen = OSC_SCREEN_ATTRACT;
+    g->flow.screen_tick = 0;
+    g->flow.sel[1] = 1; g->flow.sel[2] = 2;
     osc_unlocks_load(g);
-    g->p1_in = false;   /* nobody has joined until a start button */
-    g->p2_in = false;
+    g->flow.p1_in = false;   /* nobody has joined until a start button */
+    g->flow.p2_in = false;
     return true;
 }
 
