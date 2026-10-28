@@ -3,14 +3,9 @@
  * stage override SCnn.dat. Only their existence matters. */
 #include <stdio.h>
 
+#include "assets.h"
 #include "game.h"
 #include "unlocks.h"
-
-static bool load_path(char *dst, size_t n, const char *dir, const char *rel)
-{
-    int r = snprintf(dst, n, "%s/%s", dir, rel);
-    return r > 0 && (size_t)r < n;
-}
 
 /* FormCreate: unlock files next to the game */
 void osc_unlocks_load(osc_game *g)

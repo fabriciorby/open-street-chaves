@@ -1,6 +1,7 @@
 /* Arcade ladder: the CPU opponent's stage (osc_stage_for, 07 state 5) and the
  * opponent order for a run (osc_make_ladder, criaadversario, 02). */
 #include "arcade.h"
+#include "fight.h"
 #include "game.h"
 
 /* Stage chosen by the CPU opponent's character (07, state 5). */

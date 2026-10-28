@@ -27,6 +27,17 @@ add_executable(open-street-chaves
   src/strip.c
   src/wav.c
   src/game.c
+  src/assets.c
+  src/effects.c
+  src/fight.c
+  src/fight_draw.c
+  src/hud.c
+  src/fighter.c
+  src/stage.c
+  src/combat.c
+  src/commands.c
+  src/selector.c
+  src/cpu.c
   src/tables_gen.c
   src/exetext.c
   src/exeimg.c

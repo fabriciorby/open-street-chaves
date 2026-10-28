@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+#include "fight.h"
 #include "game.h"
 #include "arcade.h"
 #ifdef __EMSCRIPTEN__
