@@ -27,8 +27,8 @@ void counters(osc_game *g, osc_fighter *f);
 void move_clock(osc_game *g, osc_fighter *f);
 void physics(osc_game *g, osc_fighter *f);
 void fighter_frame(osc_game *g, osc_fighter *f);
-void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);
-void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);   /* zerardados */
+void init_fighter(osc_fighter *f, int ch, int p, int strip_slot);
+void osc_reset_fighter(osc_fighter *f, int ch, int p, int strip_slot);   /* zerardados */
 
 /* selector.c */
 void select_frame(osc_game *g, osc_fighter *f);

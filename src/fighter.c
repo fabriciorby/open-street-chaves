@@ -210,10 +210,10 @@ void fighter_frame(osc_game *g, osc_fighter *f)
     if (f->state != 12 && f->state != 19) { f->rot = 0; f->rot_step = 0; }
 }
 
-void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip) { osc_reset_fighter(f, ch, p, strip); }
+void init_fighter(osc_fighter *f, int ch, int p, int strip_slot) { osc_reset_fighter(f, ch, p, strip_slot); }
 
 /* zerardados: per-round reset of one fighter. */
-void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
+void osc_reset_fighter(osc_fighter *f, int ch, int p, int strip_slot)
 {
     memset(f, 0, sizeof *f);
     f->char_id = ch;
@@ -224,7 +224,7 @@ void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip)
     f->facing = p == 1 ? 1 : 2;
     f->sprite_h = k_sprite_h[ch];
     f->speed = k_speed[ch];
-    f->strip = strip;
+    f->strip_slot = strip_slot;
     f->human = true;
     f->hurt_l = -20; f->hurt_r = 20; f->hurt_t = 10; f->hurt_b = f->sprite_h; /* fallback box */
 }

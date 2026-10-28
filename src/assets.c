@@ -50,7 +50,7 @@ bool osc_load_fighter(osc_game *g, int slot, int ch)
     osc_image_free(&img);
     if (!ok) return false;
     osc_fighter *f = &g->fight.p[slot];
-    f->char_id = ch; f->strip = &g->assets.strips[slot - 1];
+    f->char_id = ch; f->strip_slot = slot;
     f->facing = slot == 1 ? 1 : 2; f->rot = 0; f->state = 1; f->anim_timer = 0;
     return true;
 }

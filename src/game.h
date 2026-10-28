@@ -65,7 +65,7 @@ typedef struct {
     bool on_top;         /* +0x91 drawn over the opponent (the last one who hit) */
     uint8_t in, in_prev; /* input bits this tick / last tick */
     int wins;
-    const osc_strip *strip;
+    int strip_slot;      /* 1-based index into osc_assets.strips (the fighter holds no texture), 0 = none */
     int slot_base;       /* 0 for P1, 50 for P2 in the original; unused here */
 } osc_fighter;
 

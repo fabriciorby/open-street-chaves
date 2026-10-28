@@ -10,7 +10,7 @@
 /* ---- rendering ------------------------------------------------------------------------ */
 static void draw_fighter(osc_game *g, const osc_fighter *f)
 {
-    const osc_strip *s = f->strip;
+    const osc_strip *s = &g->assets.strips[f->strip_slot - 1];
     /* shadow (Efeitos[0]), rising a little with the jump */
     if (g->assets.n_fx_tex > 0) {
         int sy = OSC_GROUND_Y - 12 - iround((OSC_GROUND_Y - iround(f->y)) / 12.0) - g->fight.cam_y;
@@ -155,7 +155,7 @@ void osc_fight_render(osc_game *g)
 void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer)
 {
     osc_fighter *f = &g->fight.p[slot];
-    if (!f->strip || !f->strip->count) return;
+    if (!f->strip_slot || !g->assets.strips[f->strip_slot - 1].count) return;
     f->x = x; f->y = y; f->state = state; f->anim_timer = timer; f->in_air = false; f->rot = 0;
     f->sprite_h = k_sprite_h[f->char_id];
     select_pose(g, f);

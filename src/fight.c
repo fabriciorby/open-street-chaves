@@ -44,7 +44,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         if (!ok) return false;
         bool human = g->fight.p[i + 1].human, had = g->fight.p[i + 1].char_id != 0;
         int wins = g->fight.p[i + 1].wins, score = g->fight.p[i + 1].score;
-        init_fighter(&g->fight.p[i + 1], chars[i], i + 1, &g->assets.strips[i]);
+        init_fighter(&g->fight.p[i + 1], chars[i], i + 1, i + 1);
         g->fight.p[i + 1].human = had ? human : (i == 0 || !g->settings.ai_p2);
         g->fight.p[i + 1].wins = wins; g->fight.p[i + 1].score = score;
     }
@@ -288,8 +288,8 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
                 osc_fighter *f = &g->fight.p[i];
                 int wins = f->wins, ch = f->char_id, st = f->stocks, score = f->score, mc = f->max_combo;
                 double meter = f->meter; bool human = f->human;
-                const osc_strip *st_ = f->strip;
-                osc_reset_fighter(f, ch, i, st_);
+                int ss = f->strip_slot;
+                osc_reset_fighter(f, ch, i, ss);
                 f->wins = wins; f->stocks = st; f->score = score; f->human = human; f->meter = meter; f->max_combo = mc;
             }
             g->fight.round_no++;
