@@ -7,6 +7,7 @@
 #include "exetext.h"
 #include "font.h"
 #include "assets.h"
+#include "fight_draw.h"
 #include "game.h"
 #include "canvas.h"
 #include "arcade.h"
