@@ -99,7 +99,7 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
         case 5: g->cfg_blood = false; break;
         case 6: g->rounds_to_win++; break;
         case 7: g->lang = 1; break;
-        case 8: if (g->snd_test < g->n_sounds) g->snd_test++; break;
+        case 8: if (g->snd_test < g->assets.n_sounds) g->snd_test++; break;
         case 9: if (g->mus_test < s_n_music) g->mus_test++; break;
         case 10: g->cfg_flash = false; break;
         case 11: g->show_level = false; break;
@@ -107,7 +107,7 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
         }
     }
     if ((e1 | e2) & OSC_IN_B1) {   /* only the first button plays */
-        if (c == 8 && g->n_sounds > g->snd_test - 1) osc_play_snd(g, g->snd_test - 1);
+        if (c == 8 && g->assets.n_sounds > g->snd_test - 1) osc_play_snd(g, g->snd_test - 1);
         if (c == 9) osc_play_music(g, g->mus_test);
     }
     if ((e1 | e2) & OSC_IN_B2) osc_audio_stop_music();   /* the second button stops the music, on any row */
@@ -122,7 +122,7 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (g->damage_level > 2.0) g->damage_level = 2.0;
     g->rounds_to_win = clampi(g->rounds_to_win, 1, 3);
     if (g->snd_test < 1) g->snd_test = 1;
-    if (g->snd_test > g->n_sounds) g->snd_test = g->n_sounds;
+    if (g->snd_test > g->assets.n_sounds) g->snd_test = g->assets.n_sounds;
 }
 
 static void f1_render(osc_game *g)
@@ -156,7 +156,7 @@ static void f1_render(osc_game *g)
     cfgtxt(g, 10, 150, 14, w); cfgtxt(g, 140, 150, 15, w); cfgtxt(g, 230, 150, 16, w);
     /* 8, 9 tests: "n / max" */
     cfgtxt(g, 10, 165, 17, w);
-    snprintf(buf, sizeof buf, "%d / %d", g->snd_test, g->n_sounds); ltxt(g, 140, 165, buf, w);
+    snprintf(buf, sizeof buf, "%d / %d", g->snd_test, g->assets.n_sounds); ltxt(g, 140, 165, buf, w);
     cfgtxt(g, 10, 180, 18, w);
     snprintf(buf, sizeof buf, "%d / %d", g->mus_test, s_n_music); ltxt(g, 140, 180, buf, w);
     /* 10..12 Flash, Mostrar Nível, Mostrar Creditos */
@@ -225,7 +225,7 @@ static void f2_render(osc_game *g)
         SDL_Scancode k = g->keymap[0][i - 1];
         int icon = k == SDL_SCANCODE_UP ? 0 : k == SDL_SCANCODE_DOWN ? 1 : k == SDL_SCANCODE_RIGHT ? 2 : k == SDL_SCANCODE_LEFT ? 3 : -1;
         if (icon >= 0) {
-            if (icon < g->n_icone && g->icone[icon]) draw_tex(g, g->icone[icon], 200, (float)(85 + 20 * (i - 1)), 255, false);
+            if (icon < g->assets.n_icone && g->assets.icone[icon]) draw_tex(g, g->assets.icone[icon], 200, (float)(85 + 20 * (i - 1)), 255, false);
         } else {
             char s[2] = {vk_char(k), 0};
             ltxt(g, 200, 60 + 20 * i, s[0] ? s : SDL_GetScancodeName(k), w);

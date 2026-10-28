@@ -47,7 +47,7 @@ void draw_hud_top(osc_game *g)
         int shake = 0;
         if (f->health_shown > f->health) shake = even(g->ciclo) ? -1 : 1;
         if (c >= 1 && c <= 15) {
-            SDL_Texture *t = shake ? g->face_hurt[c] : g->face_small[c];
+            SDL_Texture *t = shake ? g->assets.face_hurt[c] : g->assets.face_small[c];
             float w, h;
             if (t && SDL_GetTextureSize(t, &w, &h)) {
                 SDL_FRect d = {(float)((p == 1 ? 3 : 347) - shake), (float)(hy + 7), w, h};
@@ -195,10 +195,10 @@ void draw_round_texts(osc_game *g)
         if (f->wins < g->rounds_to_win || re < 90 || re > 210) continue;
         int p5 = even(g->ciclo) ? 30 : 0, c = f->char_id;
         /* the winner's big face (Rxx-c) slides in, holds, slides out */
-        if (c >= 1 && c <= 15 && g->face_big[c]) {
+        if (c >= 1 && c <= 15 && g->assets.face_big[c]) {
             int l = re < 100 ? 728 - (re - 90) * 50 : re < 180 ? 128 : 128 - (re - 180) * 50;
             SDL_FRect d = {(float)l, 29.f, 144.f, 189.f};
-            SDL_RenderTexture(g->ren, g->face_big[c], NULL, &d);
+            SDL_RenderTexture(g->ren, g->assets.face_big[c], NULL, &d);
         }
         if (f->human) {
             texto(g, 10, 20, tx(g, 16), '-', 12, rgb(p5 + 30, p5 + 220, p5 + 30));                    /* MÁXIMO DE ACERTOS */
@@ -248,11 +248,11 @@ void draw_dialogue(osc_game *g)
     int a = g->p[1].human ? 1 : 2, b = g->p[1].human ? 2 : 1;
     int ca = g->p[a].char_id, cb = g->p[b].char_id;
     barraredonda(g, 5, 165, 290, 215, 20, k_white, k_black);
-    if (ca >= 1 && ca <= 15 && g->face_big[ca])
-        draw_tex(g, g->face_big[ca], (float)(d > 580 ? 15 - (d - 580) * 10 : 15), 85.f, 255, false);
+    if (ca >= 1 && ca <= 15 && g->assets.face_big[ca])
+        draw_tex(g, g->assets.face_big[ca], (float)(d > 580 ? 15 - (d - 580) * 10 : 15), 85.f, 255, false);
     barraredonda(g, 110, 220, 395, 270, 20, k_white, k_black);
-    if (cb >= 1 && cb <= 15 && g->face_big[cb])
-        draw_tex(g, g->face_big[cb], (float)(d > 580 ? 288 + (d - 580) * 10 : 288), 140.f, 255, false);
+    if (cb >= 1 && cb <= 15 && g->assets.face_big[cb])
+        draw_tex(g, g->assets.face_big[cb], (float)(d > 580 ? 288 + (d - 580) * 10 : 288), 140.f, 255, false);
     /* on the exact boundaries the line and speaker keep their last values */
     if (d > 450 && d < 600) { g->dialog_line = (ca - 1) * 12; g->dialog_speaker = 1; }
     if (d > 300 && d < 450) { g->dialog_line = (ca - 1) * 12 + 3; g->dialog_speaker = 2; }

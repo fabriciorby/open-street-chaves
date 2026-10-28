@@ -21,7 +21,7 @@ int osc_random(osc_game *g, int n)
 
 static void play_snd(osc_game *g, int idx)
 {
-    if (idx >= 0 && idx < g->n_sounds && g->sounds[idx].buf) osc_audio_play(&g->sounds[idx]);
+    if (idx >= 0 && idx < g->assets.n_sounds && g->assets.sounds[idx].buf) osc_audio_play(&g->assets.sounds[idx]);
 }
 
 /* Round/fight init (state 6 -> 7). */
@@ -30,7 +30,7 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     char rel[64];
     osc_image img;
     char path[1200];
-    for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
+    for (int i = 0; i < 2; i++) osc_strip_free(&g->assets.strips[i]);
     memset(g->fx, 0, sizeof g->fx);
     memset(g->fx_draw, 0, sizeof g->fx_draw);
 
@@ -39,12 +39,12 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         snprintf(rel, sizeof rel, "Lutadores/C%02d.bmp", chars[i]);
         load_path(path, sizeof path, g->data_dir, rel);
         if (!osc_bmp_load(path, true, &img)) return false;
-        bool ok = osc_strip_build(g->ren, &img, &g->strips[i]);
+        bool ok = osc_strip_build(g->ren, &img, &g->assets.strips[i]);
         osc_image_free(&img);
         if (!ok) return false;
         bool human = g->p[i + 1].human, had = g->p[i + 1].char_id != 0;
         int wins = g->p[i + 1].wins, score = g->p[i + 1].score;
-        init_fighter(&g->p[i + 1], chars[i], i + 1, &g->strips[i]);
+        init_fighter(&g->p[i + 1], chars[i], i + 1, &g->assets.strips[i]);
         g->p[i + 1].human = had ? human : (i == 0 || !g->ai_p2);
         g->p[i + 1].wins = wins; g->p[i + 1].score = score;
     }
@@ -277,7 +277,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             if ((f->in & OSC_IN_B1) && (g->round_end < 90 || g->round_end > 100)) g->round_end += 2;
             if (g->round_end == 95 && !g->hit_stop && !g->super_pause && f->char_id >= 1 && f->char_id <= 15) {
                 /* the victory line, a or b: Round(Random(200) / 200) with banker's rounding */
-                const osc_wav *v = &g->voices[f->char_id][osc_random(g, 200) > 100];
+                const osc_wav *v = &g->assets.voices[f->char_id][osc_random(g, 200) > 100];
                 if (v->buf) osc_audio_play(v);
             }
         }

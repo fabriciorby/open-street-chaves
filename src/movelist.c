@@ -48,7 +48,7 @@ static void sequence(osc_game *g, int x, int y, const char *name, const char *ke
         const char *ic = strchr(k_icon, keys[i]);
         if (ic && keys[i]) {
             int n = (int)(ic - k_icon);
-            if (n < g->n_icone && g->icone[n]) draw_tex(g, g->icone[n], (float)px, (float)(y + 3), 255, false);
+            if (n < g->assets.n_icone && g->assets.icone[n]) draw_tex(g, g->assets.icone[n], (float)px, (float)(y + 3), 255, false);
         }
         int tag = keys[i] == 'P' ? K_TAG_P : keys[i] == 'K' ? K_TAG_K : keys[i] == 'R' ? K_TAG_R : keys[i] == '?' ? K_TAG_Q : 0;
         if (tag) texto(g, px, y, osc_text_const(tag), '-', 9, k_white);

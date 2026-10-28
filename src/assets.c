@@ -31,10 +31,10 @@ void osc_play_music(osc_game *g, int n)
 {
     char rel[64], path[1200];
     osc_audio_stop_music();
-    if (g->has_music) { osc_wav_free(&g->music); g->has_music = false; }
+    if (g->assets.has_music) { osc_wav_free(&g->assets.music); g->assets.has_music = false; }
     snprintf(rel, sizeof rel, "Musicas/Musica-%02d.wav", n);
     load_path(path, sizeof path, g->data_dir, rel);
-    if (osc_audio_open() && osc_wav_load(path, &g->music)) { g->has_music = true; osc_audio_music(&g->music); }
+    if (osc_audio_open() && osc_wav_load(path, &g->assets.music)) { g->assets.has_music = true; osc_audio_music(&g->assets.music); }
 }
 
 /* ---- helpers for the ending scripts (endings.c) ---------------------------- */
@@ -42,15 +42,15 @@ bool osc_load_fighter(osc_game *g, int slot, int ch)
 {
     char rel[64], path[1200];
     osc_image img;
-    osc_strip_free(&g->strips[slot - 1]);
+    osc_strip_free(&g->assets.strips[slot - 1]);
     snprintf(rel, sizeof rel, "Lutadores/C%02d.bmp", ch);
     load_path(path, sizeof path, g->data_dir, rel);
     if (!osc_bmp_load(path, true, &img)) return false;
-    bool ok = osc_strip_build(g->ren, &img, &g->strips[slot - 1]);
+    bool ok = osc_strip_build(g->ren, &img, &g->assets.strips[slot - 1]);
     osc_image_free(&img);
     if (!ok) return false;
     osc_fighter *f = &g->p[slot];
-    f->char_id = ch; f->strip = &g->strips[slot - 1];
+    f->char_id = ch; f->strip = &g->assets.strips[slot - 1];
     f->facing = slot == 1 ? 1 : 2; f->rot = 0; f->state = 1; f->anim_timer = 0;
     return true;
 }
@@ -58,13 +58,13 @@ bool osc_load_fighter(osc_game *g, int slot, int ch)
 bool osc_load_stage(osc_game *g, int stage)
 {
     char rel[64];
-    if (g->stage) { SDL_DestroyTexture(g->stage); g->stage = NULL; }
+    if (g->assets.stage) { SDL_DestroyTexture(g->assets.stage); g->assets.stage = NULL; }
     snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
     g->stage_id = stage;
     /* carregarcenario: stage 2 has a breakable thing (Icone[6]) */
     g->crate.icon = 0;
     if (stage == 2) { g->crate.x = 395; g->crate.y = 195; g->crate.r0 = 25; g->crate.b0 = 25; g->crate.r1 = 110; g->crate.b1 = 90; g->crate.icon = 6; }
-    return load_image_tex(g, rel, false, &g->stage, &g->stage_w, &g->stage_h);
+    return load_image_tex(g, rel, false, &g->assets.stage, &g->assets.stage_w, &g->assets.stage_h);
 }
 
 /* Common assets: effects, stage animations, faces, sounds, text (FormCreate). */
@@ -74,62 +74,62 @@ bool osc_assets_load(osc_game *g)
 
     for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
         snprintf(rel, sizeof rel, "Efeitos/Efeito-%03d.bmp", n);
-        if (!load_image_tex(g, rel, true, &g->fx_tex[n - 1], &g->fx_w[n - 1], &g->fx_h[n - 1])) break;
-        g->n_fx_tex = n;
+        if (!load_image_tex(g, rel, true, &g->assets.fx_tex[n - 1], &g->assets.fx_w[n - 1], &g->assets.fx_h[n - 1])) break;
+        g->assets.n_fx_tex = n;
     }
-    if (g->n_fx_tex == 0) return false;
+    if (g->assets.n_fx_tex == 0) return false;
     for (int n = 1; n < OSC_MAX_FX_SPRITES; n++) {
         snprintf(rel, sizeof rel, "Animacoes/Anim-%02d.bmp", n);
-        if (!load_image_tex(g, rel, true, &g->anim_tex[n - 1], &g->anim_w[n - 1], &g->anim_h[n - 1])) break;
-        g->n_anim_tex = n;
+        if (!load_image_tex(g, rel, true, &g->assets.anim_tex[n - 1], &g->assets.anim_w[n - 1], &g->assets.anim_h[n - 1])) break;
+        g->assets.n_anim_tex = n;
     }
     for (int c = 1; c <= 15; c++) {
         snprintf(rel, sizeof rel, "Rostos/R%02d-a.bmp", c);
-        load_image_tex(g, rel, true, &g->face_small[c], NULL, NULL);
+        load_image_tex(g, rel, true, &g->assets.face_small[c], NULL, NULL);
         snprintf(rel, sizeof rel, "Rostos/R%02d-b.bmp", c);
-        load_image_tex(g, rel, true, &g->face_hurt[c], NULL, NULL);
+        load_image_tex(g, rel, true, &g->assets.face_hurt[c], NULL, NULL);
         snprintf(rel, sizeof rel, "Rostos/R%02d-c.bmp", c);
-        load_image_tex(g, rel, true, &g->face_big[c], &g->face_big_w[c], &g->face_big_h[c]);
+        load_image_tex(g, rel, true, &g->assets.face_big[c], &g->assets.face_big_w[c], &g->assets.face_big_h[c]);
     }
-    SDL_Log("%d effect sprites, %d stage animation sprites loaded", g->n_fx_tex, g->n_anim_tex);
+    SDL_Log("%d effect sprites, %d stage animation sprites loaded", g->assets.n_fx_tex, g->assets.n_anim_tex);
 
     if (osc_audio_open()) {
         for (int n = 1; n <= 80; n++) {
             snprintf(rel, sizeof rel, "Sons/Som-%02d.wav", n);
             load_path(path, sizeof path, g->data_dir, rel);
-            if (!osc_wav_load(path, &g->sounds[g->n_sounds])) break;
-            g->n_sounds++;
+            if (!osc_wav_load(path, &g->assets.sounds[g->assets.n_sounds])) break;
+            g->assets.n_sounds++;
         }
-        SDL_Log("%d sounds loaded", g->n_sounds);
+        SDL_Log("%d sounds loaded", g->assets.n_sounds);
         for (int c = 1; c <= 15; c++)
             for (int k = 0; k < 2; k++) {
                 snprintf(rel, sizeof rel, "Falas/Fala-%02d-%c.wav", c, 'a' + k);
                 load_path(path, sizeof path, g->data_dir, rel);
-                osc_wav_load(path, &g->voices[c][k]);
+                osc_wav_load(path, &g->assets.voices[c][k]);
             }
     }
     osc_text_load(g->data_dir);
     /* intro pictures and icons live inside Chaves.exe (03-assets.md) */
     if (osc_exeimg_load(g->data_dir)) {
-        g->n_abertura = osc_exeimg_count("Abertura"); if (g->n_abertura > 16) g->n_abertura = 16;
-        for (int i = 0; i < g->n_abertura; i++) {
+        g->assets.n_abertura = osc_exeimg_count("Abertura"); if (g->assets.n_abertura > 16) g->assets.n_abertura = 16;
+        for (int i = 0; i < g->assets.n_abertura; i++) {
             osc_image img;
             if (!osc_exeimg_get("Abertura", i, &img)) continue;
-            g->abertura[i] = osc_texture_from_image(g->ren, &img); g->abertura_w[i] = img.w; g->abertura_h[i] = img.h;
+            g->assets.abertura[i] = osc_texture_from_image(g->ren, &img); g->assets.abertura_w[i] = img.w; g->assets.abertura_h[i] = img.h;
             osc_image_free(&img);
         }
-        g->n_icone = osc_exeimg_count("Icone"); if (g->n_icone > 14) g->n_icone = 14;
-        for (int i = 0; i < g->n_icone; i++) {
+        g->assets.n_icone = osc_exeimg_count("Icone"); if (g->assets.n_icone > 14) g->assets.n_icone = 14;
+        for (int i = 0; i < g->assets.n_icone; i++) {
             osc_image img;
             if (!osc_exeimg_get("Icone", i, &img)) continue;
-            g->icone[i] = osc_texture_from_image(g->ren, &img); g->icone_w[i] = img.w; g->icone_h[i] = img.h;
+            g->assets.icone[i] = osc_texture_from_image(g->ren, &img); g->assets.icone_w[i] = img.w; g->assets.icone_h[i] = img.h;
             osc_image_free(&img);
         }
-        g->n_final = osc_exeimg_count("Final"); if (g->n_final > 11) g->n_final = 11;
-        for (int i = 0; i < g->n_final; i++) {
+        g->assets.n_final = osc_exeimg_count("Final"); if (g->assets.n_final > 11) g->assets.n_final = 11;
+        for (int i = 0; i < g->assets.n_final; i++) {
             osc_image img;
             if (!osc_exeimg_get("Final", i, &img)) continue;
-            g->final_tex[i] = osc_texture_from_image(g->ren, &img); g->final_w[i] = img.w; g->final_h[i] = img.h;
+            g->assets.final_tex[i] = osc_texture_from_image(g->ren, &img); g->assets.final_w[i] = img.w; g->assets.final_h[i] = img.h;
             osc_image_free(&img);
         }
         osc_exeimg_free();
@@ -140,16 +140,16 @@ bool osc_assets_load(osc_game *g)
 void osc_assets_free(osc_game *g)
 {
     osc_audio_stop_music();
-    if (g->has_music) osc_wav_free(&g->music);
-    for (int i = 0; i < g->n_sounds; i++) osc_wav_free(&g->sounds[i]);
-    for (int c = 0; c < 16; c++) for (int k = 0; k < 2; k++) osc_wav_free(&g->voices[c][k]);
+    if (g->assets.has_music) osc_wav_free(&g->assets.music);
+    for (int i = 0; i < g->assets.n_sounds; i++) osc_wav_free(&g->assets.sounds[i]);
+    for (int c = 0; c < 16; c++) for (int k = 0; k < 2; k++) osc_wav_free(&g->assets.voices[c][k]);
     osc_text_free();
     osc_font_quit();
     osc_audio_close();
-    for (int i = 0; i < 2; i++) osc_strip_free(&g->strips[i]);
-    for (int i = 0; i < g->n_fx_tex; i++) if (g->fx_tex[i]) SDL_DestroyTexture(g->fx_tex[i]);
-    if (g->stage) SDL_DestroyTexture(g->stage);
-    for (int i = 0; i < 16; i++) if (g->abertura[i]) SDL_DestroyTexture(g->abertura[i]);
-    for (int i = 0; i < 14; i++) if (g->icone[i]) SDL_DestroyTexture(g->icone[i]);
-    for (int i = 0; i < 11; i++) if (g->final_tex[i]) SDL_DestroyTexture(g->final_tex[i]);
+    for (int i = 0; i < 2; i++) osc_strip_free(&g->assets.strips[i]);
+    for (int i = 0; i < g->assets.n_fx_tex; i++) if (g->assets.fx_tex[i]) SDL_DestroyTexture(g->assets.fx_tex[i]);
+    if (g->assets.stage) SDL_DestroyTexture(g->assets.stage);
+    for (int i = 0; i < 16; i++) if (g->assets.abertura[i]) SDL_DestroyTexture(g->assets.abertura[i]);
+    for (int i = 0; i < 14; i++) if (g->assets.icone[i]) SDL_DestroyTexture(g->assets.icone[i]);
+    for (int i = 0; i < 11; i++) if (g->assets.final_tex[i]) SDL_DestroyTexture(g->assets.final_tex[i]);
 }

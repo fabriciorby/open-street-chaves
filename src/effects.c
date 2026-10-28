@@ -159,7 +159,7 @@ static void fx_snapshot(osc_game *g, int i, const osc_effect *e)
         d->bw = e->hb_r - e->hb_l; d->bh = e->hb_b - e->hb_t;
     }
     if (e->done && (g->ciclo & 1)) return;           /* blinking: drawn on even g_ciclo only */
-    if (e->type != 5 && e->sprite < g->n_fx_tex) { d->kind = 1; d->sprite = e->sprite; d->dir = e->dir; d->bottom = e->bottom_anchor; }
+    if (e->type != 5 && e->sprite < g->assets.n_fx_tex) { d->kind = 1; d->sprite = e->sprite; d->dir = e->dir; d->bottom = e->bottom_anchor; }
     if (e->type == 5) d->kind = 2;                   /* the floating "VITALIDADE" text of a pickup */
 }
 

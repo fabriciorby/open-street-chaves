@@ -12,9 +12,9 @@ static void draw_fighter(osc_game *g, const osc_fighter *f)
 {
     const osc_strip *s = f->strip;
     /* shadow (Efeitos[0]), rising a little with the jump */
-    if (g->n_fx_tex > 0) {
+    if (g->assets.n_fx_tex > 0) {
         int sy = OSC_GROUND_Y - 12 - iround((OSC_GROUND_Y - iround(f->y)) / 12.0) - g->cam_y;
-        draw_tex(g, g->fx_tex[0], (float)(iround(f->x) - 35 - g->cam_x), (float)sy, 255, false);
+        draw_tex(g, g->assets.fx_tex[0], (float)(iround(f->x) - 35 - g->cam_x), (float)sy, 255, false);
     }
     if (f->frame < 1 || f->frame > s->count || !s->tex[f->frame]) return;
     int w = s->w[f->frame];
@@ -44,12 +44,12 @@ void osc_fx_render(osc_game *g)
         const osc_fx_draw *d = &g->fx_draw[i];
         if (d->kind == 2) {        /* pickup popup: MemoTexto.Get(5), centred, size 10, green (0x48fc96) */
             texto(g, d->sx, d->sy, tx(g, 5), 'c', 10, rgb(80, 255, 140));
-        } else if (d->kind == 1 && g->fx_tex[d->sprite]) {
-            float w = (float)g->fx_w[d->sprite], h = (float)g->fx_h[d->sprite];
+        } else if (d->kind == 1 && g->assets.fx_tex[d->sprite]) {
+            float w = (float)g->assets.fx_w[d->sprite], h = (float)g->assets.fx_h[d->sprite];
             /* desenhaefeitos 0x48fb0e: x - Round(w / 2), y - Round(h / 2), or y - h with the f8 flag */
             float ox = (float)iround(w / 2.0), oy = d->bottom ? h : (float)iround(h / 2.0);
             SDL_FRect r = {(float)d->sx - ox, (float)d->sy - oy, w, h};
-            SDL_RenderTextureRotated(g->ren, g->fx_tex[d->sprite], NULL, &r, 0.0, NULL,
+            SDL_RenderTextureRotated(g->ren, g->assets.fx_tex[d->sprite], NULL, &r, 0.0, NULL,
                                      d->dir == 2 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
         }
         if (d->box) {
@@ -63,9 +63,9 @@ void osc_fx_render(osc_game *g)
 /* hand-coded draws of desenhaanimacoes that are not table rows (world coords, minus camera) */
 static void stage_anim_at(osc_game *g, int item, int x, int y)
 {
-    if (item >= g->n_anim_tex || !g->anim_tex[item]) return;
-    SDL_FRect d = {(float)(x - g->cam_x), (float)(y - g->cam_y), (float)g->anim_w[item], (float)g->anim_h[item]};
-    SDL_RenderTexture(g->ren, g->anim_tex[item], NULL, &d);
+    if (item >= g->assets.n_anim_tex || !g->assets.anim_tex[item]) return;
+    SDL_FRect d = {(float)(x - g->cam_x), (float)(y - g->cam_y), (float)g->assets.anim_w[item], (float)g->assets.anim_h[item]};
+    SDL_RenderTexture(g->ren, g->assets.anim_tex[item], NULL, &d);
 }
 
 /* called after each table row of the stage (whether or not that row was drawn): the rows
@@ -86,8 +86,8 @@ static void stage_anim_extra(osc_game *g, const osc_stage_anim_row *r)
             stage_anim_at(g, 18, base + 15 * i + r2, 269 - 4 * r3);
         }
     } else if (r->stage_mask == 4096 && r->item == 40 && r->ciclo_lo == 23) {   /* 0x49c7fa: Icone[13], every tick */
-        if (13 < g->n_icone && g->icone[13])
-            draw_tex(g, g->icone[13], (float)(225 - g->cam_x),
+        if (13 < g->assets.n_icone && g->assets.icone[13])
+            draw_tex(g, g->assets.icone[13], (float)(225 - g->cam_x),
                      (float)(134 - iround(-cos((g->ciclo - 11) / 5.0) * 70.0) - g->cam_y), 255, false);
     }
 }
@@ -98,14 +98,14 @@ void osc_fight_render(osc_game *g)
     SDL_RenderClear(g->ren);
     if (g->sp_draw) {
         /* super pause: Icone[7] tiled and sliding instead of the stage (0x4a47a0) */
-        if (7 < g->n_icone && g->icone[7])
+        if (7 < g->assets.n_icone && g->assets.icone[7])
             for (int i = 0; i < 6; i++)
                 for (int j = 0; j < 5; j++)
-                    draw_tex(g, g->icone[7], (float)(100 * i - 80 + g->sp_off), (float)(100 * j), 255, false);
+                    draw_tex(g, g->assets.icone[7], (float)(100 * i - 80 + g->sp_off), (float)(100 * j), 255, false);
     } else {
-        if (g->stage) {
-            SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->stage_w, (float)g->stage_h};
-            SDL_RenderTexture(g->ren, g->stage, NULL, &dst);
+        if (g->assets.stage) {
+            SDL_FRect dst = {(float)-g->cam_x, (float)-g->cam_y, (float)g->assets.stage_w, (float)g->assets.stage_h};
+            SDL_RenderTexture(g->ren, g->assets.stage, NULL, &dst);
         }
         /* stage animations (desenhaanimacoes, table 07c) */
         for (int i = 0; i < OSC_N_STAGE_ANIM; i++) {
@@ -113,11 +113,11 @@ void osc_fight_render(osc_game *g)
             if (!(r->stage_mask & (1u << g->stage_id))) continue;
             if (g->ciclo >= r->ciclo_lo && g->ciclo <= r->ciclo_hi &&
                 !(r->not_char && (g->p[1].char_id == r->not_char || g->p[2].char_id == r->not_char))) {
-                SDL_Texture *t = r->is_effect ? (r->item < g->n_fx_tex ? g->fx_tex[r->item] : NULL)
-                                              : (r->item < g->n_anim_tex ? g->anim_tex[r->item] : NULL);
+                SDL_Texture *t = r->is_effect ? (r->item < g->assets.n_fx_tex ? g->assets.fx_tex[r->item] : NULL)
+                                              : (r->item < g->assets.n_anim_tex ? g->assets.anim_tex[r->item] : NULL);
                 if (t) {
-                    int w = r->is_effect ? g->fx_w[r->item] : g->anim_w[r->item];
-                    int h = r->is_effect ? g->fx_h[r->item] : g->anim_h[r->item];
+                    int w = r->is_effect ? g->assets.fx_w[r->item] : g->assets.anim_w[r->item];
+                    int h = r->is_effect ? g->assets.fx_h[r->item] : g->assets.anim_h[r->item];
                     int ax = r->x + r->xmul * g->ciclo, ay = r->y - (r->yjit ? r->yjit * osc_random(g, 3) : 0);
                     SDL_FRect d = {(float)(ax - g->cam_x), (float)(ay - g->cam_y), (float)w, (float)h};
                     SDL_RenderTexture(g->ren, t, NULL, &d);
@@ -128,12 +128,12 @@ void osc_fight_render(osc_game *g)
     }
     draw_hud_top(g);
     /* something crossing the street (Efeitos[0] shadow under Efeitos[9]) */
-    if (g->mover.active && g->n_fx_tex > 9) {
-        draw_tex(g, g->fx_tex[0], (float)(g->mover.x + 10 - g->cam_x), (float)(g->mover.y + 132 - g->cam_y), 255, false);
-        draw_tex(g, g->fx_tex[9], (float)(g->mover.x - g->cam_x), (float)(g->mover.y - g->cam_y), 255, false);
+    if (g->mover.active && g->assets.n_fx_tex > 9) {
+        draw_tex(g, g->assets.fx_tex[0], (float)(g->mover.x + 10 - g->cam_x), (float)(g->mover.y + 132 - g->cam_y), 255, false);
+        draw_tex(g, g->assets.fx_tex[9], (float)(g->mover.x - g->cam_x), (float)(g->mover.y - g->cam_y), 255, false);
     }
-    if (g->crate.icon && !g->super_pause && g->crate.icon < g->n_icone && g->icone[g->crate.icon])
-        draw_tex(g, g->icone[g->crate.icon], (float)(g->crate.x - g->cam_x), (float)(g->crate.y - g->cam_y), 255, false);
+    if (g->crate.icon && !g->super_pause && g->crate.icon < g->assets.n_icone && g->assets.icone[g->crate.icon])
+        draw_tex(g, g->assets.icone[g->crate.icon], (float)(g->crate.x - g->cam_x), (float)(g->crate.y - g->cam_y), 255, false);
     /* the one who hit last is drawn on top */
     if (g->p[1].on_top) { draw_fighter(g, &g->p[2]); draw_fighter(g, &g->p[1]); }
     else { draw_fighter(g, &g->p[1]); draw_fighter(g, &g->p[2]); }

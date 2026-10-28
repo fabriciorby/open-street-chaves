@@ -99,9 +99,8 @@ typedef struct {
 
 typedef struct { char name[4]; int char_id; int score; } osc_record;   /* g_records (10 x 12 bytes) */
 
+/* Everything loaded from the game folder (textures, sounds): owned by assets.c. */
 typedef struct {
-    SDL_Renderer *ren;
-    char data_dir[1024];
     SDL_Texture *stage;
     int stage_w, stage_h;
     osc_strip strips[2];
@@ -109,6 +108,23 @@ typedef struct {
     int fx_w[OSC_MAX_FX_SPRITES], fx_h[OSC_MAX_FX_SPRITES], n_fx_tex;
     SDL_Texture *anim_tex[OSC_MAX_FX_SPRITES];   /* Animacoes/Anim-NN.bmp (stage animations) */
     int anim_w[OSC_MAX_FX_SPRITES], anim_h[OSC_MAX_FX_SPRITES], n_anim_tex;
+    osc_wav music;
+    bool has_music;
+    osc_wav sounds[80];   /* DXWaveListSnd[k] = Sons/Som-(k+1).wav */
+    int n_sounds;
+    osc_wav voices[16][2]; /* DXWaveListVitoria[2(N-1) + {a, b}] = Falas/Fala-NN-a/b.wav */
+    SDL_Texture *face_small[16], *face_big[16];
+    SDL_Texture *face_hurt[16];  /* Rxx-b: the HUD face while the red bar falls */
+    int face_big_w[16], face_big_h[16];
+    SDL_Texture *abertura[16]; int abertura_w[16], abertura_h[16], n_abertura;   /* DXImageListAbertura (from the exe) */
+    SDL_Texture *icone[14];    int icone_w[14], icone_h[14], n_icone;            /* DXImageListIcone */
+    SDL_Texture *final_tex[11]; int final_w[11], final_h[11], n_final;          /* DXImageListFinal */
+} osc_assets;
+
+typedef struct {
+    SDL_Renderer *ren;
+    char data_dir[1024];
+    osc_assets assets;
     int stage_id;
     int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
     osc_effect fx[OSC_MAX_FX];
@@ -126,11 +142,6 @@ typedef struct {
     bool speed_overlay_draw; /* the bar was drawn in the last tick */
     int view_dx;             /* DXDraw1.Left, -40..40 (, / . keys) */
     uint32_t rng;        /* Delphi RandSeed */
-    osc_wav music;
-    bool has_music;
-    osc_wav sounds[80];   /* DXWaveListSnd[k] = Sons/Som-(k+1).wav */
-    int n_sounds;
-    osc_wav voices[16][2]; /* DXWaveListVitoria[2(N-1) + {a, b}] = Falas/Fala-NN-a/b.wav */
     int round_start, round_end;
     int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
     int rounds_to_win;
@@ -151,9 +162,6 @@ typedef struct {
     int sel[3], sel_locked[3], sel_sub;
     int ladder[9];           /* ladder[1..7] opponents, ladder[8] rival */
     int match_over;          /* 0 running, 1 P1 won, 2 P2 won */
-    SDL_Texture *face_small[16], *face_big[16];
-    SDL_Texture *face_hurt[16];  /* Rxx-b: the HUD face while the red bar falls */
-    int face_big_w[16], face_big_h[16];
     bool p1_in, p2_in;       /* humans who joined */
     bool first_hit;          /* 0x4b57f4: the round's first attack was landed */
     int hud_y, hud_y2;       /* 0x4b44d2 / 0x4b44d4: top and bottom HUD offsets (slide out at round end) */
@@ -164,9 +172,6 @@ typedef struct {
     int demo;                 /* g_demo countdown while the attract demo fight runs */
     int menu_cam;             /* g_camY as the attract / records scroll offset */
     bool key_coin, key_start1, key_start2;   /* '5' '1' '2' edge events from main.c, consumed each tick */
-    SDL_Texture *abertura[16]; int abertura_w[16], abertura_h[16], n_abertura;   /* DXImageListAbertura (from the exe) */
-    SDL_Texture *icone[14];    int icone_w[14], icone_h[14], n_icone;            /* DXImageListIcone */
-    SDL_Texture *final_tex[11]; int final_w[11], final_h[11], n_final;          /* DXImageListFinal */
     osc_record records[10];
     /* name entry (state 12) */
     char name[3][4];          /* players' 3-letter names, 'AAA' on entry */

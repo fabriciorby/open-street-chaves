@@ -78,11 +78,11 @@ static void select_render(osc_game *g)
     barra(g, 200, c2 - 300, 400, c2, rgb(255, 100, 100));
     /* Icone 11/12 (by language) tiled and drifting down with g_timerB */
     int ic = g->lang == 0 ? 11 : 12;
-    if (ic < g->n_icone)
+    if (ic < g->assets.n_icone)
         for (int j = 0; j < 4; j++)
             for (int i = 0; i < 2; i++) {
-                draw_tex(g, g->icone[ic], (float)(145 * j - 67), (float)(200 * i - 200 + 8 * g->timer_sub), 255, false);
-                draw_tex(g, g->icone[ic], (float)(145 * j), (float)(200 * i - 100 + 8 * g->timer_sub), 255, false);
+                draw_tex(g, g->assets.icone[ic], (float)(145 * j - 67), (float)(200 * i - 200 + 8 * g->timer_sub), 255, false);
+                draw_tex(g, g->assets.icone[ic], (float)(145 * j), (float)(200 * i - 100 + 8 * g->timer_sub), 255, false);
             }
     barra(g, k - 410, 156, k, 290, rgb(30, 50, 70));
     barra(g, k - 410, 158, k, 160, k_white);
@@ -90,16 +90,16 @@ static void select_render(osc_game *g)
     /* the grid: every face at alpha 60 */
     for (int i = 0; i < 15; i++) {
         int x = k + 49 * (i % 8) - 402, y = i < 8 ? 163 : 223;
-        draw_tex_rect(g, g->face_small[i + 1], x, y, x + 50, y + 60, 60);
+        draw_tex_rect(g, g->assets.face_small[i + 1], x, y, x + 50, y + 60, 60);
     }
     if (g->sel_sub < 300) return;
     char buf[32];
     for (int p = 1; p <= 2; p++) {
         if (!(p == 1 ? g->p1_in : g->p2_in)) continue;
         int c = g->sel[p];
-        draw_tex(g, g->face_big[c], p == 1 ? 52.f : 252.f, 25.f, 255, false);
+        draw_tex(g, g->assets.face_big[c], p == 1 ? 52.f : 252.f, 25.f, 255, false);
         if (!g->sel_locked[p])
-            draw_tex(g, g->face_small[c], (float)(k + 49 * ((c - 1) % 8) - 402), (float)cell_y(c), 255, false);
+            draw_tex(g, g->assets.face_small[c], (float)(k + 49 * ((c - 1) % 8) - 402), (float)cell_y(c), 255, false);
         texto(g, p == 1 ? 100 : 300, 130 - (int)SDL_lround(cos(g->ciclo / 4.3) * 4.0),
               osc_text(OSC_MEMO_NOMES, c, g->lang), 'c', 12, rgb(180, 220, 160));
     }
@@ -153,16 +153,16 @@ static void vs_render(osc_game *g)
             int c = g->ladder[i];
             float y = c2 < 50 ? (float)(470 - 5 * c2) : 220.f;
             bool shown = i <= g->fight_no || g->unlock_churros;
-            if (shown && c >= 1 && c <= 15) draw_tex(g, g->face_small[c], (float)(48 * i - 40), y, 255, true);
-            if (i < g->fight_no && 10 < g->n_icone)
-                draw_tex(g, g->icone[10], (float)(48 * i - 35), c2 < 50 ? (float)(485 - 5 * c2) : 235.f, 255, false);
-            if (!shown && 9 < g->n_icone) draw_tex(g, g->icone[9], (float)(48 * i - 40), y, 255, false);
+            if (shown && c >= 1 && c <= 15) draw_tex(g, g->assets.face_small[c], (float)(48 * i - 40), y, 255, true);
+            if (i < g->fight_no && 10 < g->assets.n_icone)
+                draw_tex(g, g->assets.icone[10], (float)(48 * i - 35), c2 < 50 ? (float)(485 - 5 * c2) : 235.f, 255, false);
+            if (!shown && 9 < g->assets.n_icone) draw_tex(g, g->assets.icone[9], (float)(48 * i - 40), y, 255, false);
         }
     }
-    if (c2 >= 50 && g->ciclo <= 10 && 8 < g->n_icone)
-        draw_tex(g, g->icone[8], (float)(48 * g->fight_no - 20), 215.f, 255, false);
-    if (c2 > 60 && g->stage) {
-        draw_tex_rect(g, g->stage, 80, 6, 320, 134, 255);
+    if (c2 >= 50 && g->ciclo <= 10 && 8 < g->assets.n_icone)
+        draw_tex(g, g->assets.icone[8], (float)(48 * g->fight_no - 20), 215.f, 255, false);
+    if (c2 > 60 && g->assets.stage) {
+        draw_tex_rect(g, g->assets.stage, 80, 6, 320, 134, 255);
         texto(g, 200, 115, osc_text(OSC_MEMO_CENARIOS, g->stage_id - 1, g->lang), 'c', 9, k_white);
     }
     if (c2 > 120)
@@ -214,7 +214,7 @@ static void blit(osc_game *g, SDL_Texture *t, int w, int h, float x, float y)
 }
 static void blit_ab(osc_game *g, int i, float x, float y)
 {
-    if (i >= 0 && i < g->n_abertura) blit(g, g->abertura[i], g->abertura_w[i], g->abertura_h[i], x, y);
+    if (i >= 0 && i < g->assets.n_abertura) blit(g, g->assets.abertura[i], g->assets.abertura_w[i], g->assets.abertura_h[i], x, y);
 }
 
 /* ---- state 1: attract / title (07b-layout.md "Attract") ------------------- */
@@ -265,7 +265,7 @@ static void attract_tick(osc_game *g)
     if (g->screen_tick < 1000) g->screen_tick++;
     int c = g->screen_tick;
     if (c == 100) g->menu_cam = 0;
-    if (c == 200 && g->n_sounds > 9) osc_play_snd(g, 9);
+    if (c == 200 && g->assets.n_sounds > 9) osc_play_snd(g, 9);
     if (c > 235) g->menu_cam -= 2;
     if (g->menu_cam < -200) g->menu_cam = -200;
     if (c > 650) start_demo(g);
@@ -314,9 +314,9 @@ static void attract_render(osc_game *g)
     if (k > 0) {
         int k1 = lround_i(223.0 / k), k2 = lround_i(117.0 / k);
         int li = g->lang == 1 ? 13 : 12;
-        if (li < g->n_abertura && g->abertura[li]) {
+        if (li < g->assets.n_abertura && g->assets.abertura[li]) {
             SDL_FRect d = {(float)(205 - k1), (float)(-100 - cam - k2), (float)(2 * k1), (float)(2 * k2)};
-            SDL_RenderTexture(g->ren, g->abertura[li], NULL, &d);
+            SDL_RenderTexture(g->ren, g->assets.abertura[li], NULL, &d);
         }
     }
     if (c > 440) {
@@ -358,7 +358,7 @@ static void records_render(osc_game *g)
         snprintf(sc, sizeof sc, "%d", r->score);
         texto(g, 50, y, num, '-', 15, c);
         texto(g, 100, y, r->name, '-', 15, c);
-        if (r->char_id >= 1 && r->char_id <= 15) draw_tex(g, g->face_small[r->char_id], 160.f, (float)(y - 20), 255, false);
+        if (r->char_id >= 1 && r->char_id <= 15) draw_tex(g, g->assets.face_small[r->char_id], 160.f, (float)(y - 20), 255, false);
         texto(g, 230, y, sc, '-', 15, c);
     }
     if (g->screen_tick > 240)
@@ -502,7 +502,7 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
         g->key_coin = false;
         if (g->credits < 99) {
             g->credits++;
-            if (g->n_sounds > 0) osc_play_snd(g, 0);
+            if (g->assets.n_sounds > 0) osc_play_snd(g, 0);
             if (g->demo > 0 || g->screen == OSC_SCREEN_RECORDS) osc_go_attract(g, 500);
         }
     }
@@ -661,10 +661,10 @@ static void osc_game_render_screen(osc_game *g)
                 for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + 40 - g->demo, k_black);
             if (g->ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 10, k_white);
             int li = g->lang == 1 ? 13 : 12;
-            if (g->demo < 500 && li < g->n_abertura && g->abertura[li]) {
-                int hw = lround_i(g->abertura_w[li] / 2.0), hh = lround_i(g->abertura_h[li] / 2.0);
+            if (g->demo < 500 && li < g->assets.n_abertura && g->assets.abertura[li]) {
+                int hw = lround_i(g->assets.abertura_w[li] / 2.0), hh = lround_i(g->assets.abertura_h[li] / 2.0);
                 SDL_FRect d = {(float)(390 - hw), (float)(280 - hh), (float)hw, (float)hh};
-                SDL_RenderTexture(g->ren, g->abertura[li], NULL, &d);
+                SDL_RenderTexture(g->ren, g->assets.abertura[li], NULL, &d);
             }
         }
         break;
