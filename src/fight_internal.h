@@ -61,4 +61,11 @@ void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);
 
 void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);   /* zerardados */
 
+/* hud.c */
+const char *tx(osc_game *g, int get);   /* MemoTexto.Lines.Get(n) */
+void draw_hud_top(osc_game *g);
+void draw_hud_bottom(osc_game *g);
+void draw_round_texts(osc_game *g);
+void draw_dialogue(osc_game *g);
+
 #endif
