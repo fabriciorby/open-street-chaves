@@ -1,3 +1,4 @@
+/* Name entry for the records (state 12). */
 #include <stdio.h>
 #include <string.h>
 

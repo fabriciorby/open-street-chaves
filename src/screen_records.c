@@ -1,3 +1,4 @@
+/* Game over / top 10 (state 8). */
 #include <stdio.h>
 #include <string.h>
 

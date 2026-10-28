@@ -1,53 +1,19 @@
-/* Screens outside the fight: character select (state 4), VS (state 5),
- * continue (state 9), and the dispatch between them (07-screens-and-text.md).
- * Text is drawn with SDL's debug font until the original font is handled. */
+/* Screen dispatcher (DXTimer1Timer / FormKeyDown / render): the coin and start keys, the per-screen
+ * table, the VELOCIDADE bar and the footer. Each screen lives in its own screen_*.c
+ * (07-screens-and-text.md); shared declarations are in screens.h. */
 #include <stdio.h>
 #include <string.h>
 
 #include "exetext.h"
 #include "font.h"
 #include "assets.h"
-#include "fight_draw.h"
 #include "fight.h"
+#include "wav.h"
 #include "game.h"
 #include "canvas.h"
-#include "arcade.h"
 #include "text.h"
-#include "wav.h"
 #include "screens.h"
 #include <math.h>
-
-/* End of a match (DXTimer1Timer round end, re == 100 and re > 220): the loser drops out
- * (beating the CPU advances the ladder); with a human left the ladder goes on, past
- * fight 8 that human sees the ending; with nobody left it is continue time. Either way a
- * score above the 10th record asks for a name first (state 12). */
-static void after_match(osc_game *g, int winner)
-{
-    int loser = 3 - winner;
-    if (!g->fight.p[loser].human) g->fight.fight_no++;
-    g->fight.p[loser].human = false;
-    if (loser == 1) g->flow.p1_in = false; else g->flow.p2_in = false;
-    bool any = g->fight.p[1].human || g->fight.p[2].human;
-    if (any && g->fight.fight_no <= 8) {
-        if (!g->flow.ladder[1]) osc_make_ladder(g, g->fight.p[winner].char_id);   /* 2P winner goes on alone */
-        g->flow.sel[winner] = g->fight.p[winner].char_id;
-        g->flow.screen = OSC_SCREEN_VS; g->flow.screen_tick = 0; g->fight.ciclo = 0;
-        return;
-    }
-    g->flow.name_after = any ? OSC_SCREEN_ENDING : OSC_SCREEN_CONTINUE;
-    g->flow.ending_char = g->fight.p[winner].char_id;
-    bool ask = false;
-    for (int p = 1; p <= 2; p++) {
-        g->flow.name_active[p] = g->fight.p[p].score > g->flow.records[9].score;
-        if (!g->flow.name_active[p]) continue;
-        memcpy(g->flow.name[p], "AAA", 4);
-        g->flow.name_pos[p] = 1;
-        g->fight.p[p].in_prev = 0xff;
-        ask = true;
-    }
-    if (ask) { g->flow.screen = OSC_SCREEN_NAME; g->flow.screen_tick = 0; g->fight.ciclo = 0; return; }
-    osc_name_leave(g);
-}
 
 /* ---- coins and start buttons (FormKeyDown '5', '1', '2') ------------------ */
 static void join_player(osc_game *g, int p)
@@ -117,32 +83,38 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
     }
 }
 
+/* Screen dispatch table, indexed by OSC_SCREEN_*. Slots that are NULL (0, 6 and anything out of
+ * range) fall through to the fight screen, exactly like the `default:` of the switch this replaces. */
+typedef struct {
+    void (*tick)(osc_game *g, uint8_t in1, uint8_t in2);
+    void (*render)(osc_game *g);
+} screen_ops;
+
+static const screen_ops k_screens[] = {
+    [OSC_SCREEN_ATTRACT]  = {osc_attract_tick,       osc_attract_render},
+    [OSC_SCREEN_MENU_F1]  = {osc_menu_tick,          osc_menu_render},
+    [OSC_SCREEN_MENU_F2]  = {osc_menu_tick,          osc_menu_render},
+    [OSC_SCREEN_SELECT]   = {osc_select_tick,        osc_select_render},
+    [OSC_SCREEN_VS]       = {osc_vs_tick,            osc_vs_render},
+    [OSC_SCREEN_FIGHT]    = {osc_fight_screen_tick,  osc_fight_screen_render},
+    [OSC_SCREEN_RECORDS]  = {osc_records_tick,       osc_records_render},
+    [OSC_SCREEN_CONTINUE] = {osc_continue_tick,      osc_continue_render},
+    [OSC_SCREEN_ENDING]   = {osc_ending_tick,        osc_ending_render},
+    [OSC_SCREEN_CREDITS]  = {osc_ending_tick,        osc_ending_render},
+    [OSC_SCREEN_NAME]     = {osc_name_tick,          osc_name_render},
+};
+
+static const screen_ops *screen_of(const osc_game *g)
+{
+    unsigned s = (unsigned)g->flow.screen;
+    if (s < sizeof k_screens / sizeof k_screens[0] && k_screens[s].tick) return &k_screens[s];
+    return &k_screens[OSC_SCREEN_FIGHT];
+}
+
 static void game_tick_body(osc_game *g, uint8_t in1, uint8_t in2)
 {
     handle_keys(g, in1, in2);
-    switch (g->flow.screen) {
-    case OSC_SCREEN_ATTRACT: osc_attract_tick(g, in1, in2); break;
-    case OSC_SCREEN_RECORDS: osc_records_tick(g, in1, in2); break;
-    case OSC_SCREEN_NAME: osc_name_tick(g, in1, in2); break;
-    case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_tick(g, in1, in2); break;
-    case OSC_SCREEN_ENDING: case OSC_SCREEN_CREDITS: osc_ending_tick(g, in1, in2); break;
-    case OSC_SCREEN_SELECT: osc_select_tick(g, in1, in2); break;
-    case OSC_SCREEN_VS: osc_vs_tick(g, in1, in2); break;
-    case OSC_SCREEN_CONTINUE: osc_continue_tick(g, in1, in2); break;
-    default:
-        osc_fight_tick(g, in1, in2);
-        if (g->flow.demo > 0) {
-            g->flow.demo--;
-            if (g->flow.demo < 6) { g->flow.demo = 0; g->flow.screen = OSC_SCREEN_RECORDS; g->flow.screen_tick = 0; g->flow.menu_cam = 0; g->fight.ciclo = 0; }
-            break;
-        }
-        if (g->flow.match_over) {
-            int winner = g->flow.match_over;
-            g->flow.match_over = 0;
-            after_match(g, winner);
-        }
-        break;
-    }
+    screen_of(g)->tick(g, in1, in2);
 }
 
 /* Port rule: P2's default strong punch is G, so G only opens the move list when neither player's
@@ -195,8 +167,6 @@ static void speed_bar(osc_game *g)
     barra(g, v, 275, v + 2, 283, rgb(255, 50, 50));
 }
 
-static void osc_game_render_screen(osc_game *g);
-
 static void footer(osc_game *g)
 {
     char buf[32];
@@ -213,37 +183,7 @@ static void footer(osc_game *g)
 
 void osc_game_render(osc_game *g)
 {
-    osc_game_render_screen(g);
+    screen_of(g)->render(g);
     if (g->flow.screen != OSC_SCREEN_MENU_F1 && g->flow.screen != OSC_SCREEN_MENU_F2) footer(g);
     if (g->flow.speed_overlay_draw) speed_bar(g);
-}
-
-static void osc_game_render_screen(osc_game *g)
-{
-    switch (g->flow.screen) {
-    case OSC_SCREEN_SELECT: osc_select_render(g); break;
-    case OSC_SCREEN_VS: osc_vs_render(g); break;
-    case OSC_SCREEN_CONTINUE: osc_continue_render(g); break;
-    case OSC_SCREEN_ATTRACT: osc_attract_render(g); break;
-    case OSC_SCREEN_RECORDS: osc_records_render(g); break;
-    case OSC_SCREEN_NAME: osc_name_render(g); break;
-    case OSC_SCREEN_MENU_F1: case OSC_SCREEN_MENU_F2: osc_menu_render(g); break;
-    case OSC_SCREEN_ENDING: case OSC_SCREEN_CREDITS: osc_ending_render(g); break;
-    default:
-        osc_fight_render(g);
-        if (g->flow.demo > 0) {
-            /* 0x4aa00f..0x4aa264: venetian wipe over the last 40 ticks, the blinking prompt (size 10),
-             * and the title logo (Abertura 12/13, not Icone) at half size in the bottom right corner */
-            if (g->flow.demo < 40)
-                for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + 40 - g->flow.demo, k_black);
-            if (g->fight.ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);
-            int li = g->settings.lang == 1 ? 13 : 12;
-            if (g->flow.demo < 500 && li < g->assets.n_abertura && g->assets.abertura[li]) {
-                int hw = lround_i(g->assets.abertura_w[li] / 2.0), hh = lround_i(g->assets.abertura_h[li] / 2.0);
-                SDL_FRect d = {(float)(390 - hw), (float)(280 - hh), (float)hw, (float)hh};
-                SDL_RenderTexture(g->ren, g->assets.abertura[li], NULL, &d);
-            }
-        }
-        break;
-    }
 }

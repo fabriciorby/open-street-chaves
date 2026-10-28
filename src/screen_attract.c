@@ -1,3 +1,4 @@
+/* Attract / title (state 1) and the demo fight start. */
 #include <stdio.h>
 #include <string.h>
 
