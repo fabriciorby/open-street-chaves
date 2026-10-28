@@ -138,6 +138,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     a->loaded = osc_game_init(&a->game, a->ren, data);
 #endif
     if (lang) a->game.lang = lang;
+    if (max_frames > 0) a->game.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
     if (a->loaded && (direct || demo)) {
         a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
         a->game.fight_no = battle;
@@ -250,6 +251,7 @@ SDL_AppResult SDL_AppIterate(void *state)
     Uint64 now = SDL_GetTicksNS();
     a->acc_ns += now - a->last_ns;
     a->last_ns = now;
+    if (a->max_frames > 0) a->acc_ns = TICK_NS;   /* ... and exactly one tick per frame, independent of the wall clock */
 #ifdef __EMSCRIPTEN__
     if (a->acc_ns > TICK_NS * 2) a->acc_ns = TICK_NS * 2;   /* never let a slow frame snowball on the main thread */
 #else

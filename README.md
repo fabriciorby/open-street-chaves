@@ -72,6 +72,22 @@ browser only and cached in its IndexedDB storage.
 On touch devices a semi-transparent on-screen gamepad (D-pad on the left; Z X C V as a diamond on the right; FICHA inserts a coin and Z starts) appears once the game starts.
 On desktop the canvas fills the window at 4:3; a small toolbar under it offers *Tela cheia* (fullscreen) and *Escala* (Ajustar / 2x / 3x / Pixel perfeito, remembered in the browser).
 
+### Regression test (golden screenshots)
+
+`tests/golden.sh` renders ~40 deterministic headless scenarios (fights, effects,
+every screen, endings, menus, Spanish) and compares the sha256 of each
+screenshot with `tests/golden.txt` (only names and hashes are committed, never
+any image). It needs the original game data, so CI cannot run it.
+
+```
+tests/golden.sh build/open-street-chaves /path/to/StreetChaves            # check
+tests/golden.sh --update build/open-street-chaves /path/to/StreetChaves   # accept new output
+```
+
+Screenshots are written to `build/golden-out/` (gitignored) so a failing
+scenario can be compared by eye. `--frames N` is deterministic by design: fixed
+RNG seed and one tick per frame.
+
 ### Web build on GitHub Pages
 
 `.github/workflows/pages.yml` publishes the web build at
@@ -177,6 +193,23 @@ ligado).
 
 Binários prontos para todas as plataformas são gerados pelo GitHub Actions a
 cada push (aba *Actions* → artifacts).
+
+### Teste de regressão (screenshots de referência)
+
+`tests/golden.sh` renderiza ~40 cenários determinísticos sem janela (lutas,
+efeitos, todas as telas, finais, menus, espanhol) e compara o sha256 de cada
+screenshot com `tests/golden.txt` (só nomes e hashes vão para o repositório,
+nunca imagens). Precisa dos dados do jogo original, então o CI não consegue
+executá-lo.
+
+```
+tests/golden.sh build/open-street-chaves /caminho/para/StreetChaves            # verificar
+tests/golden.sh --update build/open-street-chaves /caminho/para/StreetChaves   # aceitar a nova saída
+```
+
+As imagens ficam em `build/golden-out/` (ignorado pelo git) para comparar a
+olho um cenário que falhou. `--frames N` é determinístico de propósito:
+semente aleatória fixa e um tick por frame.
 
 ### Controles (por enquanto)
 
