@@ -15,7 +15,7 @@ static const int k_round_time[5] = {0, 30, 60, 90, 99};
 
 int osc_round_time(const osc_game *g)
 {
-    int m = g->cfg_time_mode;
+    int m = g->settings.cfg_time_mode;
     if (m < 1 || m > 4) m = 3;
     return k_round_time[m];
 }
@@ -31,9 +31,9 @@ static void config_path(char *out, size_t cap)
 /* FormCreate defaults (0x49d05d..0x49d0c1) */
 static void apply_defaults(osc_game *g)
 {
-    g->level = 4; g->cfg_time_mode = 3; g->cfg_power = 1; g->damage_level = 0.9;
-    g->cfg_blood = true; g->rounds_to_win = 2; g->lang = 0; g->cfg_flash = true;
-    g->show_level = true; g->show_credits = true;
+    g->settings.level = 4; g->settings.cfg_time_mode = 3; g->settings.cfg_power = 1; g->settings.damage_level = 0.9;
+    g->settings.cfg_blood = true; g->settings.rounds_to_win = 2; g->settings.lang = 0; g->settings.cfg_flash = true;
+    g->settings.show_level = true; g->settings.show_credits = true;
     g->snd_test = 0; g->mus_test = 0;
 }
 
@@ -56,9 +56,9 @@ static void config_line(osc_game *g, int line, const char *tok)
 {
     int v;
     switch (line) {
-    case 0: if (parse_byte(tok, &v)) g->level = clampi(v, 1, 8); break;
-    case 1: if (tok[0] >= '1' && tok[0] <= '4' && !tok[1]) g->cfg_time_mode = tok[0] - '0'; break;
-    case 2: if (parse_byte(tok, &v)) g->cfg_power = clampi(v, 1, 4); break;
+    case 0: if (parse_byte(tok, &v)) g->settings.level = clampi(v, 1, 8); break;
+    case 1: if (tok[0] >= '1' && tok[0] <= '4' && !tok[1]) g->settings.cfg_time_mode = tok[0] - '0'; break;
+    case 2: if (parse_byte(tok, &v)) g->settings.cfg_power = clampi(v, 1, 4); break;
     case 3: {   /* StrToFloat: the decimal separator is the writer's locale's */
         char tmp[64], *end;
         snprintf(tmp, sizeof tmp, "%s", tok);
@@ -67,18 +67,18 @@ static void config_line(osc_game *g, int line, const char *tok)
         if (end == tmp || *end) break;
         if (0.3L > (long double)d) d = 0.3;
         if (d > 2.0) d = 2.0;
-        g->damage_level = d;
+        g->settings.damage_level = d;
         break;
     }
-    case 4: if (!strcmp(tok, "0")) g->cfg_blood = false; if (!strcmp(tok, "1")) g->cfg_blood = true; break;
-    case 5: if (parse_byte(tok, &v)) g->rounds_to_win = clampi(v, 1, 3); break;
-    case 6: if (parse_byte(tok, &v)) g->lang = clampi(v, 1, 2) == 2 ? 1 : 0; break;
-    case 7: if (!strcmp(tok, "0")) g->cfg_flash = false; if (!strcmp(tok, "1")) g->cfg_flash = true; break;
-    case 8: if (!strcmp(tok, "0")) g->show_level = false; if (!strcmp(tok, "1")) g->show_level = true; break;
-    case 9: if (!strcmp(tok, "0")) g->show_credits = false; if (!strcmp(tok, "1")) g->show_credits = true; break;
+    case 4: if (!strcmp(tok, "0")) g->settings.cfg_blood = false; if (!strcmp(tok, "1")) g->settings.cfg_blood = true; break;
+    case 5: if (parse_byte(tok, &v)) g->settings.rounds_to_win = clampi(v, 1, 3); break;
+    case 6: if (parse_byte(tok, &v)) g->settings.lang = clampi(v, 1, 2) == 2 ? 1 : 0; break;
+    case 7: if (!strcmp(tok, "0")) g->settings.cfg_flash = false; if (!strcmp(tok, "1")) g->settings.cfg_flash = true; break;
+    case 8: if (!strcmp(tok, "0")) g->settings.show_level = false; if (!strcmp(tok, "1")) g->settings.show_level = true; break;
+    case 9: if (!strcmp(tok, "0")) g->settings.show_credits = false; if (!strcmp(tok, "1")) g->settings.show_credits = true; break;
     default:   /* lines 10..25: our own key map (the original's F2 menu is not persisted), P1 then P2 scancodes */
         if (line >= 10 && line < 26 && parse_byte(tok, &v) && v > 0 && v < SDL_SCANCODE_COUNT)
-            g->keymap[(line - 10) / 8][(line - 10) % 8] = (SDL_Scancode)v;
+            g->settings.keymap[(line - 10) / 8][(line - 10) % 8] = (SDL_Scancode)v;
         break;
     }
 }
@@ -111,8 +111,8 @@ void osc_config_load(osc_game *g)
                                        SDL_SCANCODE_Z, SDL_SCANCODE_X, SDL_SCANCODE_C, SDL_SCANCODE_V};
     static const SDL_Scancode k2[8] = {SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_A, SDL_SCANCODE_D,
                                        SDL_SCANCODE_F, SDL_SCANCODE_G, SDL_SCANCODE_H, SDL_SCANCODE_J};
-    memcpy(g->keymap[0], k1, sizeof k1);
-    memcpy(g->keymap[1], k2, sizeof k2);
+    memcpy(g->settings.keymap[0], k1, sizeof k1);
+    memcpy(g->settings.keymap[1], k2, sizeof k2);
     apply_defaults(g);
     char path[1200];
     snprintf(path, sizeof path, "%s/Chaves.dat", g->data_dir);
@@ -131,11 +131,11 @@ void osc_config_save(osc_game *g)
     SDL_IOStream *f = SDL_IOFromFile(path, "wb");
     if (!f) { SDL_Log("config: cannot write %s: %s", path, SDL_GetError()); return; }
     char buf[512];
-    int n = snprintf(buf, sizeof buf, "%d\r\n%d\r\n%d\r\n%.15g\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n", g->level, g->cfg_time_mode, g->cfg_power,
-                     g->damage_level, g->cfg_blood ? 1 : 0, g->rounds_to_win, g->lang == 1 ? 2 : 1,
-                     g->cfg_flash ? 1 : 0, g->show_level ? 1 : 0, g->show_credits ? 1 : 0);
+    int n = snprintf(buf, sizeof buf, "%d\r\n%d\r\n%d\r\n%.15g\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n", g->settings.level, g->settings.cfg_time_mode, g->settings.cfg_power,
+                     g->settings.damage_level, g->settings.cfg_blood ? 1 : 0, g->settings.rounds_to_win, g->settings.lang == 1 ? 2 : 1,
+                     g->settings.cfg_flash ? 1 : 0, g->settings.show_level ? 1 : 0, g->settings.show_credits ? 1 : 0);
     for (int p = 0; p < 2; p++)
-        for (int i = 0; i < 8; i++) n += snprintf(buf + n, sizeof buf - (size_t)n, "%d\r\n", (int)g->keymap[p][i]);
+        for (int i = 0; i < 8; i++) n += snprintf(buf + n, sizeof buf - (size_t)n, "%d\r\n", (int)g->settings.keymap[p][i]);
     SDL_WriteIO(f, buf, (size_t)n);
     SDL_CloseIO(f);
 }

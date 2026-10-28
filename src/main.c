@@ -131,7 +131,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderLogicalPresentation(a->ren, OSC_SCREEN_W, OSC_SCREEN_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderVSync(a->ren, 1);
 
-    a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
+    a->game.settings.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
 #ifdef __EMSCRIPTEN__
     data = "/data";   /* filled by the page's folder picker (web/shell.html) */
     a->loaded = false;
@@ -139,14 +139,14 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
 #else
     a->loaded = osc_game_init(&a->game, a->ren, data);
 #endif
-    if (lang) a->game.lang = lang;
+    if (lang) a->game.settings.lang = lang;
     if (max_frames > 0) a->game.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
     if (a->loaded && (direct || demo)) {
-        a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
+        a->game.p1_in = true; a->game.p2_in = !a->game.settings.ai_p2;
         a->game.fight_no = battle;
         osc_make_ladder(&a->game, c1);
         a->game.sel[1] = c1; a->game.sel[2] = c2;
-        a->game.p[1].human = true; a->game.p[2].human = !a->game.ai_p2;
+        a->game.p[1].human = true; a->game.p[2].human = !a->game.settings.ai_p2;
         a->game.p[1].char_id = c1; a->game.p[2].char_id = c2;
         a->loaded = osc_fight_start(&a->game, c1, c2, stage);
     }
@@ -261,8 +261,8 @@ SDL_AppResult SDL_AppIterate(void *state)
 #endif
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
-            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
-            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[1]) | pad_input(a->pads[1]));
+            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.settings.keymap[0]) | pad_input(a->pads[0]));
+            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.settings.keymap[1]) | pad_input(a->pads[1]));
             for (int i = 0; i < a->n_press; i++) {   /* scripted key taps for headless tests */
                 if (a->press_tick[i] == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_DOWN; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }
                 if (a->press_tick[i] + 3 == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_UP; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }

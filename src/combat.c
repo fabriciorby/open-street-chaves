@@ -34,7 +34,7 @@ void defend(osc_game *g, osc_fighter *f)
         if (e->persist) pers = true;
         ey = e->y;
     }
-    double kb = (8 - g->level) * 0.9 + 1.2 - 0.1 * g->fight_no;
+    double kb = (8 - g->settings.level) * 0.9 + 1.2 - 0.1 * g->fight_no;
     if (kb < 0.0) kb = 0.0;
 
     if (o->attacking && dist <= 160) {
@@ -95,7 +95,7 @@ void melee_step(osc_game *g, osc_fighter *a)
         spawn_fx(g, 14, 0, 0, cx, cy);
         if (v->facing == 1) move_x(g, v, -10.0);
         if (v->facing == 2) move_x(g, v, 10.0);
-        if (live) { v->health -= a->chip * g->damage_level; v->trail_delay = 20; }
+        if (live) { v->health -= a->chip * g->settings.damage_level; v->trail_delay = 20; }
         if (v->health <= 0.0) { g->snd_pending = 9; set_move(g, v, 10); }
         a->attacking = false;
         if (v->health > 0.0) {
@@ -120,8 +120,8 @@ void melee_step(osc_game *g, osc_fighter *a)
         if (ch == 6 && st == 29) a->combo_timer = 50;
         if (ch == 15 && st == 27) a->combo_timer = 50;
         if (a->hits > a->max_combo) a->max_combo = a->hits;
-        if (live) { v->health -= a->damage * g->damage_level; v->trail_delay = 20; }
-        if (g->cfg_flash) {
+        if (live) { v->health -= a->damage * g->settings.damage_level; v->trail_delay = 20; }
+        if (g->settings.cfg_flash) {
             if (a->hit_level == 1 && osc_random(g, 5) == 0) g->flash = 6;
             if (a->hit_level == 2 && osc_random(g, 2) == 0) g->flash = 6;
         }
@@ -134,7 +134,7 @@ void melee_step(osc_game *g, osc_fighter *a)
             if (v->facing == 2) v->rot_step = 20;
         }
         spawn_fx(g, 1, 0, 0, cx, cy);
-        if ((g->cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0) || g->unlock_satanas)
+        if ((g->settings.cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0) || g->settings.unlocks.satanas)
             spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
         set_move(g, v, (st == 4 || st == 6 || st == 8 || st == 9 || st == 10) ? 9 : 8);
         if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);

@@ -13,7 +13,7 @@ int osc_stage_for(osc_game *g, int opponent)
     if (osc_random(g, 5) < 2 && g->fight_no < 8 && alt[opponent]) st = alt[opponent];
     if (osc_random(g, 6) < 2 && g->fight_no < 8 &&
         (opponent == 3 || opponent == 4 || opponent == 9 || opponent == 10 || opponent == 11 || opponent == 14)) st = 12;
-    if (g->unlock_sc && g->fight_no < 8) st = g->unlock_sc;   /* SCnn.dat, not on the Gentalha path */
+    if (g->settings.unlocks.sc && g->fight_no < 8) st = g->settings.unlocks.sc;   /* SCnn.dat, not on the Gentalha path */
     return st;
 }
 

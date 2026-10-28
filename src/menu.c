@@ -21,7 +21,7 @@
  * current choices are drawn again on top in RGB(130,130,255) */
 static const osc_rgb k_blue = {130, 130, 255};
 static void ltxt(osc_game *g, int x, int y, const char *s, osc_rgb c) { texto(g, x, y, s, '-', 11, c); }
-static void cfgtxt(osc_game *g, int x, int y, int line, osc_rgb c) { ltxt(g, x, y, osc_text(OSC_MEMO_CONFIG, line, g->lang), c); }
+static void cfgtxt(osc_game *g, int x, int y, int line, osc_rgb c) { ltxt(g, x, y, osc_text(OSC_MEMO_CONFIG, line, g->settings.lang), c); }
 
 /* where the F1 menu came back to: leaving it only sets g_state := 1, the attract cycle carries on */
 static int s_resume_tick, s_resume_cam, s_resume_ciclo, s_n_music;
@@ -61,7 +61,7 @@ static void menu_leave(osc_game *g)
 /* FPU extended arithmetic of the original: x +/- 0.1 (an 80-bit constant) stored back as a double */
 static void damage_step(osc_game *g, int d)
 {
-    g->damage_level = (double)((long double)g->damage_level + (d < 0 ? -0.1L : 0.1L));
+    g->settings.damage_level = (double)((long double)g->settings.damage_level + (d < 0 ? -0.1L : 0.1L));
 }
 
 static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
@@ -76,34 +76,34 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (e2 & OSC_IN_DOWN) c++;
     if ((e1 | e2) & OSC_IN_LEFT) {
         switch (c) {
-        case 1: g->level--; break;
-        case 2: g->cfg_time_mode--; break;
-        case 3: g->cfg_power--; break;
+        case 1: g->settings.level--; break;
+        case 2: g->settings.cfg_time_mode--; break;
+        case 3: g->settings.cfg_power--; break;
         case 4: damage_step(g, -1); break;
-        case 5: g->cfg_blood = true; break;
-        case 6: g->rounds_to_win--; break;
-        case 7: g->lang = 0; break;
+        case 5: g->settings.cfg_blood = true; break;
+        case 6: g->settings.rounds_to_win--; break;
+        case 7: g->settings.lang = 0; break;
         case 8: if (g->snd_test > 1) g->snd_test--; break;
         case 9: if (g->mus_test > 1) g->mus_test--; break;
-        case 10: g->cfg_flash = true; break;
-        case 11: g->show_level = true; break;
-        case 12: g->show_credits = true; break;
+        case 10: g->settings.cfg_flash = true; break;
+        case 11: g->settings.show_level = true; break;
+        case 12: g->settings.show_credits = true; break;
         }
     }
     if ((e1 | e2) & OSC_IN_RIGHT) {
         switch (c) {
-        case 1: g->level++; break;
-        case 2: g->cfg_time_mode++; break;
-        case 3: g->cfg_power++; break;
+        case 1: g->settings.level++; break;
+        case 2: g->settings.cfg_time_mode++; break;
+        case 3: g->settings.cfg_power++; break;
         case 4: damage_step(g, 1); break;
-        case 5: g->cfg_blood = false; break;
-        case 6: g->rounds_to_win++; break;
-        case 7: g->lang = 1; break;
+        case 5: g->settings.cfg_blood = false; break;
+        case 6: g->settings.rounds_to_win++; break;
+        case 7: g->settings.lang = 1; break;
         case 8: if (g->snd_test < g->assets.n_sounds) g->snd_test++; break;
         case 9: if (g->mus_test < s_n_music) g->mus_test++; break;
-        case 10: g->cfg_flash = false; break;
-        case 11: g->show_level = false; break;
-        case 12: g->show_credits = false; break;
+        case 10: g->settings.cfg_flash = false; break;
+        case 11: g->settings.show_level = false; break;
+        case 12: g->settings.show_credits = false; break;
         }
     }
     if ((e1 | e2) & OSC_IN_B1) {   /* only the first button plays */
@@ -115,12 +115,12 @@ static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
     if (c < 1) c = 12;
     if (c > 12) c = 1;
     g->menu_cursor = c;
-    g->cfg_time_mode = clampi(g->cfg_time_mode, 1, 4);
-    g->level = clampi(g->level, 1, 8);
-    g->cfg_power = clampi(g->cfg_power, 1, 4);
-    if (0.3L > (long double)g->damage_level) g->damage_level = 0.3;
-    if (g->damage_level > 2.0) g->damage_level = 2.0;
-    g->rounds_to_win = clampi(g->rounds_to_win, 1, 3);
+    g->settings.cfg_time_mode = clampi(g->settings.cfg_time_mode, 1, 4);
+    g->settings.level = clampi(g->settings.level, 1, 8);
+    g->settings.cfg_power = clampi(g->settings.cfg_power, 1, 4);
+    if (0.3L > (long double)g->settings.damage_level) g->settings.damage_level = 0.3;
+    if (g->settings.damage_level > 2.0) g->settings.damage_level = 2.0;
+    g->settings.rounds_to_win = clampi(g->settings.rounds_to_win, 1, 3);
     if (g->snd_test < 1) g->snd_test = 1;
     if (g->snd_test > g->assets.n_sounds) g->snd_test = g->assets.n_sounds;
 }
@@ -131,7 +131,7 @@ static void f1_render(osc_game *g)
     int c = g->menu_cursor;
     const osc_rgb w = k_white;
     barra(g, 0, 0, 400, 300, k_black);
-    texto(g, 200, 5, osc_text(OSC_MEMO_CONFIG, 1, g->lang), 'c', 15, w);
+    texto(g, 200, 5, osc_text(OSC_MEMO_CONFIG, 1, g->settings.lang), 'c', 15, w);
     /* 1 Nível do Jogo */
     cfgtxt(g, 10, 60, 2, w);
     for (int i = 1; i <= 8; i++) { snprintf(buf, sizeof buf, "%d", i); ltxt(g, 140 + 10 * (i - 1), 60, buf, w); }
@@ -144,10 +144,10 @@ static void f1_render(osc_game *g)
     /* 4 Nível de Dano: 78 px per 1.0, a 2 px red band on top, and the percentage (Round: half to even) */
     cfgtxt(g, 10, 105, 11, w);
     barraredonda(g, 140, 110, 300, 121, 5, w, k_black);
-    int bw = (int)lrintl(78.0L * g->damage_level);
+    int bw = (int)lrintl(78.0L * g->settings.damage_level);
     barra(g, 142, 112, 142 + bw, 119, rgb(255, 0, 0));
     barra(g, 142, 113, 142 + bw, 114, rgb(255, 100, 100));
-    snprintf(buf, sizeof buf, "%lld%%", (long long)llrintl(g->damage_level * 100.0L));
+    snprintf(buf, sizeof buf, "%lld%%", (long long)llrintl(g->settings.damage_level * 100.0L));
     ltxt(g, 310, 105, buf, w);
     /* 5 Sangue, 6 Rounds, 7 Linguagem */
     cfgtxt(g, 10, 120, 12, w); cfgtxt(g, 140, 120, 4, w); cfgtxt(g, 230, 120, 5, w);
@@ -164,19 +164,19 @@ static void f1_render(osc_game *g)
         cfgtxt(g, 10, 195 + 15 * i, 19 + i, w);
         cfgtxt(g, 140, 195 + 15 * i, 4, w); cfgtxt(g, 230, 195 + 15 * i, 5, w);
     }
-    texto(g, 200, 280, osc_text(OSC_MEMO_CONFIG, 22, g->lang), 'c', 11, w);   /* F1-SAIR */
+    texto(g, 200, 280, osc_text(OSC_MEMO_CONFIG, 22, g->settings.lang), 'c', 11, w);   /* F1-SAIR */
     /* the cursor row's label and every current choice again in blue */
     static const int label_line[13] = {0, 2, 3, 6, 11, 12, 13, 14, 17, 18, 19, 20, 21};
     if (c >= 1 && c <= 12) cfgtxt(g, 10, 45 + 15 * c, label_line[c], k_blue);
-    snprintf(buf, sizeof buf, "%d", g->level); ltxt(g, 140 + 10 * (g->level - 1), 60, buf, k_blue);
+    snprintf(buf, sizeof buf, "%d", g->settings.level); ltxt(g, 140 + 10 * (g->settings.level - 1), 60, buf, k_blue);
     static const char *times[5] = {"", "30", "60", "90", "--"};
-    if (g->cfg_time_mode >= 1 && g->cfg_time_mode <= 4) ltxt(g, 140 + 50 * (g->cfg_time_mode - 1), 75, times[g->cfg_time_mode], k_blue);
+    if (g->settings.cfg_time_mode >= 1 && g->settings.cfg_time_mode <= 4) ltxt(g, 140 + 50 * (g->settings.cfg_time_mode - 1), 75, times[g->settings.cfg_time_mode], k_blue);
     static const int power_x[5] = {0, 140, 215, 280, 345};
-    if (g->cfg_power >= 1 && g->cfg_power <= 4) cfgtxt(g, power_x[g->cfg_power], 90, 6 + g->cfg_power, k_blue);
-    cfgtxt(g, g->cfg_blood ? 140 : 230, 120, g->cfg_blood ? 4 : 5, k_blue);
-    snprintf(buf, sizeof buf, "%d", g->rounds_to_win); ltxt(g, 140 + 30 * (g->rounds_to_win - 1), 135, buf, k_blue);
-    cfgtxt(g, g->lang == 0 ? 140 : 230, 150, g->lang == 0 ? 15 : 16, k_blue);
-    const bool flag[3] = {g->cfg_flash, g->show_level, g->show_credits};
+    if (g->settings.cfg_power >= 1 && g->settings.cfg_power <= 4) cfgtxt(g, power_x[g->settings.cfg_power], 90, 6 + g->settings.cfg_power, k_blue);
+    cfgtxt(g, g->settings.cfg_blood ? 140 : 230, 120, g->settings.cfg_blood ? 4 : 5, k_blue);
+    snprintf(buf, sizeof buf, "%d", g->settings.rounds_to_win); ltxt(g, 140 + 30 * (g->settings.rounds_to_win - 1), 135, buf, k_blue);
+    cfgtxt(g, g->settings.lang == 0 ? 140 : 230, 150, g->settings.lang == 0 ? 15 : 16, k_blue);
+    const bool flag[3] = {g->settings.cfg_flash, g->settings.show_level, g->settings.show_credits};
     for (int i = 0; i < 3; i++) cfgtxt(g, flag[i] ? 140 : 230, 195 + 15 * i, flag[i] ? 4 : 5, k_blue);
 }
 
@@ -194,7 +194,7 @@ void osc_menu_key(osc_game *g, SDL_Scancode k)
 {
     if (g->screen != OSC_SCREEN_MENU_F2 || !f2_key_ok(k)) return;
     uint8_t c = (uint8_t)g->menu_cursor;
-    if (c >= 1 && c <= 8) g->keymap[0][c - 1] = k;
+    if (c >= 1 && c <= 8) g->settings.keymap[0][c - 1] = k;
     g->menu_cursor = (uint8_t)(c + 1);
 }
 
@@ -219,10 +219,10 @@ static void f2_render(osc_game *g)
 {
     const osc_rgb w = k_white;
     barra(g, 0, 0, 400, 300, k_black);
-    texto(g, 200, 5, osc_text(OSC_MEMO_CONFIG, 23, g->lang), 'c', 15, w);
+    texto(g, 200, 5, osc_text(OSC_MEMO_CONFIG, 23, g->settings.lang), 'c', 15, w);
     for (int i = 1; i <= 8; i++) cfgtxt(g, 50, 60 + 20 * i, 23 + i, w);
     for (int i = 1; i <= 8; i++) {
-        SDL_Scancode k = g->keymap[0][i - 1];
+        SDL_Scancode k = g->settings.keymap[0][i - 1];
         int icon = k == SDL_SCANCODE_UP ? 0 : k == SDL_SCANCODE_DOWN ? 1 : k == SDL_SCANCODE_RIGHT ? 2 : k == SDL_SCANCODE_LEFT ? 3 : -1;
         if (icon >= 0) {
             if (icon < g->assets.n_icone && g->assets.icone[icon]) draw_tex(g, g->assets.icone[icon], 200, (float)(85 + 20 * (i - 1)), 255, false);
@@ -232,7 +232,7 @@ static void f2_render(osc_game *g)
         }
     }
     if (g->menu_cursor >= 1 && g->menu_cursor <= 8) cfgtxt(g, 50, 60 + 20 * g->menu_cursor, 23 + g->menu_cursor, k_blue);
-    texto(g, 200, 280, osc_text(OSC_MEMO_CONFIG, 32, g->lang), 'c', 11, w);   /* F2-SAIR */
+    texto(g, 200, 280, osc_text(OSC_MEMO_CONFIG, 32, g->settings.lang), 'c', 11, w);   /* F2-SAIR */
 }
 
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2)

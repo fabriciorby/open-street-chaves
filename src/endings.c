@@ -97,14 +97,14 @@ static void credits_render(osc_game *g)
 {
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
-    osc_text_ex(g, 200, 50, osc_text(OSC_MEMO_TEXTO, 24, g->lang), 'c', 15, 255, 255, 255);   /* OBRIGADO POR JOGAR */
-    int li = g->lang == 1 ? 13 : 12;
+    osc_text_ex(g, 200, 50, osc_text(OSC_MEMO_TEXTO, 24, g->settings.lang), 'c', 15, 255, 255, 255);   /* OBRIGADO POR JOGAR */
+    int li = g->settings.lang == 1 ? 13 : 12;
     if (li < g->assets.n_abertura && g->assets.abertura[li]) {
         SDL_FRect d = {89, 80, (float)g->assets.abertura_w[li], (float)g->assets.abertura_h[li]};
         SDL_RenderTexture(g->ren, g->assets.abertura[li], NULL, &d);
     }
-    osc_text_ex(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 25, g->lang), 'c', 10, 255, 255, 255);
-    osc_text_ex(g, 200, 260, osc_text(OSC_MEMO_TEXTO, 30, g->lang), 'c', 10, 255, 255, 255);
+    osc_text_ex(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 25, g->settings.lang), 'c', 10, 255, 255, 255);
+    osc_text_ex(g, 200, 260, osc_text(OSC_MEMO_TEXTO, 30, g->settings.lang), 'c', 10, 255, 255, 255);
 }
 
 void osc_ending_render(osc_game *g)
@@ -152,7 +152,7 @@ void osc_ending_render(osc_game *g)
     if (c >= 2200) return;   /* the dialogue is drawn for c < 2200 */
     int k = c / 200;
     int base = k_base[g->ending_char] + 4 * k;
-    const char *tag = osc_text(OSC_MEMO_DIALOGO, base, g->lang);
+    const char *tag = osc_text(OSC_MEMO_DIALOGO, base, g->settings.lang);
     int speaker = (tag && tag[0] >= 'A' && tag[0] <= 'O') ? tag[0] - 'A' + 1 : 0;
     if (speaker) {
         if (g->assets.face_small[speaker]) {
@@ -160,6 +160,6 @@ void osc_ending_render(osc_game *g)
             SDL_RenderTexture(g->ren, g->assets.face_small[speaker], NULL, &d);
         }
         for (int l = 0; l < 3; l++)
-            osc_text_ex(g, 80, (float)(228 + 17 * l), osc_text(OSC_MEMO_DIALOGO, base + 1 + l, g->lang), 'l', 12, 255, 255, 255);
+            osc_text_ex(g, 80, (float)(228 + 17 * l), osc_text(OSC_MEMO_DIALOGO, base + 1 + l, g->settings.lang), 'l', 12, 255, 255, 255);
     }
 }

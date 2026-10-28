@@ -7,7 +7,7 @@
 #include "exetext.h"
 #include "fight_internal.h"
 
-const char *tx(osc_game *g, int get) { return osc_text(OSC_MEMO_TEXTO, get - 1, g->lang); }   /* MemoTexto.Lines.Get(n) */
+const char *tx(osc_game *g, int get) { return osc_text(OSC_MEMO_TEXTO, get - 1, g->settings.lang); }   /* MemoTexto.Lines.Get(n) */
 static bool even(int v) { return (v & 1) == 0; }
 
 /* Top HUD, drawn before the fighters (DXTimer1Timer 0x4a49ac..0x4a5a61). */
@@ -20,7 +20,7 @@ void draw_hud_top(osc_game *g)
     barraredonda(g, 170, hy + 15, 230, hy + 54, 15, k_white, k_white);
     barraredonda(g, 172, hy + 17, 228, hy + 52, 15, k_grey, k_grey);
     barraredonda(g, 174, hy + 19, 226, hy + 50, 15, k_black, k_black);
-    if (g->cfg_time_mode != 4) {
+    if (g->settings.cfg_time_mode != 4) {
         osc_rgb c = g->timer_sub <= 2 ? rgb(255, 180, 180) : rgb(255, 50, 50);
         if (g->timer_sec >= 10) {
             snprintf(buf, sizeof buf, "%d", g->timer_sec);
@@ -67,7 +67,7 @@ void draw_hud_top(osc_game *g)
         barra(g, hx, hy + 39, 200 + s * 25, hy + 40, k_white);
         /* round lamps */
         int pulse2 = iround(cos(g->ciclo / 2.735) * 60.0);
-        for (int i = 1; i <= g->rounds_to_win; i++) {
+        for (int i = 1; i <= g->settings.rounds_to_win; i++) {
             int xa = 200 + s * (195 - 17 * (i - 1)), xb = 200 + s * (180 - 17 * (i - 1));
             barraredonda(g, xa, hy + 70, xb, hy + 85, 5, k_white, k_black);
             if (f->wins >= i) {
@@ -80,7 +80,7 @@ void draw_hud_top(osc_game *g)
             if (g->credits == 0) texto(g, 200 + s * 100, 0, tx(g, 6), 'c', 10, k_white);          /* INSIRA FICHAS */
             else if (!g->no_push) texto(g, 200 + s * 100, 0, tx(g, 7), 'c', 10, k_white);      /* ENTRE AGORA */
         }
-        const char *name = osc_text(OSC_MEMO_NOMES, c, g->lang);
+        const char *name = osc_text(OSC_MEMO_NOMES, c, g->settings.lang);
         if (p == 1) texto(g, 200 + s * 145, hy + 45, name, '-', 12, rgb(120, 120, 255));
         else texto(g, 200 + s * 145, hy + 45, name, 'e', 12, rgb(255, 110, 110));
         if (f->human) {
@@ -175,7 +175,7 @@ void draw_round_texts(osc_game *g)
             const osc_fighter *f = &g->p[i], *o = &g->p[3 - i];
             if (f->health <= 0.0) continue;
             int p = even(g->ciclo) ? 80 : 0;
-            texto(g, 200, 110, osc_text(OSC_MEMO_NOMES, f->char_id, g->lang), 'c', 20, rgb(255, p, p));
+            texto(g, 200, 110, osc_text(OSC_MEMO_NOMES, f->char_id, g->settings.lang), 'c', 20, rgb(255, p, p));
             texto(g, 200, 140, tx(g, 14), 'c', 14, k_white);                                        /* VENCEU */
             if (f->human && f->health < OSC_HEALTH_MAX) {
                 snprintf(buf, sizeof buf, "%sx5=%d PTS.", tx(g, 5), iround(f->health) * 5);         /* VITALIDADE */
@@ -184,7 +184,7 @@ void draw_round_texts(osc_game *g)
             int p3 = even(g->ciclo) ? 120 : 0;
             if (f->health == OSC_HEALTH_MAX && re > 35) texto(g, 200, 170, tx(g, 30), 'c', 28, rgb(255, p3 + 120, p3 + 30));   /* PERFEITO */
             if (f->human && f->health == OSC_HEALTH_MAX) texto(g, 200, 210, "BONUS 1000 PTS.", 'c', 15, k_white);
-            if (f->human && f->wins == g->rounds_to_win && o->wins == 0) {
+            if (f->human && f->wins == g->settings.rounds_to_win && o->wins == 0) {
                 int p4 = even(g->ciclo) ? 20 : 0;
                 snprintf(buf, sizeof buf, "%s  1000 PTS.", tx(g, 32));                              /* COMPLETO */
                 texto(g, 200, 240, buf, 'c', 20, rgb(p4 + 170, p4 + 170, p4 + 235));
@@ -192,7 +192,7 @@ void draw_round_texts(osc_game *g)
         }
     for (int i = 1; i <= 2; i++) {
         const osc_fighter *f = &g->p[i];
-        if (f->wins < g->rounds_to_win || re < 90 || re > 210) continue;
+        if (f->wins < g->settings.rounds_to_win || re < 90 || re > 210) continue;
         int p5 = even(g->ciclo) ? 30 : 0, c = f->char_id;
         /* the winner's big face (Rxx-c) slides in, holds, slides out */
         if (c >= 1 && c <= 15 && g->assets.face_big[c]) {
@@ -209,10 +209,10 @@ void draw_round_texts(osc_game *g)
             texto(g, 10, 75, buf, '-', 14, rgb(255 - p5, 255 - p5, 255 - p5));
         }
         barraredonda(g, 5, 220, 395, 280, 5, k_white, k_black);
-        texto(g, 200, 237, osc_text(OSC_MEMO_FRASES, (c - 1) * 4 + f->quote, g->lang), 'c', 12, k_white);
+        texto(g, 200, 237, osc_text(OSC_MEMO_FRASES, (c - 1) * 4 + f->quote, g->settings.lang), 'c', 12, k_white);
     }
     /* wipe to the next round */
-    if (g->p[1].wins < g->rounds_to_win && g->p[2].wins < g->rounds_to_win && re > 95) {
+    if (g->p[1].wins < g->settings.rounds_to_win && g->p[2].wins < g->settings.rounds_to_win && re > 95) {
         switch (g->transition) {
         case 1:
             barra(g, 0, 0, 400, re * 10 - 950, k_black);
@@ -259,7 +259,7 @@ void draw_dialogue(osc_game *g)
     if (d > 150 && d < 300) { g->dialog_line = (ca - 1) * 12 + 6; g->dialog_speaker = 1; }
     if (d > 0 && d < 150) { g->dialog_line = (ca - 1) * 12 + 9; g->dialog_speaker = 2; }
     for (int k = 0; k < 3; k++) {
-        const char *s = osc_text(OSC_MEMO_FINAIS, g->dialog_line + k, g->lang);
+        const char *s = osc_text(OSC_MEMO_FINAIS, g->dialog_line + k, g->settings.lang);
         if (g->dialog_speaker == 1) texto(g, 115, 168 + 14 * k, s, '-', 10, k_white);
         if (g->dialog_speaker == 2) texto(g, 120, 223 + 14 * k, s, '-', 10, k_white);
     }

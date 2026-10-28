@@ -234,7 +234,7 @@ void update_fx(osc_game *g)
                 spawn_fx(g, 14, 0, 0, e->x, e->y);
                 if (v->facing == 1) move_x(g, v, -10.0);
                 if (v->facing == 2) move_x(g, v, 10.0);
-                if (live) { v->health -= e->chip * g->damage_level; v->trail_delay = 20; }
+                if (live) { v->health -= e->chip * g->settings.damage_level; v->trail_delay = 20; }
                 if (v->health <= 0.0) { g->snd_pending = 9; set_move(g, v, 10); }
                 if (!e->persist) e->type = 0;
                 e->has_hitbox = false;
@@ -245,15 +245,15 @@ void update_fx(osc_game *g)
                 if (v->x >= a->x) v->facing = 2;
                 g->snd_pending = 9;
                 spawn_fx(g, 1, 0, 0, e->x, e->y);
-                if (g->cfg_flash && osc_random(g, 3) == 0) g->flash = 4;
-                if ((g->cfg_blood && osc_random(g, 3) == 0) || g->unlock_satanas) spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
+                if (g->settings.cfg_flash && osc_random(g, 3) == 0) g->flash = 4;
+                if ((g->settings.cfg_blood && osc_random(g, 3) == 0) || g->settings.unlocks.satanas) spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
                 if (a->human && v->health > 0.0) a->score += 10;
                 if (a->combo_timer <= 35) a->hits = 0;
                 a->hits++;
                 a->combo_timer = 50;
                 if (a->hits > a->max_combo) a->max_combo = a->hits;
                 if (live) {
-                    v->health -= e->damage * g->damage_level;
+                    v->health -= e->damage * g->settings.damage_level;
                     if (v->meter < OSC_METER_MAX) v->meter += 1.0 * k_meter_unit;   /* the one hit gains */
                     v->trail_delay = 20;
                 }
@@ -280,7 +280,7 @@ void update_fx(osc_game *g)
             }
             /* pickups dropped by the passer-by: 20 or 30 health (0x490308) */
             if ((e->type == 3 || e->type == 4) && e->phase > 13 && v->health > 0.0 && !g->no_push) {
-                if (!g->challenge) v->health += (e->type == 3 ? 20.0 : 30.0) * g->damage_level;
+                if (!g->challenge) v->health += (e->type == 3 ? 20.0 : 30.0) * g->settings.damage_level;
                 g->snd_pending = 11;
                 spawn_fx(g, 5, 0, 0, e->x, e->y);
                 e->type = 0;

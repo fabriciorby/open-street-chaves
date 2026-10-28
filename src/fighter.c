@@ -52,7 +52,7 @@ void set_move(osc_game *g, osc_fighter *f, int move)
     }
     const osc_move_row *r = find_move(f->char_id, move, f->state);
     if (!r) return;
-    if (r->needs_fx && !g->unlock_bruxa) {        /* 0x476454: one projectile of this type per owner */
+    if (r->needs_fx && !g->settings.unlocks.bruxa) {        /* 0x476454: one projectile of this type per owner */
         int me = (f == &g->p[1]) ? 1 : 2;
         for (int i = 0; i < OSC_MAX_FX; i++)
             if (g->fx[i].type == r->needs_fx && g->fx[i].owner == me) return;
@@ -173,7 +173,7 @@ void physics(osc_game *g, osc_fighter *f)
         if (f->state == 20) {                       /* bouncing on the ground */
             if (f->facing == 1) move_x(g, f, -f->hitstun);
             if (f->facing == 2) move_x(g, f, f->hitstun);
-            if ((g->cfg_blood && osc_random(g, 4) == 0 && f->anim_timer == 5) || g->unlock_satanas)
+            if ((g->settings.cfg_blood && osc_random(g, 4) == 0 && f->anim_timer == 5) || g->settings.unlocks.satanas)
                 spawn_fx(g, 10, 0, 0, f->facing == 1 ? f->x - 30 : f->x + 30, f->y - 50);
             if (f->y > OSC_GROUND_Y) {
                 f->y = OSC_GROUND_Y; f->in_air = false; f->rot = 0; f->rot_step = 0; f->vy = 0; f->hitstun = 0;

@@ -77,7 +77,7 @@ static void select_render(osc_game *g)
     barra(g, 0, 300 - c2, 200, 600 - c2, rgb(120, 120, 255));
     barra(g, 200, c2 - 300, 400, c2, rgb(255, 100, 100));
     /* Icone 11/12 (by language) tiled and drifting down with g_timerB */
-    int ic = g->lang == 0 ? 11 : 12;
+    int ic = g->settings.lang == 0 ? 11 : 12;
     if (ic < g->assets.n_icone)
         for (int j = 0; j < 4; j++)
             for (int i = 0; i < 2; i++) {
@@ -101,10 +101,10 @@ static void select_render(osc_game *g)
         if (!g->sel_locked[p])
             draw_tex(g, g->assets.face_small[c], (float)(k + 49 * ((c - 1) % 8) - 402), (float)cell_y(c), 255, false);
         texto(g, p == 1 ? 100 : 300, 130 - (int)SDL_lround(cos(g->ciclo / 4.3) * 4.0),
-              osc_text(OSC_MEMO_NOMES, c, g->lang), 'c', 12, rgb(180, 220, 160));
+              osc_text(OSC_MEMO_NOMES, c, g->settings.lang), 'c', 12, rgb(180, 220, 160));
     }
     int kt = (int)SDL_lround(cos(g->timer_sub / 4.0) * 20.0);
-    texto(g, 200, (int)SDL_lround(c2 * 0.3) - 96, osc_text(OSC_MEMO_TEXTO, 7, g->lang), 'c', 18,
+    texto(g, 200, (int)SDL_lround(c2 * 0.3) - 96, osc_text(OSC_MEMO_TEXTO, 7, g->settings.lang), 'c', 18,
           rgb(230 + kt, 230 + kt, 255));                                                   /* SELECIONE SEU LUTADOR */
     osc_rgb tc = g->timer_sec <= 5 && (g->timer_sub & 1) == 0 ? rgb(250, 220, 220) : rgb(250, 150, 150);
     snprintf(buf, sizeof buf, "%d", g->timer_sec);
@@ -137,7 +137,7 @@ static void vs_tick(osc_game *g, uint8_t in1, uint8_t in2)
     uint8_t held = (uint8_t)((g->p1_in ? in1 : 0) | (g->p2_in ? in2 : 0));
     if ((held & OSC_IN_B1) && g->screen_tick > 0) g->screen_tick += 5;
     if (c2 > 150) osc_fight_start(g, g->sel[1], g->sel[2], g->stage_id);
-    if (g->unlock_fadiga) osc_ending_start(g, g->sel[g->p1_in ? 1 : 2]);   /* Fadiga.dat: state 10 */
+    if (g->settings.unlocks.fadiga) osc_ending_start(g, g->sel[g->p1_in ? 1 : 2]);   /* Fadiga.dat: state 10 */
 }
 
 static void vs_render(osc_game *g)
@@ -147,12 +147,12 @@ static void vs_render(osc_game *g)
     for (int p = 1; p <= 2; p++) {
         if (!(p == 1 ? g->p1_in : g->p2_in)) continue;
         int tx_x = c2 < 30 ? 200 - (c2 - 30) * 20 : c2 <= 100 ? 200 : 200 - (c2 - 100) * 20;
-        texto(g, tx_x, 135, osc_text(OSC_MEMO_TEXTO, 19, g->lang), 'c', 26, rgb(150, 255, 180));   /* PRÓXIMA BATALHA */
-        if (c2 > 40) texto(g, 200, 180, osc_text(OSC_MEMO_NOMES, g->ladder[g->fight_no], g->lang), 'c', 15, k_white);
+        texto(g, tx_x, 135, osc_text(OSC_MEMO_TEXTO, 19, g->settings.lang), 'c', 26, rgb(150, 255, 180));   /* PRÓXIMA BATALHA */
+        if (c2 > 40) texto(g, 200, 180, osc_text(OSC_MEMO_NOMES, g->ladder[g->fight_no], g->settings.lang), 'c', 15, k_white);
         for (int i = 1; i <= 8; i++) {
             int c = g->ladder[i];
             float y = c2 < 50 ? (float)(470 - 5 * c2) : 220.f;
-            bool shown = i <= g->fight_no || g->unlock_churros;
+            bool shown = i <= g->fight_no || g->settings.unlocks.churros;
             if (shown && c >= 1 && c <= 15) draw_tex(g, g->assets.face_small[c], (float)(48 * i - 40), y, 255, true);
             if (i < g->fight_no && 10 < g->assets.n_icone)
                 draw_tex(g, g->assets.icone[10], (float)(48 * i - 35), c2 < 50 ? (float)(485 - 5 * c2) : 235.f, 255, false);
@@ -163,7 +163,7 @@ static void vs_render(osc_game *g)
         draw_tex(g, g->assets.icone[8], (float)(48 * g->fight_no - 20), 215.f, 255, false);
     if (c2 > 60 && g->assets.stage) {
         draw_tex_rect(g, g->assets.stage, 80, 6, 320, 134, 255);
-        texto(g, 200, 115, osc_text(OSC_MEMO_CENARIOS, g->stage_id - 1, g->lang), 'c', 9, k_white);
+        texto(g, 200, 115, osc_text(OSC_MEMO_CENARIOS, g->stage_id - 1, g->settings.lang), 'c', 9, k_white);
     }
     if (c2 > 120)
         for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + c2 - 120, k_black);
@@ -193,13 +193,13 @@ static void continue_render(osc_game *g)
     char buf[16];
     for (int i = 0; i <= 60; i++) barra(g, 0, 5 * i, 400, 5 * i + 5, rgb(3 * i + 10, 3 * i + 50, 3 * i + 30));
     if (g->timer_sec > 0 || g->timer_sub > 0) {
-        texto(g, 200, 20, osc_text(OSC_MEMO_TEXTO, 23, g->lang), 'c', 35, rgb(255, 120, 120));   /* CONTINUE ? */
+        texto(g, 200, 20, osc_text(OSC_MEMO_TEXTO, 23, g->settings.lang), 'c', 35, rgb(255, 120, 120));   /* CONTINUE ? */
         if (g->timer_sec > 3 || g->ciclo < 8) {
             snprintf(buf, sizeof buf, "%d", g->timer_sec);
             texto(g, 320, 70, buf, 'c', 120, rgb(255, 25 * g->timer_sec, 25 * g->timer_sec));
         }
     } else {
-        texto(g, 200, 110, osc_text(OSC_MEMO_TEXTO, 22, g->lang), 'c', 36, rgb(255, 0, 0));   /* FIM DO JOGO */
+        texto(g, 200, 110, osc_text(OSC_MEMO_TEXTO, 22, g->settings.lang), 'c', 36, rgb(255, 0, 0));   /* FIM DO JOGO */
         if (g->ciclo < 15) barra(g, 0, 10 * g->ciclo, 400, 300 - 10 * g->ciclo, k_white);
     }
 }
@@ -279,7 +279,7 @@ static void attract_render(osc_game *g)
     if (c < 100) {
         barra(g, 0, 0, 400, 300, rgb(120, 120, 250));
         blit_ab(g, 14, 110, 10);                                               /* Vencedores */
-        osc_text_ex(g, 200, 210, osc_text(OSC_MEMO_TEXTO, 12, g->lang), 'c', 16, 250, 200, 0);
+        osc_text_ex(g, 200, 210, osc_text(OSC_MEMO_TEXTO, 12, g->settings.lang), 'c', 16, 250, 200, 0);
     }
     if (c >= 100 && c <= 370) {
         for (int i = 0; i < 21; i++) barra(g, 0, 15 * i, 400, 15 * i + 15, rgb(120 + 2 * i, 120 + 2 * i, 200));
@@ -313,7 +313,7 @@ static void attract_render(osc_game *g)
     int k = c < 400 ? 4 : c < 420 ? c - 396 : c <= 438 ? 440 - c : 2;
     if (k > 0) {
         int k1 = lround_i(223.0 / k), k2 = lround_i(117.0 / k);
-        int li = g->lang == 1 ? 13 : 12;
+        int li = g->settings.lang == 1 ? 13 : 12;
         if (li < g->assets.n_abertura && g->assets.abertura[li]) {
             SDL_FRect d = {(float)(205 - k1), (float)(-100 - cam - k2), (float)(2 * k1), (float)(2 * k2)};
             SDL_RenderTexture(g->ren, g->assets.abertura[li], NULL, &d);
@@ -321,17 +321,17 @@ static void attract_render(osc_game *g)
     }
     if (c > 440) {
         osc_text_ex(g, 320, 140, "V1.5A", 'l', 8, 255, 255, 255);
-        const char *sub = osc_text(OSC_MEMO_TEXTO, 21, g->lang);                 /* O LUTADOR DA VILA */
+        const char *sub = osc_text(OSC_MEMO_TEXTO, 21, g->settings.lang);                 /* O LUTADOR DA VILA */
         if (c < 500) osc_text_ex(g, (float)((c & 1) ? 200 - 4 * (500 - c) : 200 + 4 * (500 - c)), 170, sub, 'c', 12, 90, 90, 255);
         else osc_text_ex(g, 200, 170, sub, 'c', 12, 90, 90, 255);
     }
     if (c > 440) {                                                             /* the credit block is inside the c > 440 test */
         blit_ab(g, 15, 5, 280);                                                /* Cybergamba */
-        osc_text_ex(g, 200, 253, osc_text(OSC_MEMO_TEXTO, 25, g->lang), 'c', 8, 255, 255, 255);
-        osc_text_ex(g, 200, 267, osc_text(OSC_MEMO_TEXTO, 30, g->lang), 'c', 8, 255, 255, 255);
+        osc_text_ex(g, 200, 253, osc_text(OSC_MEMO_TEXTO, 25, g->settings.lang), 'c', 8, 255, 255, 255);
+        osc_text_ex(g, 200, 267, osc_text(OSC_MEMO_TEXTO, 30, g->settings.lang), 'c', 8, 255, 255, 255);
     }
     if (g->ciclo < 12)
-        osc_text_ex(g, 200, 235, osc_text(OSC_MEMO_TEXTO, g->credits == 0 ? 5 : 6, g->lang), 'c', 10, 255, 255, 255);
+        osc_text_ex(g, 200, 235, osc_text(OSC_MEMO_TEXTO, g->credits == 0 ? 5 : 6, g->settings.lang), 'c', 10, 255, 255, 255);
 }
 
 /* ---- state 8: game over / top 10 (07b-layout.md "Records") ---------------- */
@@ -363,8 +363,8 @@ static void records_render(osc_game *g)
     }
     if (g->screen_tick > 240)
         for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + g->screen_tick - 240, k_black);
-    if (g->ciclo < 18) texto(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->lang), 'c', 12, k_white);    /* OS 10 MELHORES */
-    if (g->ciclo < 10) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 10, k_white);   /* INSIRA FICHAS */
+    if (g->ciclo < 18) texto(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->settings.lang), 'c', 12, k_white);    /* OS 10 MELHORES */
+    if (g->ciclo < 10) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);   /* INSIRA FICHAS */
 }
 
 
@@ -514,13 +514,13 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
         if (g->credits == 0 || in) continue;
         if (g->screen == OSC_SCREEN_ATTRACT) {
             join_player(g, p);
-            g->fight_no = g->unlock_gentalha ? 8 : 1;
+            g->fight_no = g->settings.unlocks.gentalha ? 8 : 1;
             g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 0;
             g->sel_locked[1] = g->sel_locked[2] = 0;
-            g->ai_p2 = !g->p2_in;
+            g->settings.ai_p2 = !g->p2_in;
         } else if (g->screen == OSC_SCREEN_SELECT && !g->no_push) {
             join_player(g, p);
-            g->ai_p2 = !g->p2_in;
+            g->settings.ai_p2 = !g->p2_in;
         } else if (g->screen == OSC_SCREEN_FIGHT && g->demo == 0 && !g->no_push && g->challenge == 0) {
             join_player(g, p);
             g->p[p].human = true;
@@ -533,7 +533,7 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
             g->p[p].human = true;
             g->sel_locked[p] = 1;
             g->ciclo = 0; g->screen_tick = 0;
-            g->ai_p2 = !g->p2_in;
+            g->settings.ai_p2 = !g->p2_in;
             if (g->ladder[1]) g->screen = OSC_SCREEN_VS;
             else { g->screen = OSC_SCREEN_SELECT; g->sel_sub = 0; g->sel_locked[p] = 0; }
         }
@@ -574,7 +574,7 @@ static bool g_is_bound(const osc_game *g)
 {
     for (int p = 0; p < 2; p++)
         for (int k = 0; k < 8; k++)
-            if (g->keymap[p][k] == SDL_SCANCODE_G) return true;
+            if (g->settings.keymap[p][k] == SDL_SCANCODE_G) return true;
     return false;
 }
 
@@ -623,12 +623,12 @@ static void osc_game_render_screen(osc_game *g);
 static void footer(osc_game *g)
 {
     char buf[32];
-    if (g->show_level) {
-        snprintf(buf, sizeof buf, "%s%d", osc_text(OSC_MEMO_TEXTO, 17, g->lang), g->level);   /* NIVEL-n */
+    if (g->settings.show_level) {
+        snprintf(buf, sizeof buf, "%s%d", osc_text(OSC_MEMO_TEXTO, 17, g->settings.lang), g->settings.level);   /* NIVEL-n */
         osc_text_ex(g, 200, 285, buf, 'c', 8, 255, 255, 255);
     }
-    if (g->show_credits) {
-        osc_text_ex(g, 300, 285, osc_text(OSC_MEMO_TEXTO, 18, g->lang), 'c', 8, 255, 255, 255);   /* CREDITOS */
+    if (g->settings.show_credits) {
+        osc_text_ex(g, 300, 285, osc_text(OSC_MEMO_TEXTO, 18, g->settings.lang), 'c', 8, 255, 255, 255);   /* CREDITOS */
         snprintf(buf, sizeof buf, "%d", g->credits);
         osc_text_ex(g, 395, 285, buf, 'e', 8, 255, 255, 255);
     }
@@ -659,8 +659,8 @@ static void osc_game_render_screen(osc_game *g)
              * and the title logo (Abertura 12/13, not Icone) at half size in the bottom right corner */
             if (g->demo < 40)
                 for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + 40 - g->demo, k_black);
-            if (g->ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->lang), 'c', 10, k_white);
-            int li = g->lang == 1 ? 13 : 12;
+            if (g->ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);
+            int li = g->settings.lang == 1 ? 13 : 12;
             if (g->demo < 500 && li < g->assets.n_abertura && g->assets.abertura[li]) {
                 int hw = lround_i(g->assets.abertura_w[li] / 2.0), hh = lround_i(g->assets.abertura_h[li] / 2.0);
                 SDL_FRect d = {(float)(390 - hw), (float)(280 - hh), (float)hw, (float)hh};

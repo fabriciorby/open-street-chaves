@@ -63,7 +63,7 @@ static void throw_spin(osc_fighter *o, int spin)
 /* flash of the screen (g_shakeHit 0x4b449b) with config line 7 on */
 static void throw_flash(osc_game *g, int chance)
 {
-    if (g->cfg_flash && osc_random(g, chance) == 0) g->flash = 3;
+    if (g->settings.cfg_flash && osc_random(g, chance) == 0) g->flash = 3;
 }
 
 /* Seu Madruga 28/29, 31, Chiquinha 30 and Sr. Barriga 30: the thrower grabs and shakes the opponent,
@@ -86,7 +86,7 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         f->hits++; f->combo_timer = 20;
         if (last) {
             f->damage = 20;
-            o->health -= f->damage * g->damage_level;
+            o->health -= f->damage * g->settings.damage_level;
             set_move(g, o, 10);
             o->hitstun = 30;
         }
@@ -100,7 +100,7 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         if (osc_random(g, 30) == 0 && o->health > 0.0) g->hit_stop = 5;
         if (last) {
             f->damage = 47;
-            o->health -= f->damage * g->damage_level;
+            o->health -= f->damage * g->settings.damage_level;
             f->state = 1; f->frame = 38;
             g->hit_stop = 5;
             set_move(g, f, 19);
@@ -118,7 +118,7 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         if (osc_random(g, 20) == 0 && o->health > 0.0) g->hit_stop = 5;
         if (last) {
             f->damage = 36;
-            o->health -= f->damage * g->damage_level;
+            o->health -= f->damage * g->settings.damage_level;
             f->vy = -28; f->in_air = true;
             f->state = 12; f->anim_timer = 0; f->anim_dur = 99;
             set_move(g, o, 10);
@@ -135,7 +135,7 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         f->hits++; f->combo_timer = 43;
         if (last) {
             f->damage = 36;
-            o->health -= f->damage * g->damage_level;
+            o->health -= f->damage * g->settings.damage_level;
             f->state = 1; f->frame = 12;
             if (o->health > 0.0) g->hit_stop = 5;
             f->anim_timer = 0; f->vy = -48; f->in_air = true;

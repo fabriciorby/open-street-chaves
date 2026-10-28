@@ -146,9 +146,9 @@ void osc_fight_render(osc_game *g)
     if (g->challenge > 0) {
         osc_rgb pink = rgb(250, 140, 140);
         barraredonda(g, 80, 100, 320, 170, 10, k_white, k_black);                   /* 0x4ae384 */
-        texto(g, 200, 100, osc_text(OSC_MEMO_TEXTO, 9, g->lang), 'c', 15, pink);    /* ESPERE ... */
-        texto(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 10, g->lang), 'c', 15, pink);   /* ALGUÉM ENTROU */
-        texto(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 11, g->lang), 'c', 15, pink);   /* NO COMBATE ! */
+        texto(g, 200, 100, osc_text(OSC_MEMO_TEXTO, 9, g->settings.lang), 'c', 15, pink);    /* ESPERE ... */
+        texto(g, 200, 120, osc_text(OSC_MEMO_TEXTO, 10, g->settings.lang), 'c', 15, pink);   /* ALGUÉM ENTROU */
+        texto(g, 200, 140, osc_text(OSC_MEMO_TEXTO, 11, g->settings.lang), 'c', 15, pink);   /* NO COMBATE ! */
     }
 }
 

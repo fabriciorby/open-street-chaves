@@ -34,7 +34,7 @@ void cpu_think(osc_game *g, osc_fighter *f)
             pd = abs(iround(f->x) - iround(e->x));
         }
     }
-    double k = (8 - g->level) * 0.6 + 1.3 - 0.1 * g->fight_no;
+    double k = (8 - g->settings.level) * 0.6 + 1.3 - 0.1 * g->fight_no;
 
     /* preferred distance re-rolled with chance 1/13 */
     static const int pref[6] = {100, 150, 200, 250, 300, 350};

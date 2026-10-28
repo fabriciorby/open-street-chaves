@@ -10,11 +10,11 @@
 /* FormCreate: the common assets, the default records, the settings and the unlock files. */
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
 {
-    bool ai_p2 = g->ai_p2;
-    int lang = g->lang;
+    bool ai_p2 = g->settings.ai_p2;
+    int lang = g->settings.lang;
     memset(g, 0, sizeof *g);
-    g->ai_p2 = ai_p2;
-    g->lang = lang;
+    g->settings.ai_p2 = ai_p2;
+    g->settings.lang = lang;
     g->speed_delay = OSC_TICK_MS;   /* FormCreate: g_speedDelay = 28 */
     g->ren = ren;
     g->rng = (uint32_t)SDL_GetTicksNS();

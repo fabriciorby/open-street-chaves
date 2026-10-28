@@ -121,10 +121,38 @@ typedef struct {
     SDL_Texture *final_tex[11]; int final_w[11], final_h[11], n_final;          /* DXImageListFinal */
 } osc_assets;
 
+/* The *.dat marker files next to Chaves.exe (unlocks.c). */
+typedef struct {
+    bool churros;     /* Churros.dat: the VS ladder shows every face */
+    bool gentalha;    /* Gentalha.dat: a new game starts at fight 8 */
+    bool energeticos; /* Energeticos.dat (0x4b5898): +0.15 health per tick while both are alive */
+    bool satanas;     /* Satanas.dat (0x4b58ad): blood on every hit */
+    bool fadiga;      /* Fadiga.dat (0x4b58ae): the VS screen jumps to the ending */
+    bool mentecapto;  /* Mentecapto.dat (0x4b58af): the HUD stays off screen */
+    bool bruxa;       /* Bruxa.dat (0x4b58b0): no "one projectile at a time" rule */
+    int sc;           /* SC01..SC12.dat (0x4b58b1): the highest NN found forces that stage, 0 = none */
+} osc_unlocks;
+
+/* Options chosen by the player or on the command line / read from Chaves.dat. */
+typedef struct {
+    int lang;                /* 0 Portuguese, 1 Spanish */
+    bool ai_p2;              /* P2 is the CPU (set by main before osc_game_init) */
+    int rounds_to_win;
+    int level;                /* g_cfg0 "Nível do Jogo" (display only) */
+    /* F1 settings (01 "Config file") and F2 key map */
+    int cfg_time_mode;        /* 1..4 = 30/60/90/99 s */
+    int cfg_power;            /* 1 normal, 2 P1 max, 3 P2 max, 4 both */
+    double damage_level;      /* 0.3..2.0 */
+    bool cfg_blood, cfg_flash, show_level, show_credits;
+    SDL_Scancode keymap[2][8];
+    osc_unlocks unlocks;
+} osc_settings;
+
 typedef struct {
     SDL_Renderer *ren;
     char data_dir[1024];
     osc_assets assets;
+    osc_settings settings;
     int stage_id;
     int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
     osc_effect fx[OSC_MAX_FX];
@@ -144,17 +172,6 @@ typedef struct {
     uint32_t rng;        /* Delphi RandSeed */
     int round_start, round_end;
     int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
-    int rounds_to_win;
-    bool ai_p2;
-    int lang;                /* 0 Portuguese, 1 Spanish */
-    bool unlock_churros;     /* Churros.dat: the VS ladder shows every face */
-    bool unlock_gentalha;    /* Gentalha.dat: a new game starts at fight 8 */
-    bool unlock_energeticos; /* Energeticos.dat (0x4b5898): +0.15 health per tick while both are alive */
-    bool unlock_satanas;     /* Satanas.dat (0x4b58ad): blood on every hit */
-    bool unlock_fadiga;      /* Fadiga.dat (0x4b58ae): the VS screen jumps to the ending */
-    bool unlock_mentecapto;  /* Mentecapto.dat (0x4b58af): the HUD stays off screen */
-    bool unlock_bruxa;       /* Bruxa.dat (0x4b58b0): no "one projectile at a time" rule */
-    int unlock_sc;           /* SC01..SC12.dat (0x4b58b1): the highest NN found forces that stage, 0 = none */
 
     /* screens (07) */
     int screen;              /* osc_screen */
@@ -178,14 +195,7 @@ typedef struct {
     int name_pos[3];          /* 1..3, 4 = done */
     bool name_active[3];
     int name_after;           /* screen after the names: continue, records (ending) */
-    int level;                /* g_cfg0 "Nível do Jogo" (display only) */
-    /* F1 settings (01 "Config file") and F2 key map */
-    int cfg_time_mode;        /* 1..4 = 30/60/90/99 s */
-    int cfg_power;            /* 1 normal, 2 P1 max, 3 P2 max, 4 both */
-    double damage_level;      /* 0.3..2.0 */
-    bool cfg_blood, cfg_flash, show_level, show_credits;
     int snd_test, mus_test, menu_cursor;
-    SDL_Scancode keymap[2][8];
     bool key_f1, key_f2;
     int ending_char;          /* state 10: whose ending */
     int challenge;            /* g_challengeTimer: a second player joined a 1P fight */

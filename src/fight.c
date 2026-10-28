@@ -45,14 +45,14 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
         bool human = g->p[i + 1].human, had = g->p[i + 1].char_id != 0;
         int wins = g->p[i + 1].wins, score = g->p[i + 1].score;
         init_fighter(&g->p[i + 1], chars[i], i + 1, &g->assets.strips[i]);
-        g->p[i + 1].human = had ? human : (i == 0 || !g->ai_p2);
+        g->p[i + 1].human = had ? human : (i == 0 || !g->settings.ai_p2);
         g->p[i + 1].wins = wins; g->p[i + 1].score = score;
     }
     if (stage < 1 || stage > 12) {
         if (g->p[1].human && g->p[2].human) {                       /* 2P: Round(Random(120)/10)+1 */
             stage = iround(osc_random(g, 120) / 10.0) + 1;
             if (stage > 12) stage = 12;
-            if (g->unlock_sc) stage = g->unlock_sc;
+            if (g->settings.unlocks.sc) stage = g->settings.unlocks.sc;
         } else stage = osc_stage_for(g, char2);
     }
     if (!osc_load_stage(g, stage)) return false;
@@ -85,22 +85,22 @@ bool osc_fight_start(osc_game *g, int char1, int char2, int stage)
     g->p[1].ai_pref = g->p[2].ai_pref = 200;
     g->screen = OSC_SCREEN_FIGHT;
     g->screen_tick = 0;
-    SDL_Log("fight %d: %s vs %s at %s", g->fight_no, osc_text(OSC_MEMO_NOMES, char1, g->lang),
-            osc_text(OSC_MEMO_NOMES, char2, g->lang), osc_text(OSC_MEMO_CENARIOS, stage - 1, g->lang));
+    SDL_Log("fight %d: %s vs %s at %s", g->fight_no, osc_text(OSC_MEMO_NOMES, char1, g->settings.lang),
+            osc_text(OSC_MEMO_NOMES, char2, g->settings.lang), osc_text(OSC_MEMO_CENARIOS, stage - 1, g->settings.lang));
     return true;
 }
 
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     g->tick++;
-    if (g->unlock_mentecapto) { g->hud_y = -90; g->hud_y2 = 40; }   /* top of DXTimer1Timer */
-    if (g->demo > 0) { g->timer_sec = g->cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
+    if (g->settings.unlocks.mentecapto) { g->hud_y = -90; g->hud_y2 = 40; }   /* top of DXTimer1Timer */
+    if (g->demo > 0) { g->timer_sec = g->settings.cfg_time_mode; g->timer_sub = 25; }   /* attract demo: g_timerA := g_cfg1_mode every tick (0x4aa026) */
     if (g->challenge > 0) {                                        /* "ALGUÉM ENTROU NO COMBATE !" */
         g->no_push = true;
         if (--g->challenge == 0) {
             g->screen = OSC_SCREEN_SELECT; g->screen_tick = 0; g->sel_sub = 0;
             g->sel_locked[1] = g->sel_locked[2] = 0; g->timer_sec = 20; g->timer_sub = 25;
-            g->p[1].human = g->p1_in; g->p[2].human = g->p2_in; g->ai_p2 = !g->p2_in;
+            g->p[1].human = g->p1_in; g->p[2].human = g->p2_in; g->settings.ai_p2 = !g->p2_in;
             g->sel[1] = g->p[1].char_id; g->sel[2] = g->p[2].char_id;
             g->no_push = false;
         }
@@ -155,8 +155,8 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         g->p[1].health = g->p[2].health = OSC_HEALTH_MAX;
         g->p[1].stocks = g->p[2].stocks = 3;
     }
-    if (g->cfg_power == 2 || g->cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */
-    if (g->cfg_power == 3 || g->cfg_power == 4) g->p[2].stocks = 3;
+    if (g->settings.cfg_power == 2 || g->settings.cfg_power == 4) g->p[1].stocks = 3;        /* "Poder" 1P MAX / MAX */
+    if (g->settings.cfg_power == 3 || g->settings.cfg_power == 4) g->p[2].stocks = 3;
     for (int i = 1; i <= 2; i++) {
         osc_fighter *f = &g->p[i];
         /* meter 102 -> stock (main loop 4572) */
@@ -165,7 +165,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (f->stocks >= 3) { f->meter = OSC_METER_MAX; f->stocks = 3; }
         /* health bars (HUD loop 0x4a4cbe): the red bar waits 20 ticks after a hit, then
          * falls 3 per tick to the health */
-        if (g->unlock_energeticos && g->p[1].health > 0.0 && g->p[2].health > 0.0) f->health += 0.15;   /* g_energeticos */
+        if (g->settings.unlocks.energeticos && g->p[1].health > 0.0 && g->p[2].health > 0.0) f->health += 0.15;   /* g_energeticos */
         if (f->health < 0.0) f->health = 0.0;
         if (f->health > OSC_HEALTH_MAX) f->health = OSC_HEALTH_MAX;
         if (f->health_shown > OSC_HEALTH_MAX) f->health_shown = OSC_HEALTH_MAX;
@@ -255,7 +255,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
                     f->score += 1000;                     /* PERFEITO */
                     g->round_end++;
                 }
-                if (f->human && f->wins == g->rounds_to_win && o->wins == 0 && g->round_end == 45 && calm)
+                if (f->human && f->wins == g->settings.rounds_to_win && o->wins == 0 && g->round_end == 45 && calm)
                     f->score += 1000;                     /* COMPLETO */
             }
         if (g->round_end == 40) {
@@ -271,7 +271,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
         /* the match winner: pose, big portrait and quote (0x4a7b5d) */
         for (int i = 1; i <= 2; i++) {
             osc_fighter *f = &g->p[i];
-            if (f->wins < g->rounds_to_win || g->round_end < 90 || g->round_end > 210) continue;
+            if (f->wins < g->settings.rounds_to_win || g->round_end < 90 || g->round_end > 210) continue;
             if (g->no_push) set_move(g, f, 14);
             /* holding the first button hurries the scene along */
             if ((f->in & OSC_IN_B1) && (g->round_end < 90 || g->round_end > 100)) g->round_end += 2;
@@ -281,7 +281,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
                 if (v->buf) osc_audio_play(v);
             }
         }
-        bool decided = g->p[1].wins >= g->rounds_to_win || g->p[2].wins >= g->rounds_to_win;
+        bool decided = g->p[1].wins >= g->settings.rounds_to_win || g->p[2].wins >= g->settings.rounds_to_win;
         if (!decided && g->round_end > 130) {
             /* next round (zerardados for both) */
             for (int i = 1; i <= 2; i++) {
@@ -298,7 +298,7 @@ void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2)
             g->p[1].on_top = true; g->p[2].on_top = false; g->mover.active = false;
             g->timer_sec = osc_round_time(g); g->timer_sub = 25; g->cam_x = 100;
         }
-        if (decided && g->round_end > 220) g->match_over = g->p[1].wins >= g->rounds_to_win ? 1 : 2;
+        if (decided && g->round_end > 220) g->match_over = g->p[1].wins >= g->settings.rounds_to_win ? 1 : 2;
     }
 
     /* body hits, then the clocks and the physics (0x4a85ec..0x4a99d8) */
