@@ -5,6 +5,7 @@
 
 #include "exetext.h"
 #include "game.h"
+#include "canvas.h"
 #include "tables_gen.h"
 
 static const int k_base[16] = {0, 0, 44, 88, 125, 166, 210, 254, 298, 342, 386, 430, 474, 518, 562, 606};
@@ -14,13 +15,6 @@ static const int k_base[16] = {0, 0, 44, 88, 125, 166, 210, 254, 298, 342, 386, 
  * more or less often than the tick). */
 static int s_c;               /* counter of the last tick, as the original drew it */
 static int s_flash_g[OSC_N_ENDINGS], s_flash_b[OSC_N_ENDINGS];
-
-static void fillr(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
-{
-    SDL_FRect d = {x1, y1, x2 - x1, y2 - y1};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderFillRect(g->ren, &d);
-}
 
 void osc_ending_start(osc_game *g, int ch)
 {
@@ -138,18 +132,18 @@ void osc_ending_render(osc_game *g)
                 SDL_RenderTexture(g->ren, g->final_tex[r->a], NULL, &d);
             }
             break;
-        case OSC_END_BLACK: fillr(g, 0, 0, 400, 300, 0, 0, 0); break;
-        case OSC_END_FLASH: fillr(g, 50, 50, 350, 220, 255, (Uint8)s_flash_g[i], (Uint8)s_flash_b[i]); break;
+        case OSC_END_BLACK: barra(g, 0, 0, 400, 300, k_black); break;
+        case OSC_END_FLASH: barra(g, 50, 50, 350, 220, rgb(255, s_flash_g[i], s_flash_b[i])); break;
         case OSC_END_SPAWN: break;   /* spawned by the tick */
         default: break;
         }
     }
     osc_fx_render(g);
     /* letterbox */
-    fillr(g, 0, 0, 400, 50, 0, 0, 0);
-    fillr(g, 0, 220, 400, 300, 0, 0, 0);
-    fillr(g, 0, 50, 50, 220, 0, 0, 0);
-    fillr(g, 350, 50, 400, 220, 0, 0, 0);
+    barra(g, 0, 0, 400, 50, k_black);
+    barra(g, 0, 220, 400, 300, k_black);
+    barra(g, 0, 50, 50, 220, k_black);
+    barra(g, 350, 50, 400, 220, k_black);
     /* dialogue: segment k of 200 ticks, speaker tag + 3 lines */
     if (c >= 2200) return;   /* the dialogue is drawn for c < 2200 */
     int k = c / 200;

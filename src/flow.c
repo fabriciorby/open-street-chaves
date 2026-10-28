@@ -32,20 +32,6 @@ void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered)
     SDL_RenderDebugText(g->ren, x, y, buf);
 }
 
-static void fill(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
-{
-    SDL_FRect rc = {SDL_min(x1, x2), SDL_min(y1, y2), SDL_fabsf(x2 - x1), SDL_fabsf(y2 - y1)};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderFillRect(g->ren, &rc);
-}
-
-static void rect(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
-{
-    SDL_FRect rc = {x1, y1, x2 - x1, y2 - y1};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderRect(g->ren, &rc);
-}
-
 /* ---- character select (DXTimer1Timer state 4, 0x4a22f0..0x4a342f) ------------- */
 static int cell_x(int sel) { return 49 * ((sel - 1) % 8) + 3; }    /* at full scroll */
 static int cell_y(int sel) { return sel <= 8 ? 163 : 223; }
@@ -342,12 +328,12 @@ static void attract_render(osc_game *g)
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
     if (c < 100) {
-        fill(g, 0, 0, 400, 300, 120, 120, 250);
+        barra(g, 0, 0, 400, 300, rgb(120, 120, 250));
         blit_ab(g, 14, 110, 10);                                               /* Vencedores */
         osc_text_ex(g, 200, 210, osc_text(OSC_MEMO_TEXTO, 12, g->lang), 'c', 16, 250, 200, 0);
     }
     if (c >= 100 && c <= 370) {
-        for (int i = 0; i < 21; i++) fill(g, 0, (float)(15 * i), 400, (float)(15 * i + 15), (Uint8)(120 + 2 * i), (Uint8)(120 + 2 * i), 200);
+        for (int i = 0; i < 21; i++) barra(g, 0, 15 * i, 400, 15 * i + 15, rgb(120 + 2 * i, 120 + 2 * i, 200));
         int c2 = lround_i(cam / 2.0);
         blit_ab(g, 2, 50, (float)(50 - c2)); blit_ab(g, 2, 350, (float)(150 - c2)); blit_ab(g, 2, 300, (float)(180 - c2));
         for (int j = 0; j < 5; j++) {
@@ -358,8 +344,8 @@ static void attract_render(osc_game *g)
         for (int j = 0; j < 7; j++) { blit_ab(g, 0, 100, (float)(80 * j - 200 - cam)); blit_ab(g, 0, 305, (float)(80 * j - 200 - cam)); }
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 16; j++) blit_ab(g, 1, (float)(39 * i + 113), (float)(32 * j - 200 - cam));
-        fill(g, 147, (float)(-155 - cam), 270, (float)(-48 - cam), 0, 0, 0);
-        rect(g, 149, (float)(-153 - cam), 268, (float)(-50 - cam), 255, 255, 255);
+        barra(g, 147, -155 - cam, 270, -48 - cam, k_black);
+        retangulo(g, 149, -153 - cam, 268, -50 - cam, k_white);
         for (int i = 0; i < 8; i++) blit_ab(g, 4, (float)(50 * i), (float)(220 - cam));
         int bob = g->ciclo < 10 ? 4 : 0;
         for (int i = 0; i < 9; i++) {
