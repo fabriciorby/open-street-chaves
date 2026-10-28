@@ -52,4 +52,13 @@ void melee_step(osc_game *g, osc_fighter *a);
 /* stage.c */
 void stage_objects(osc_game *g);
 
+/* fighter.c */
+void counters(osc_game *g, osc_fighter *f);
+void move_clock(osc_game *g, osc_fighter *f);
+void physics(osc_game *g, osc_fighter *f);
+void fighter_frame(osc_game *g, osc_fighter *f);
+void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);
+
+void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);   /* zerardados */
+
 #endif
