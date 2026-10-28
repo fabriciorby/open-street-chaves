@@ -11,6 +11,7 @@
 #include "canvas.h"
 #include "config.h"
 #include "exetext.h"
+#include "assets.h"
 #include "game.h"
 #include "wav.h"
 

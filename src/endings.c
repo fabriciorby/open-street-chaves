@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "exetext.h"
+#include "assets.h"
 #include "game.h"
 #include "canvas.h"
 #include "tables_gen.h"

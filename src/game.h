@@ -214,14 +214,12 @@ void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G *
 int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
 void osc_play_snd(osc_game *g, int idx);
 void osc_go_attract(osc_game *g, int tick);
-void osc_play_music(osc_game *g, int n);   /* Musicas/Musica-0n.wav */
 /* endings.c */
 void osc_ending_start(osc_game *g, int ch);
 void osc_ending_seek(osc_game *g, int tick);
 void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_ending_render(osc_game *g);
 /* game.c helpers for the scripts */
-bool osc_load_fighter(osc_game *g, int slot, int ch);
 void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);
 void osc_spawn_fx(osc_game *g, int type, int x, int y);
 void osc_fx_tick(osc_game *g);
@@ -231,6 +229,5 @@ void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
 void osc_menu_render(osc_game *g);
-bool osc_load_stage(osc_game *g, int stage);
 
 #endif
