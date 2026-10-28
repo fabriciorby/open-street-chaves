@@ -29,6 +29,7 @@ add_executable(open-street-chaves
   src/game.c
   src/assets.c
   src/effects.c
+  src/stage.c
   src/combat.c
   src/commands.c
   src/selector.c

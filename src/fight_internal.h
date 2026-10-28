@@ -49,4 +49,7 @@ void input_dispatch(osc_game *g, osc_fighter *f);
 /* combat.c */
 void melee_step(osc_game *g, osc_fighter *a);
 
+/* stage.c */
+void stage_objects(osc_game *g);
+
 #endif
