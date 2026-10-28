@@ -209,9 +209,6 @@ void osc_game_shutdown(osc_game *g);
 /* fight-screen internals used by flow.c */
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_fight_render(osc_game *g);
-void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered);
-/* TForm1.texto: align 'c' centred, 'e' right-aligned, else left; size in points of the original font. */
-void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b);
 void osc_movelist_render(osc_game *g);   /* G: mostragolpe */
 void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G */
 int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
