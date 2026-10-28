@@ -5,6 +5,7 @@
 
 #include "exetext.h"
 #include "assets.h"
+#include "effects.h"
 #include "game.h"
 #include "canvas.h"
 #include "tables_gen.h"

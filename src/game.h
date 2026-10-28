@@ -221,8 +221,6 @@ void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_ending_render(osc_game *g);
 /* game.c helpers for the scripts */
 void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);
-void osc_spawn_fx(osc_game *g, int type, int x, int y);
-void osc_fx_tick(osc_game *g);
 void osc_fx_render(osc_game *g);
 /* menu.c */
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
