@@ -49,7 +49,7 @@ bool osc_load_fighter(osc_game *g, int slot, int ch)
     bool ok = osc_strip_build(g->ren, &img, &g->assets.strips[slot - 1]);
     osc_image_free(&img);
     if (!ok) return false;
-    osc_fighter *f = &g->p[slot];
+    osc_fighter *f = &g->fight.p[slot];
     f->char_id = ch; f->strip = &g->assets.strips[slot - 1];
     f->facing = slot == 1 ? 1 : 2; f->rot = 0; f->state = 1; f->anim_timer = 0;
     return true;
@@ -60,10 +60,10 @@ bool osc_load_stage(osc_game *g, int stage)
     char rel[64];
     if (g->assets.stage) { SDL_DestroyTexture(g->assets.stage); g->assets.stage = NULL; }
     snprintf(rel, sizeof rel, "Cenarios/Cenario-%02d.bmp", stage);
-    g->stage_id = stage;
+    g->fight.stage_id = stage;
     /* carregarcenario: stage 2 has a breakable thing (Icone[6]) */
-    g->crate.icon = 0;
-    if (stage == 2) { g->crate.x = 395; g->crate.y = 195; g->crate.r0 = 25; g->crate.b0 = 25; g->crate.r1 = 110; g->crate.b1 = 90; g->crate.icon = 6; }
+    g->fight.crate.icon = 0;
+    if (stage == 2) { g->fight.crate.x = 395; g->fight.crate.y = 195; g->fight.crate.r0 = 25; g->fight.crate.b0 = 25; g->fight.crate.r1 = 110; g->fight.crate.b1 = 90; g->fight.crate.icon = 6; }
     return load_image_tex(g, rel, false, &g->assets.stage, &g->assets.stage_w, &g->assets.stage_h);
 }
 

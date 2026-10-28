@@ -25,10 +25,10 @@ void osc_ending_start(osc_game *g, int ch)
     g->flow.ending_char = ch < 1 || ch > 15 ? 1 : ch;
     g->flow.screen = OSC_SCREEN_ENDING;
     g->flow.screen_tick = 0; s_c = 0;
-    g->cam_x = 0; g->cam_y = 0;
-    memset(g->fx, 0, sizeof g->fx);
-    g->p[1].in_prev = g->p[2].in_prev = 0xff;
-    g->p[1].facing = 1; g->p[2].facing = 2;
+    g->fight.cam_x = 0; g->fight.cam_y = 0;
+    memset(g->fight.fx, 0, sizeof g->fight.fx);
+    g->fight.p[1].in_prev = g->fight.p[2].in_prev = 0xff;
+    g->fight.p[1].facing = 1; g->fight.p[2].facing = 2;
 }
 
 /* debug/preview: jump to a tick, replaying the loads before it */
@@ -64,12 +64,12 @@ void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2)
         g->flow.screen_tick++;
         if (g->flow.screen_tick > 200) {
             g->flow.screen = OSC_SCREEN_CONTINUE; g->flow.screen_tick = 0;
-            g->timer_sec = 0; g->timer_sub = 0;
+            g->fight.timer_sec = 0; g->fight.timer_sub = 0;
         }
         return;
     }
     int c = g->flow.screen_tick;
-    g->p[1].in_prev = in1; g->p[2].in_prev = in2;
+    g->fight.p[1].in_prev = in1; g->fight.p[2].in_prev = in2;
     /* loads, spawns and flash colours of this tick, in the order of the code */
     for (int i = 0; i < OSC_N_ENDINGS; i++) {
         const osc_ending_row *r = &osc_endings[i];
@@ -83,11 +83,11 @@ void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2)
     osc_fx_tick(g);
     g->flow.screen_tick++;
     if (g->flow.screen_tick > 2200) {
-        g->flow.screen = OSC_SCREEN_CREDITS; g->flow.screen_tick = 0; g->ciclo = 0;
+        g->flow.screen = OSC_SCREEN_CREDITS; g->flow.screen_tick = 0; g->fight.ciclo = 0;
         return;
     }
     /* a held button 1 of a human player skips to the end of the 100-tick block (level, not edge) */
-    if (((in1 & OSC_IN_B1) && g->p[1].human) || ((in2 & OSC_IN_B1) && g->p[2].human)) {
+    if (((in1 & OSC_IN_B1) && g->fight.p[1].human) || ((in2 & OSC_IN_B1) && g->fight.p[2].human)) {
         for (int i = 0; i < 21; i++)
             if (g->flow.screen_tick > i * 100 + 5 && g->flow.screen_tick < i * 100 + 85) { g->flow.screen_tick = i * 100 + 85; break; }
     }

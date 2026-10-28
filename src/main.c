@@ -140,14 +140,14 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     a->loaded = osc_game_init(&a->game, a->ren, data);
 #endif
     if (lang) a->game.settings.lang = lang;
-    if (max_frames > 0) a->game.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
+    if (max_frames > 0) a->game.fight.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
     if (a->loaded && (direct || demo)) {
         a->game.flow.p1_in = true; a->game.flow.p2_in = !a->game.settings.ai_p2;
-        a->game.fight_no = battle;
+        a->game.fight.fight_no = battle;
         osc_make_ladder(&a->game, c1);
         a->game.flow.sel[1] = c1; a->game.flow.sel[2] = c2;
-        a->game.p[1].human = true; a->game.p[2].human = !a->game.settings.ai_p2;
-        a->game.p[1].char_id = c1; a->game.p[2].char_id = c2;
+        a->game.fight.p[1].human = true; a->game.fight.p[2].human = !a->game.settings.ai_p2;
+        a->game.fight.p[1].char_id = c1; a->game.fight.p[2].char_id = c2;
         a->loaded = osc_fight_start(&a->game, c1, c2, stage);
     }
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
@@ -157,13 +157,13 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.flow.screen = OSC_SCREEN_RECORDS; a->game.flow.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
         osc_game *g = &a->game;
-        g->p[1].human = true; g->p[1].char_id = c1; g->p[1].score = 5000;
+        g->fight.p[1].human = true; g->fight.p[1].char_id = c1; g->fight.p[1].score = 5000;
         memcpy(g->flow.name[1], "AAA", 4); g->flow.name_pos[1] = 1; g->flow.name_active[1] = true;
         g->flow.name_after = OSC_SCREEN_CONTINUE; g->flow.screen = OSC_SCREEN_NAME;
     }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CONTINUE) {   /* debug: the continue countdown */
         osc_game *g = &a->game;
-        g->flow.screen = OSC_SCREEN_CONTINUE; g->flow.screen_tick = 0; g->ciclo = 0; g->timer_sec = 9; g->timer_sub = 25;
+        g->flow.screen = OSC_SCREEN_CONTINUE; g->flow.screen_tick = 0; g->fight.ciclo = 0; g->fight.timer_sec = 9; g->fight.timer_sub = 25;
     }
     a->game.flow.debug_boxes = boxes;
 #ifndef __EMSCRIPTEN__
@@ -213,13 +213,13 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
 /* Scripted opponent for --demo: walk towards P1, punch every 25 ticks, block sometimes. */
 static uint8_t demo_input(const osc_game *g)
 {
-    const osc_fighter *p2 = &g->p[2], *p1 = &g->p[1];
+    const osc_fighter *p2 = &g->fight.p[2], *p1 = &g->fight.p[1];
     uint8_t in = 0;
     double dist = p2->x - p1->x;
     if (dist > 70) in |= OSC_IN_LEFT;
     if (dist < -70) in |= OSC_IN_RIGHT;
-    if (g->tick % 25 == 0 && dist >= -70 && dist <= 70) in |= (g->tick % 50 == 0) ? OSC_IN_B3 : OSC_IN_B1;
-    if (p1->attacking && g->tick % 3 == 0) in |= (dist > 0) ? OSC_IN_RIGHT : OSC_IN_LEFT; /* step back = block */
+    if (g->fight.tick % 25 == 0 && dist >= -70 && dist <= 70) in |= (g->fight.tick % 50 == 0) ? OSC_IN_B3 : OSC_IN_B1;
+    if (p1->attacking && g->fight.tick % 3 == 0) in |= (dist > 0) ? OSC_IN_RIGHT : OSC_IN_LEFT; /* step back = block */
     return in;
 }
 
@@ -227,8 +227,8 @@ static uint8_t demo_input(const osc_game *g)
 static uint8_t autofire_input(const osc_game *g)
 {
     if (g->flow.screen != OSC_SCREEN_FIGHT) return (g->flow.screen_tick % 30) == 20 ? OSC_IN_B1 : 0; /* confirm menus */
-    int t = (int)(g->tick % 60);
-    const osc_fighter *p1 = &g->p[1];
+    int t = (int)(g->fight.tick % 60);
+    const osc_fighter *p1 = &g->fight.p[1];
     uint8_t fwd = p1->facing == 1 ? OSC_IN_RIGHT : OSC_IN_LEFT;
     if (t < 3) return OSC_IN_DOWN;
     if (t < 6) return OSC_IN_DOWN | fwd;
@@ -306,8 +306,8 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (a->max_frames > 0 && a->frames >= a->max_frames) {
         const osc_game *g = &a->game;
         SDL_Log("frames=%ld ticks=%u loaded=%d p1(x=%.0f st=%d fr=%d hp=%.1f) p2(x=%.0f st=%d fr=%d hp=%.1f) cam=%d,%d",
-                a->frames, g->tick, a->loaded, g->p[1].x, g->p[1].state, g->p[1].frame, g->p[1].health,
-                g->p[2].x, g->p[2].state, g->p[2].frame, g->p[2].health, g->cam_x, g->cam_y);
+                a->frames, g->fight.tick, a->loaded, g->fight.p[1].x, g->fight.p[1].state, g->fight.p[1].frame, g->fight.p[1].health,
+                g->fight.p[2].x, g->fight.p[2].state, g->fight.p[2].frame, g->fight.p[2].health, g->fight.cam_x, g->fight.cam_y);
         return a->loaded ? SDL_APP_SUCCESS : SDL_APP_FAILURE;
     }
     return SDL_APP_CONTINUE;

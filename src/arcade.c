@@ -10,10 +10,10 @@ int osc_stage_for(osc_game *g, int opponent)
     static const int base[16] = {0, 1, 2, 2, 3, 3, 4, 11, 1, 1, 11, 6, 1, 1, 2, 1};
     static const int alt[16] = {0, 0, 7, 10, 10, 8, 8, 5, 9, 10, 10, 5, 9, 5, 1, 6};
     int st = base[opponent];
-    if (osc_random(g, 5) < 2 && g->fight_no < 8 && alt[opponent]) st = alt[opponent];
-    if (osc_random(g, 6) < 2 && g->fight_no < 8 &&
+    if (osc_random(g, 5) < 2 && g->fight.fight_no < 8 && alt[opponent]) st = alt[opponent];
+    if (osc_random(g, 6) < 2 && g->fight.fight_no < 8 &&
         (opponent == 3 || opponent == 4 || opponent == 9 || opponent == 10 || opponent == 11 || opponent == 14)) st = 12;
-    if (g->settings.unlocks.sc && g->fight_no < 8) st = g->settings.unlocks.sc;   /* SCnn.dat, not on the Gentalha path */
+    if (g->settings.unlocks.sc && g->fight.fight_no < 8) st = g->settings.unlocks.sc;   /* SCnn.dat, not on the Gentalha path */
     return st;
 }
 

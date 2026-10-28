@@ -17,7 +17,7 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->settings.lang = lang;
     g->flow.speed_delay = OSC_TICK_MS;   /* FormCreate: g_speedDelay = 28 */
     g->ren = ren;
-    g->rng = (uint32_t)SDL_GetTicksNS();
+    g->fight.rng = (uint32_t)SDL_GetTicksNS();
     SDL_strlcpy(g->data_dir, data_dir, sizeof g->data_dir);
     if (!osc_assets_load(g)) return false;   /* no data folder */
     /* default high-score table (FormCreate: criarecorde 1..10) */

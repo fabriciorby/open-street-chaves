@@ -29,10 +29,10 @@ static int s_resume_tick, s_resume_cam, s_resume_ciclo, s_n_music;
 /* ---- state 2: F1 menu ------------------------------------------------------ */
 void osc_menu_enter(osc_game *g, int which)
 {
-    if (g->flow.screen == OSC_SCREEN_ATTRACT) { s_resume_tick = g->flow.screen_tick; s_resume_cam = g->flow.menu_cam; s_resume_ciclo = g->ciclo; }
+    if (g->flow.screen == OSC_SCREEN_ATTRACT) { s_resume_tick = g->flow.screen_tick; s_resume_cam = g->flow.menu_cam; s_resume_ciclo = g->fight.ciclo; }
     g->flow.screen = which == 2 ? OSC_SCREEN_MENU_F1 : OSC_SCREEN_MENU_F2;
     g->flow.menu_cursor = 1;
-    g->p[1].in_prev = g->p[2].in_prev = 0xff;
+    g->fight.p[1].in_prev = g->fight.p[2].in_prev = 0xff;
     if (which == 2) {
         g->flow.snd_test = g->flow.mus_test = 1;   /* g_sndIndexA / g_sndFlagB := 1 */
         /* 0x4b58a3: FormCreate counts Musicas/Musica-NN.wav */
@@ -55,7 +55,7 @@ static void menu_leave(osc_game *g)
     }
     osc_config_save(g);
     g->flow.screen = OSC_SCREEN_ATTRACT;
-    g->flow.screen_tick = s_resume_tick; g->flow.menu_cam = s_resume_cam; g->ciclo = s_resume_ciclo;
+    g->flow.screen_tick = s_resume_tick; g->flow.menu_cam = s_resume_cam; g->fight.ciclo = s_resume_ciclo;
 }
 
 /* FPU extended arithmetic of the original: x +/- 0.1 (an 80-bit constant) stored back as a double */
@@ -67,8 +67,8 @@ static void damage_step(osc_game *g, int d)
 static void f1_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     /* edge of each device against last tick's state (Players[].0xac.. bytes); P1 = keyboard, P2 = joystick */
-    uint8_t e1 = (uint8_t)(in1 & ~g->p[1].in_prev), e2 = (uint8_t)(in2 & ~g->p[2].in_prev);
-    g->p[1].in_prev = in1; g->p[2].in_prev = in2;
+    uint8_t e1 = (uint8_t)(in1 & ~g->fight.p[1].in_prev), e2 = (uint8_t)(in2 & ~g->fight.p[2].in_prev);
+    g->fight.p[1].in_prev = in1; g->fight.p[2].in_prev = in2;
     uint8_t c = (uint8_t)g->flow.menu_cursor;   /* a Byte: P1 and P2 both pressing up at 1 gives 255 */
     if (e1 & OSC_IN_UP) c--;
     if (e1 & OSC_IN_DOWN) c++;

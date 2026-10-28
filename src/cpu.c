@@ -20,7 +20,7 @@ bool chance(osc_game *g, double c, double k)
 void cpu_think(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    int me = (f == &g->p[1]) ? 1 : 2;
+    int me = (f == &g->fight.p[1]) ? 1 : 2;
     int dist = abs(iround(f->x) - iround(o->x));
     int oy = iround(o->y);
 
@@ -28,13 +28,13 @@ void cpu_think(osc_game *g, osc_fighter *f)
     bool proj = false;
     int pd = 0;
     for (int i = 0; i < OSC_MAX_FX; i++) {
-        const osc_effect *e = &g->fx[i];
+        const osc_effect *e = &g->fight.fx[i];
         if (e->has_hitbox && e->owner != me && e->type) {
             proj = true;
             pd = abs(iround(f->x) - iround(e->x));
         }
     }
-    double k = (8 - g->settings.level) * 0.6 + 1.3 - 0.1 * g->fight_no;
+    double k = (8 - g->settings.level) * 0.6 + 1.3 - 0.1 * g->fight.fight_no;
 
     /* preferred distance re-rolled with chance 1/13 */
     static const int pref[6] = {100, 150, 200, 250, 300, 350};

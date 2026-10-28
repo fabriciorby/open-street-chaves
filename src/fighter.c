@@ -53,9 +53,9 @@ void set_move(osc_game *g, osc_fighter *f, int move)
     const osc_move_row *r = find_move(f->char_id, move, f->state);
     if (!r) return;
     if (r->needs_fx && !g->settings.unlocks.bruxa) {        /* 0x476454: one projectile of this type per owner */
-        int me = (f == &g->p[1]) ? 1 : 2;
+        int me = (f == &g->fight.p[1]) ? 1 : 2;
         for (int i = 0; i < OSC_MAX_FX; i++)
-            if (g->fx[i].type == r->needs_fx && g->fx[i].owner == me) return;
+            if (g->fight.fx[i].type == r->needs_fx && g->fight.fx[i].owner == me) return;
     }
     if ((r->flags & OSC_MOVE_ONGROUND) && f->vy != 0) return;
     if ((r->flags & OSC_MOVE_NOT_INAIR) && f->in_air) return;
@@ -63,7 +63,7 @@ void set_move(osc_game *g, osc_fighter *f, int move)
         if (!(f->health <= 15.0 || f->stocks > 0)) return;
         if (f->stocks == 3) f->meter = 0;
         f->stocks--;
-        g->super_pause = 22;
+        g->fight.super_pause = 22;
     }
     if (r->flags & OSC_MOVE_WALK) {
         /* moves 1/2 (0x477634): step by the walk speed, keep the animation clock */
@@ -78,7 +78,7 @@ void set_move(osc_game *g, osc_fighter *f, int move)
     if (r->meter10 && f->meter < OSC_METER_MAX) f->meter += k_meter_unit * r->meter10 / 10.0;
     if (r->strength) f->hit_level = r->strength;
     if (move == 8 || move == 9) f->attacking = false;
-    if (r->snd >= 0) g->snd_pending = r->snd;   /* g_sndIndexA: played at the start of the next tick */
+    if (r->snd >= 0) g->fight.snd_pending = r->snd;   /* g_sndIndexA: played at the start of the next tick */
     if (f->char_id == 9 && (move == 20 || move == 21))   /* 0x47b0bb: five dust puffs */
         for (int k = 0; k < 5; k++) {
             double x = f->x - 20 + osc_random(g, 40);
@@ -94,27 +94,27 @@ void move_x(osc_game *g, osc_fighter *f, double dx)
     bool overlap = f->hurt_l + f->x < o->hurt_r + o->x && o->hurt_l + o->x < f->hurt_r + f->x &&
                    f->hurt_t + (f->y - f->sprite_h) < o->hurt_b + (o->y - o->sprite_h) &&
                    o->hurt_t + (o->y - o->sprite_h) < f->hurt_b + (f->y - f->sprite_h);
-    if (overlap && f->state != 23 && f->state != 20 && !g->no_push) {
+    if (overlap && f->state != 23 && f->state != 20 && !g->fight.no_push) {
         if (f->x <= o->x) {
             o->x += 5.0;
-            if (o->x > g->cam_x + 370) o->x = g->cam_x + 370;
+            if (o->x > g->fight.cam_x + 370) o->x = g->fight.cam_x + 370;
             f->x = (o->hurt_l + o->x) - f->hurt_r - 5.0;
         } else {
             o->x -= 5.0;
-            if (o->x < g->cam_x + 30) o->x = g->cam_x + 30;
+            if (o->x < g->fight.cam_x + 30) o->x = g->fight.cam_x + 30;
             f->x = (o->hurt_r + o->x) - f->hurt_l + 5.0;
         }
     }
     if (f->health > 0.0) {
-        if (f->x < g->cam_x + 30) f->x = g->cam_x + 30;
-        if (f->x > g->cam_x + 370) f->x = g->cam_x + 370;
+        if (f->x < g->fight.cam_x + 30) f->x = g->fight.cam_x + 30;
+        if (f->x > g->fight.cam_x + 370) f->x = g->fight.cam_x + 370;
     }
 }
 
 /* ---- input-side counters (sequences, mash, combo) ----------------------------- */
 void counters(osc_game *g, osc_fighter *f)
 {
-    bool paused = g->hit_stop || g->super_pause;
+    bool paused = g->fight.hit_stop || g->fight.super_pause;
     if (f->state == 2 && !paused) { f->anim_timer++; if (f->anim_timer > 16) f->anim_timer = 0; }
     if (f->seq_timer > 0 && !paused) { f->seq_timer--; if (f->seq_timer == 0) f->seq_state = 0; }
     if (f->mash_p) f->mash_p--; if (f->mash_p > 15) f->mash_p = 15;
@@ -126,7 +126,7 @@ void counters(osc_game *g, osc_fighter *f)
 void move_clock(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    if (f->anim_dur != 99 && !g->super_pause && !g->hit_stop) f->anim_timer++;
+    if (f->anim_dur != 99 && !g->fight.super_pause && !g->fight.hit_stop) f->anim_timer++;
     if (f->anim_timer < f->anim_dur) return;
     f->state = 1; f->attacking = false; f->damage = 0; f->anim_timer = 0;
     f->invuln = false; f->blocking = false; f->knockdown = false; f->hit_level = 0;
@@ -150,7 +150,7 @@ static void dust(osc_game *g, osc_fighter *f, int n, int spread)
 void physics(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    if (f->in_air && !g->super_pause && !g->hit_stop) {
+    if (f->in_air && !g->fight.super_pause && !g->fight.hit_stop) {
         f->y += f->vy;
         f->vy += k_gravity;
         if (f->jump_dir == 2) move_x(g, f, -8.0);
@@ -162,9 +162,9 @@ void physics(osc_game *g, osc_fighter *f)
                 set_move(g, f, 11);
                 f->y = OSC_GROUND_Y - 10;
                 f->rot = 0; f->rot_step = 0;
-                g->snd_pending = 12;
+                g->fight.snd_pending = 12;
                 if (f->char_id == 7 || f->char_id == 10) {   /* the heavy ones shake the street */
-                    g->shake = 20;
+                    g->fight.shake = 20;
                     dust(g, f, 20, 30);
                 }
                 dust(g, f, 5, 20);
@@ -189,8 +189,8 @@ void physics(osc_game *g, osc_fighter *f)
         }
     }
     if (f->health > 0.0) {
-        if (f->x < g->cam_x + 30) f->x = g->cam_x + 30;
-        if (f->x > g->cam_x + 370) f->x = g->cam_x + 370;
+        if (f->x < g->fight.cam_x + 30) f->x = g->fight.cam_x + 30;
+        if (f->x > g->fight.cam_x + 370) f->x = g->fight.cam_x + 370;
     }
 }
 
@@ -198,7 +198,7 @@ void physics(osc_game *g, osc_fighter *f)
 void fighter_frame(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    bool paused = g->hit_stop || g->super_pause;
+    bool paused = g->fight.hit_stop || g->fight.super_pause;
     if ((f->state == 1 || f->state == 2 || f->state == 7) && f->vy == 0) {
         if (f->x < o->x) f->facing = 1;
         if (f->x >= o->x) f->facing = 2;

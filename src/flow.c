@@ -26,17 +26,17 @@ static void select_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     uint8_t ins[3] = {0, in1, in2};
     g->flow.screen_tick++;
-    g->no_push = false;
+    g->fight.no_push = false;
     osc_audio_stop_music();
     if (g->flow.sel_sub < 300) {                       /* g_selectSub 1: slide in by 20 */
         g->flow.sel_sub += 20;
         if (g->flow.sel_sub >= 300) g->flow.sel_sub = 300;
         return;
     }
-    if (g->timer_sec >= 1 && --g->timer_sub <= 0) { g->timer_sec--; g->timer_sub = 25; }
-    if (++g->ciclo >= 25) g->ciclo = 0;
+    if (g->fight.timer_sec >= 1 && --g->fight.timer_sub <= 0) { g->fight.timer_sec--; g->fight.timer_sub = 25; }
+    if (++g->fight.ciclo >= 25) g->fight.ciclo = 0;
     for (int p = 1; p <= 2; p++) {
-        osc_fighter *f = &g->p[p];
+        osc_fighter *f = &g->fight.p[p];
         bool human = p == 1 ? g->flow.p1_in : g->flow.p2_in;
         uint8_t in = ins[p], pressed = (uint8_t)(in & ~f->in_prev);
         f->in_prev = in;
@@ -50,7 +50,7 @@ static void select_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (g->flow.sel[p] < 1) g->flow.sel[p] = 15;
         if (g->flow.sel[p] > 15) g->flow.sel[p] = 1;
     }
-    if (g->timer_sec == 0 && !(g->flow.sel_locked[1] && g->flow.sel_locked[2])) {
+    if (g->fight.timer_sec == 0 && !(g->flow.sel_locked[1] && g->flow.sel_locked[2])) {
         g->flow.sel_locked[1] = g->flow.sel_locked[2] = 1;
         osc_play_snd(g, 2);
     }
@@ -59,13 +59,13 @@ static void select_tick(osc_game *g, uint8_t in1, uint8_t in2)
         if (!both) {                        /* criaadversario for the lone human */
             int h = g->flow.p1_in ? 1 : 2;
             osc_make_ladder(g, g->flow.sel[h]);
-            g->flow.sel[3 - h] = g->flow.ladder[g->fight_no];
+            g->flow.sel[3 - h] = g->flow.ladder[g->fight.fight_no];
         }
-        g->p[1].human = g->flow.p1_in;
-        g->p[2].human = g->flow.p2_in;
-        g->p[1].char_id = g->flow.sel[1]; g->p[2].char_id = g->flow.sel[2];
+        g->fight.p[1].human = g->flow.p1_in;
+        g->fight.p[2].human = g->flow.p2_in;
+        g->fight.p[1].char_id = g->flow.sel[1]; g->fight.p[2].char_id = g->flow.sel[2];
         g->flow.screen = both ? OSC_SCREEN_FIGHT : OSC_SCREEN_VS;
-        g->flow.screen_tick = 0; g->ciclo = 0;
+        g->flow.screen_tick = 0; g->fight.ciclo = 0;
         if (g->flow.screen == OSC_SCREEN_FIGHT) osc_fight_start(g, g->flow.sel[1], g->flow.sel[2], 0);
     }
 }
@@ -81,8 +81,8 @@ static void select_render(osc_game *g)
     if (ic < g->assets.n_icone)
         for (int j = 0; j < 4; j++)
             for (int i = 0; i < 2; i++) {
-                draw_tex(g, g->assets.icone[ic], (float)(145 * j - 67), (float)(200 * i - 200 + 8 * g->timer_sub), 255, false);
-                draw_tex(g, g->assets.icone[ic], (float)(145 * j), (float)(200 * i - 100 + 8 * g->timer_sub), 255, false);
+                draw_tex(g, g->assets.icone[ic], (float)(145 * j - 67), (float)(200 * i - 200 + 8 * g->fight.timer_sub), 255, false);
+                draw_tex(g, g->assets.icone[ic], (float)(145 * j), (float)(200 * i - 100 + 8 * g->fight.timer_sub), 255, false);
             }
     barra(g, k - 410, 156, k, 290, rgb(30, 50, 70));
     barra(g, k - 410, 158, k, 160, k_white);
@@ -100,19 +100,19 @@ static void select_render(osc_game *g)
         draw_tex(g, g->assets.face_big[c], p == 1 ? 52.f : 252.f, 25.f, 255, false);
         if (!g->flow.sel_locked[p])
             draw_tex(g, g->assets.face_small[c], (float)(k + 49 * ((c - 1) % 8) - 402), (float)cell_y(c), 255, false);
-        texto(g, p == 1 ? 100 : 300, 130 - (int)SDL_lround(cos(g->ciclo / 4.3) * 4.0),
+        texto(g, p == 1 ? 100 : 300, 130 - (int)SDL_lround(cos(g->fight.ciclo / 4.3) * 4.0),
               osc_text(OSC_MEMO_NOMES, c, g->settings.lang), 'c', 12, rgb(180, 220, 160));
     }
-    int kt = (int)SDL_lround(cos(g->timer_sub / 4.0) * 20.0);
+    int kt = (int)SDL_lround(cos(g->fight.timer_sub / 4.0) * 20.0);
     texto(g, 200, (int)SDL_lround(c2 * 0.3) - 96, osc_text(OSC_MEMO_TEXTO, 7, g->settings.lang), 'c', 18,
           rgb(230 + kt, 230 + kt, 255));                                                   /* SELECIONE SEU LUTADOR */
-    osc_rgb tc = g->timer_sec <= 5 && (g->timer_sub & 1) == 0 ? rgb(250, 220, 220) : rgb(250, 150, 150);
-    snprintf(buf, sizeof buf, "%d", g->timer_sec);
+    osc_rgb tc = g->fight.timer_sec <= 5 && (g->fight.timer_sub & 1) == 0 ? rgb(250, 220, 220) : rgb(250, 150, 150);
+    snprintf(buf, sizeof buf, "%d", g->fight.timer_sec);
     texto(g, 200, 15, buf, 'c', 22, tc);
     /* "1P" / "2P" over the cursor cell while choosing */
     for (int p = 1; p <= 2; p++) {
         if (!(p == 1 ? g->flow.p1_in : g->flow.p2_in) || g->flow.sel_locked[p]) continue;
-        int c = g->flow.sel[p], add = (g->ciclo & 1) == 0 ? 50 : 0;
+        int c = g->flow.sel[p], add = (g->fight.ciclo & 1) == 0 ? 50 : 0;
         snprintf(buf, sizeof buf, "%dP", p);
         if (p == 1) texto(g, cell_x(c), cell_y(c) - 3, buf, '-', 10, rgb(100 + add, 100 + add, 200 + add));
         else texto(g, cell_x(c) + 35, cell_y(c) - 3, buf, '-', 10, rgb(200 + add, 50 + add, 50 + add));
@@ -123,20 +123,20 @@ static void select_render(osc_game *g)
 static void vs_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     int c2 = g->flow.screen_tick;
-    if (g->fight_no < 1) g->fight_no = 1;
-    if (g->fight_no > 8) g->fight_no = 8;
+    if (g->fight.fight_no < 1) g->fight.fight_no = 1;
+    if (g->fight.fight_no > 8) g->fight.fight_no = 8;
     osc_audio_stop_music();
     if (c2 == 0) {
         /* the CPU opponent picks the stage (osc_stage_for) and it is shown as a preview */
         int opp = g->flow.p1_in ? 2 : 1;
-        g->flow.sel[opp] = g->flow.ladder[g->fight_no];
+        g->flow.sel[opp] = g->flow.ladder[g->fight.fight_no];
         osc_load_stage(g, osc_stage_for(g, g->flow.sel[opp]));
     }
-    if (++g->ciclo > 15) g->ciclo = 0;
+    if (++g->fight.ciclo > 15) g->fight.ciclo = 0;
     if (++g->flow.screen_tick > 1000) g->flow.screen_tick = 1000;
     uint8_t held = (uint8_t)((g->flow.p1_in ? in1 : 0) | (g->flow.p2_in ? in2 : 0));
     if ((held & OSC_IN_B1) && g->flow.screen_tick > 0) g->flow.screen_tick += 5;
-    if (c2 > 150) osc_fight_start(g, g->flow.sel[1], g->flow.sel[2], g->stage_id);
+    if (c2 > 150) osc_fight_start(g, g->flow.sel[1], g->flow.sel[2], g->fight.stage_id);
     if (g->settings.unlocks.fadiga) osc_ending_start(g, g->flow.sel[g->flow.p1_in ? 1 : 2]);   /* Fadiga.dat: state 10 */
 }
 
@@ -148,22 +148,22 @@ static void vs_render(osc_game *g)
         if (!(p == 1 ? g->flow.p1_in : g->flow.p2_in)) continue;
         int tx_x = c2 < 30 ? 200 - (c2 - 30) * 20 : c2 <= 100 ? 200 : 200 - (c2 - 100) * 20;
         texto(g, tx_x, 135, osc_text(OSC_MEMO_TEXTO, 19, g->settings.lang), 'c', 26, rgb(150, 255, 180));   /* PRÓXIMA BATALHA */
-        if (c2 > 40) texto(g, 200, 180, osc_text(OSC_MEMO_NOMES, g->flow.ladder[g->fight_no], g->settings.lang), 'c', 15, k_white);
+        if (c2 > 40) texto(g, 200, 180, osc_text(OSC_MEMO_NOMES, g->flow.ladder[g->fight.fight_no], g->settings.lang), 'c', 15, k_white);
         for (int i = 1; i <= 8; i++) {
             int c = g->flow.ladder[i];
             float y = c2 < 50 ? (float)(470 - 5 * c2) : 220.f;
-            bool shown = i <= g->fight_no || g->settings.unlocks.churros;
+            bool shown = i <= g->fight.fight_no || g->settings.unlocks.churros;
             if (shown && c >= 1 && c <= 15) draw_tex(g, g->assets.face_small[c], (float)(48 * i - 40), y, 255, true);
-            if (i < g->fight_no && 10 < g->assets.n_icone)
+            if (i < g->fight.fight_no && 10 < g->assets.n_icone)
                 draw_tex(g, g->assets.icone[10], (float)(48 * i - 35), c2 < 50 ? (float)(485 - 5 * c2) : 235.f, 255, false);
             if (!shown && 9 < g->assets.n_icone) draw_tex(g, g->assets.icone[9], (float)(48 * i - 40), y, 255, false);
         }
     }
-    if (c2 >= 50 && g->ciclo <= 10 && 8 < g->assets.n_icone)
-        draw_tex(g, g->assets.icone[8], (float)(48 * g->fight_no - 20), 215.f, 255, false);
+    if (c2 >= 50 && g->fight.ciclo <= 10 && 8 < g->assets.n_icone)
+        draw_tex(g, g->assets.icone[8], (float)(48 * g->fight.fight_no - 20), 215.f, 255, false);
     if (c2 > 60 && g->assets.stage) {
         draw_tex_rect(g, g->assets.stage, 80, 6, 320, 134, 255);
-        texto(g, 200, 115, osc_text(OSC_MEMO_CENARIOS, g->stage_id - 1, g->settings.lang), 'c', 9, k_white);
+        texto(g, 200, 115, osc_text(OSC_MEMO_CENARIOS, g->fight.stage_id - 1, g->settings.lang), 'c', 9, k_white);
     }
     if (c2 > 120)
         for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + c2 - 120, k_black);
@@ -174,16 +174,16 @@ static void continue_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     (void)in1; (void)in2;   /* continuing takes a coin and a start button (handle_keys) */
     g->flow.screen_tick++;
-    if (g->timer_sec > 0 || g->timer_sub > 0) {
-        if (++g->ciclo > 10) g->ciclo = 0;
+    if (g->fight.timer_sec > 0 || g->fight.timer_sub > 0) {
+        if (++g->fight.ciclo > 10) g->fight.ciclo = 0;
     }
-    if (g->timer_sub > 0) g->timer_sub--;
-    if (g->timer_sub == 0 && g->timer_sec > 0) { g->timer_sec--; g->timer_sub = 25; }
-    if (g->timer_sec == 0 && g->timer_sub == 0) {
-        if (++g->ciclo > 150) {   /* game over -> records (state 8), then attract */
-            g->flow.screen = OSC_SCREEN_RECORDS; g->flow.screen_tick = 0; g->flow.menu_cam = 0; g->ciclo = 0;
+    if (g->fight.timer_sub > 0) g->fight.timer_sub--;
+    if (g->fight.timer_sub == 0 && g->fight.timer_sec > 0) { g->fight.timer_sec--; g->fight.timer_sub = 25; }
+    if (g->fight.timer_sec == 0 && g->fight.timer_sub == 0) {
+        if (++g->fight.ciclo > 150) {   /* game over -> records (state 8), then attract */
+            g->flow.screen = OSC_SCREEN_RECORDS; g->flow.screen_tick = 0; g->flow.menu_cam = 0; g->fight.ciclo = 0;
             g->flow.p1_in = g->flow.p2_in = false;
-            g->p[1].human = g->p[2].human = false;
+            g->fight.p[1].human = g->fight.p[2].human = false;
         }
     }
 }
@@ -192,15 +192,15 @@ static void continue_render(osc_game *g)
 {
     char buf[16];
     for (int i = 0; i <= 60; i++) barra(g, 0, 5 * i, 400, 5 * i + 5, rgb(3 * i + 10, 3 * i + 50, 3 * i + 30));
-    if (g->timer_sec > 0 || g->timer_sub > 0) {
+    if (g->fight.timer_sec > 0 || g->fight.timer_sub > 0) {
         texto(g, 200, 20, osc_text(OSC_MEMO_TEXTO, 23, g->settings.lang), 'c', 35, rgb(255, 120, 120));   /* CONTINUE ? */
-        if (g->timer_sec > 3 || g->ciclo < 8) {
-            snprintf(buf, sizeof buf, "%d", g->timer_sec);
-            texto(g, 320, 70, buf, 'c', 120, rgb(255, 25 * g->timer_sec, 25 * g->timer_sec));
+        if (g->fight.timer_sec > 3 || g->fight.ciclo < 8) {
+            snprintf(buf, sizeof buf, "%d", g->fight.timer_sec);
+            texto(g, 320, 70, buf, 'c', 120, rgb(255, 25 * g->fight.timer_sec, 25 * g->fight.timer_sec));
         }
     } else {
         texto(g, 200, 110, osc_text(OSC_MEMO_TEXTO, 22, g->settings.lang), 'c', 36, rgb(255, 0, 0));   /* FIM DO JOGO */
-        if (g->ciclo < 15) barra(g, 0, 10 * g->ciclo, 400, 300 - 10 * g->ciclo, k_white);
+        if (g->fight.ciclo < 15) barra(g, 0, 10 * g->fight.ciclo, 400, 300 - 10 * g->fight.ciclo, k_white);
     }
 }
 
@@ -224,10 +224,10 @@ void osc_go_attract(osc_game *g, int tick)
     g->flow.screen_tick = tick;
     g->flow.menu_cam = tick > 235 ? -2 * (tick - 235) : 0;   /* where the scroll would be at that tick */
     if (g->flow.menu_cam < -200) g->flow.menu_cam = -200;
-    g->ciclo = 0;
+    g->fight.ciclo = 0;
     g->flow.demo = 0;
     g->flow.p1_in = g->flow.p2_in = false;
-    g->p[1].human = g->p[2].human = false;
+    g->fight.p[1].human = g->fight.p[2].human = false;
 }
 
 /* State 1 -> 7 (0x49fdb1..0x4a00d4): a CPU-vs-CPU fight with no round intro (g_roundStart = 72), no
@@ -241,17 +241,17 @@ static void start_demo(osc_game *g)
     if (c1 < 1) c1 = 1; if (c1 > 15) c1 = 15;
     if (c2 < 1) c2 = 1; if (c2 > 15) c2 = 15;
     g->flow.p1_in = g->flow.p2_in = false;
-    g->p[1].human = g->p[2].human = false;
-    g->p[1].char_id = c1; g->p[2].char_id = c2;
+    g->fight.p[1].human = g->fight.p[2].human = false;
+    g->fight.p[1].char_id = c1; g->fight.p[2].char_id = c2;
     g->flow.sel[1] = c1; g->flow.sel[2] = c2;
     g->flow.demo = 600;
     g->flow.screen = OSC_SCREEN_FIGHT; g->flow.screen_tick = 0;
     osc_fight_start(g, c1, c2, stage);
-    g->no_push = false;
-    g->timer_sec = 99; g->timer_sub = 25;
-    g->round_start = 72; g->round_end = 0;
-    g->hud_y = -120; g->hud_y2 = 60;
-    g->first_hit = true;
+    g->fight.no_push = false;
+    g->fight.timer_sec = 99; g->fight.timer_sub = 25;
+    g->fight.round_start = 72; g->fight.round_end = 0;
+    g->fight.hud_y = -120; g->fight.hud_y2 = 60;
+    g->fight.first_hit = true;
 }
 
 static void attract_tick(osc_game *g)
@@ -260,8 +260,8 @@ static void attract_tick(osc_game *g)
      * original runs while drawing (c == 100, the punch sound at 200) fire on the value just reached,
      * like the camera and the demo trigger, which the original tests after the increment. */
     if (g->flow.credits > 0) { g->flow.screen_tick = 500; g->flow.menu_cam = -200; }
-    g->ciclo++;
-    if (g->ciclo > 20) g->ciclo = 0;
+    g->fight.ciclo++;
+    if (g->fight.ciclo > 20) g->fight.ciclo = 0;
     if (g->flow.screen_tick < 1000) g->flow.screen_tick++;
     int c = g->flow.screen_tick;
     if (c == 100) g->flow.menu_cam = 0;
@@ -296,13 +296,13 @@ static void attract_render(osc_game *g)
         barra(g, 147, -155 - cam, 270, -48 - cam, k_black);
         retangulo(g, 149, -153 - cam, 268, -50 - cam, k_white);
         for (int i = 0; i < 8; i++) blit_ab(g, 4, (float)(50 * i), (float)(220 - cam));
-        int bob = g->ciclo < 10 ? 4 : 0;
+        int bob = g->fight.ciclo < 10 ? 4 : 0;
         for (int i = 0; i < 9; i++) {
             blit_ab(g, 7, (float)(50 * i), (float)(245 - cam + bob));
             blit_ab(g, 5, (float)(50 * i - 15), (float)(245 - cam + bob));
             blit_ab(g, 6, (float)(50 * i + 15), (float)(245 - cam + bob));
         }
-        int bob2 = g->ciclo > 10 ? 5 : 0;
+        int bob2 = g->fight.ciclo > 10 ? 5 : 0;
         if (c < 200) { blit_ab(g, 8, 210, (float)(185 + bob2 - cam)); blit_ab(g, 9, 50, (float)(178 + bob2 - cam)); }
         else {
             blit_ab(g, 11, (float)(60 - 4 * (c - 200)), (float)(180 + 2 * (c - 200) - cam));   /* Seu Madruga caindo */
@@ -330,15 +330,15 @@ static void attract_render(osc_game *g)
         osc_text_ex(g, 200, 253, osc_text(OSC_MEMO_TEXTO, 25, g->settings.lang), 'c', 8, 255, 255, 255);
         osc_text_ex(g, 200, 267, osc_text(OSC_MEMO_TEXTO, 30, g->settings.lang), 'c', 8, 255, 255, 255);
     }
-    if (g->ciclo < 12)
+    if (g->fight.ciclo < 12)
         osc_text_ex(g, 200, 235, osc_text(OSC_MEMO_TEXTO, g->flow.credits == 0 ? 5 : 6, g->settings.lang), 'c', 10, 255, 255, 255);
 }
 
 /* ---- state 8: game over / top 10 (07b-layout.md "Records") ---------------- */
 static void records_tick(osc_game *g)
 {
-    g->ciclo++;
-    if (g->ciclo > 20) g->ciclo = 0;
+    g->fight.ciclo++;
+    if (g->fight.ciclo > 20) g->fight.ciclo = 0;
     if (g->flow.screen_tick < 1000) g->flow.screen_tick++;
     if (g->flow.screen_tick > 80) g->flow.menu_cam -= 5;
     if (g->flow.menu_cam < -320) g->flow.menu_cam = -320;
@@ -351,7 +351,7 @@ static void records_render(osc_game *g)
     for (int i = 1; i <= 10; i++) {
         const osc_record *r = &g->flow.records[i - 1];
         int y = 60 * i - 350 - g->flow.menu_cam;
-        int hl = i == 1 && (g->ciclo & 1) == 0 ? 80 : 0;   /* the leader blinks */
+        int hl = i == 1 && (g->fight.ciclo & 1) == 0 ? 80 : 0;   /* the leader blinks */
         osc_rgb c = rgb(255, 255 - hl, 255 - hl);
         char num[16], sc[16];
         snprintf(num, sizeof num, i < 10 ? "0%d -" : "%d -", i);
@@ -363,8 +363,8 @@ static void records_render(osc_game *g)
     }
     if (g->flow.screen_tick > 240)
         for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + g->flow.screen_tick - 240, k_black);
-    if (g->ciclo < 18) texto(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->settings.lang), 'c', 12, k_white);    /* OS 10 MELHORES */
-    if (g->ciclo < 10) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);   /* INSIRA FICHAS */
+    if (g->fight.ciclo < 18) texto(g, 200, 5, osc_text(OSC_MEMO_TEXTO, 20, g->settings.lang), 'c', 12, k_white);    /* OS 10 MELHORES */
+    if (g->fight.ciclo < 10) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);   /* INSIRA FICHAS */
 }
 
 
@@ -374,8 +374,8 @@ static void insert_record(osc_game *g, int p)
     /* criarecorde(10, name) + ordenarecordista: replace the last slot, sort by score */
     osc_record *r = &g->flow.records[9];
     memcpy(r->name, g->flow.name[p], 4);
-    r->char_id = g->p[p].char_id;
-    r->score = g->p[p].score;
+    r->char_id = g->fight.p[p].char_id;
+    r->score = g->fight.p[p].score;
     for (int i = 9; i > 0 && g->flow.records[i].score > g->flow.records[i - 1].score; i--) {
         osc_record t = g->flow.records[i]; g->flow.records[i] = g->flow.records[i - 1]; g->flow.records[i - 1] = t;
     }
@@ -385,8 +385,8 @@ static void leave_name_entry(osc_game *g)
 {
     for (int p = 1; p <= 2; p++) if (g->flow.name_active[p]) { insert_record(g, p); g->flow.name_active[p] = false; }
     if (g->flow.name_after == OSC_SCREEN_ENDING) { osc_ending_start(g, g->flow.ending_char); return; }
-    g->flow.screen = g->flow.name_after; g->flow.screen_tick = 0; g->ciclo = 0; g->flow.menu_cam = 0;
-    if (g->flow.screen == OSC_SCREEN_CONTINUE) { g->timer_sec = 9; g->timer_sub = 25; }
+    g->flow.screen = g->flow.name_after; g->flow.screen_tick = 0; g->fight.ciclo = 0; g->flow.menu_cam = 0;
+    if (g->flow.screen == OSC_SCREEN_CONTINUE) { g->fight.timer_sec = 9; g->fight.timer_sub = 25; }
     if (g->flow.screen == OSC_SCREEN_RECORDS) { g->flow.p1_in = g->flow.p2_in = false; }
 }
 
@@ -397,42 +397,42 @@ static void leave_name_entry(osc_game *g)
 static void after_match(osc_game *g, int winner)
 {
     int loser = 3 - winner;
-    if (!g->p[loser].human) g->fight_no++;
-    g->p[loser].human = false;
+    if (!g->fight.p[loser].human) g->fight.fight_no++;
+    g->fight.p[loser].human = false;
     if (loser == 1) g->flow.p1_in = false; else g->flow.p2_in = false;
-    bool any = g->p[1].human || g->p[2].human;
-    if (any && g->fight_no <= 8) {
-        if (!g->flow.ladder[1]) osc_make_ladder(g, g->p[winner].char_id);   /* 2P winner goes on alone */
-        g->flow.sel[winner] = g->p[winner].char_id;
-        g->flow.screen = OSC_SCREEN_VS; g->flow.screen_tick = 0; g->ciclo = 0;
+    bool any = g->fight.p[1].human || g->fight.p[2].human;
+    if (any && g->fight.fight_no <= 8) {
+        if (!g->flow.ladder[1]) osc_make_ladder(g, g->fight.p[winner].char_id);   /* 2P winner goes on alone */
+        g->flow.sel[winner] = g->fight.p[winner].char_id;
+        g->flow.screen = OSC_SCREEN_VS; g->flow.screen_tick = 0; g->fight.ciclo = 0;
         return;
     }
     g->flow.name_after = any ? OSC_SCREEN_ENDING : OSC_SCREEN_CONTINUE;
-    g->flow.ending_char = g->p[winner].char_id;
+    g->flow.ending_char = g->fight.p[winner].char_id;
     bool ask = false;
     for (int p = 1; p <= 2; p++) {
-        g->flow.name_active[p] = g->p[p].score > g->flow.records[9].score;
+        g->flow.name_active[p] = g->fight.p[p].score > g->flow.records[9].score;
         if (!g->flow.name_active[p]) continue;
         memcpy(g->flow.name[p], "AAA", 4);
         g->flow.name_pos[p] = 1;
-        g->p[p].in_prev = 0xff;
+        g->fight.p[p].in_prev = 0xff;
         ask = true;
     }
-    if (ask) { g->flow.screen = OSC_SCREEN_NAME; g->flow.screen_tick = 0; g->ciclo = 0; return; }
+    if (ask) { g->flow.screen = OSC_SCREEN_NAME; g->flow.screen_tick = 0; g->fight.ciclo = 0; return; }
     leave_name_entry(g);
 }
 
 static void name_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
     uint8_t ins[3] = {0, in1, in2};
-    g->ciclo++;
-    if (g->ciclo > 20) g->ciclo = 0;
+    g->fight.ciclo++;
+    if (g->fight.ciclo > 20) g->fight.ciclo = 0;
     if (g->flow.screen_tick < 1000) g->flow.screen_tick++;
     bool any = false;
     for (int p = 1; p <= 2; p++) {
         if (!g->flow.name_active[p]) continue;
-        uint8_t pressed = (uint8_t)(ins[p] & ~g->p[p].in_prev);
-        g->p[p].in_prev = ins[p];
+        uint8_t pressed = (uint8_t)(ins[p] & ~g->fight.p[p].in_prev);
+        g->fight.p[p].in_prev = ins[p];
         int *pos = &g->flow.name_pos[p];
         if (*pos > 3) continue;
         any = true;
@@ -468,7 +468,7 @@ static void name_render(osc_game *g)
             char l[2] = {g->flow.name[p][i], 0};
             texto(g, x0 + 15 * i, 5, l, '-', 15, k_white);
         }
-        if (g->ciclo < 15 && g->flow.name_pos[p] <= 3) texto(g, x0 + 15 * (g->flow.name_pos[p] - 1), 4, "-", '-', 27, k_white);
+        if (g->fight.ciclo < 15 && g->flow.name_pos[p] <= 3) texto(g, x0 + 15 * (g->flow.name_pos[p] - 1), 4, "-", '-', 27, k_white);
     }
 }
 
@@ -477,18 +477,18 @@ static void join_player(osc_game *g, int p)
 {
     g->flow.credits--;
     if (p == 1) g->flow.p1_in = true; else g->flow.p2_in = true;
-    g->p[p].score = 0; g->p[p].wins = 0;
+    g->fight.p[p].score = 0; g->fight.p[p].wins = 0;
     g->flow.sel[p] = p;
     g->flow.sel_locked[p] = 0;
-    g->timer_sec = 30; g->timer_sub = 25;   /* FormKeyDown '1'/'2' */
+    g->fight.timer_sec = 30; g->fight.timer_sub = 25;   /* FormKeyDown '1'/'2' */
 }
 
 static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
 {
     /* convenience for keyboards and pads: the first button on the title inserts a coin and starts */
     if (g->flow.screen == OSC_SCREEN_ATTRACT || g->flow.screen == OSC_SCREEN_RECORDS || g->flow.screen == OSC_SCREEN_CONTINUE || g->flow.demo > 0) {
-        uint8_t p1 = (uint8_t)(in1 & ~g->p[1].in_prev), p2 = (uint8_t)(in2 & ~g->p[2].in_prev);
-        g->p[1].in_prev = in1; g->p[2].in_prev = in2;
+        uint8_t p1 = (uint8_t)(in1 & ~g->fight.p[1].in_prev), p2 = (uint8_t)(in2 & ~g->fight.p[2].in_prev);
+        g->fight.p[1].in_prev = in1; g->fight.p[2].in_prev = in2;
         if (p1 & OSC_IN_B1) { if (g->flow.credits == 0) g->flow.key_coin = true; g->flow.key_start1 = true; }
         if (p2 & OSC_IN_B1) { if (g->flow.credits == 0) g->flow.key_coin = true; g->flow.key_start2 = true; }
     }
@@ -514,25 +514,25 @@ static void handle_keys(osc_game *g, uint8_t in1, uint8_t in2)
         if (g->flow.credits == 0 || in) continue;
         if (g->flow.screen == OSC_SCREEN_ATTRACT) {
             join_player(g, p);
-            g->fight_no = g->settings.unlocks.gentalha ? 8 : 1;
+            g->fight.fight_no = g->settings.unlocks.gentalha ? 8 : 1;
             g->flow.screen = OSC_SCREEN_SELECT; g->flow.screen_tick = 0; g->flow.sel_sub = 0;
             g->flow.sel_locked[1] = g->flow.sel_locked[2] = 0;
             g->settings.ai_p2 = !g->flow.p2_in;
-        } else if (g->flow.screen == OSC_SCREEN_SELECT && !g->no_push) {
+        } else if (g->flow.screen == OSC_SCREEN_SELECT && !g->fight.no_push) {
             join_player(g, p);
             g->settings.ai_p2 = !g->flow.p2_in;
-        } else if (g->flow.screen == OSC_SCREEN_FIGHT && g->flow.demo == 0 && !g->no_push && g->challenge == 0) {
+        } else if (g->flow.screen == OSC_SCREEN_FIGHT && g->flow.demo == 0 && !g->fight.no_push && g->fight.challenge == 0) {
             join_player(g, p);
-            g->p[p].human = true;
-            g->challenge = 100;
-        } else if (g->flow.screen == OSC_SCREEN_CONTINUE && g->timer_sec > 0 && g->timer_sub > 0) {
+            g->fight.p[p].human = true;
+            g->fight.challenge = 100;
+        } else if (g->flow.screen == OSC_SCREEN_CONTINUE && g->fight.timer_sec > 0 && g->fight.timer_sub > 0) {
             /* FormKeyDown state 9: back to the same ladder (VS) or, before any fight, to select */
-            int keep = g->p[p].char_id;
+            int keep = g->fight.p[p].char_id;
             join_player(g, p);
             g->flow.sel[p] = keep ? keep : p;   /* same fighter, same ladder */
-            g->p[p].human = true;
+            g->fight.p[p].human = true;
             g->flow.sel_locked[p] = 1;
-            g->ciclo = 0; g->flow.screen_tick = 0;
+            g->fight.ciclo = 0; g->flow.screen_tick = 0;
             g->settings.ai_p2 = !g->flow.p2_in;
             if (g->flow.ladder[1]) g->flow.screen = OSC_SCREEN_VS;
             else { g->flow.screen = OSC_SCREEN_SELECT; g->flow.sel_sub = 0; g->flow.sel_locked[p] = 0; }
@@ -556,7 +556,7 @@ static void game_tick_body(osc_game *g, uint8_t in1, uint8_t in2)
         osc_fight_tick(g, in1, in2);
         if (g->flow.demo > 0) {
             g->flow.demo--;
-            if (g->flow.demo < 6) { g->flow.demo = 0; g->flow.screen = OSC_SCREEN_RECORDS; g->flow.screen_tick = 0; g->flow.menu_cam = 0; g->ciclo = 0; }
+            if (g->flow.demo < 6) { g->flow.demo = 0; g->flow.screen = OSC_SCREEN_RECORDS; g->flow.screen_tick = 0; g->flow.menu_cam = 0; g->fight.ciclo = 0; }
             break;
         }
         if (g->flow.match_over) {
@@ -588,12 +588,12 @@ void osc_game_key(osc_game *g, SDL_Keycode key)
     if (key == SDLK_PERIOD && g->flow.view_dx < 40) g->flow.view_dx++;
     bool p = key == SDLK_P, gk = key == SDLK_G && g->flow.screen == OSC_SCREEN_FIGHT && !g_is_bound(g);
     if (p || gk) {
-        if (!g->paused) {
-            g->paused = true;
+        if (!g->fight.paused) {
+            g->fight.paused = true;
             if (gk) g->flow.show_moves = true;
         } else {
-            g->timer_off = false;   /* DXTimer1.Enabled := True */
-            g->paused = false;
+            g->fight.timer_off = false;   /* DXTimer1.Enabled := True */
+            g->fight.paused = false;
             g->flow.show_moves = false;
         }
     }
@@ -603,11 +603,11 @@ void osc_game_key(osc_game *g, SDL_Keycode key)
  * DXTimer1.Enabled := False so the last frame stays on screen. */
 void osc_game_tick(osc_game *g, uint8_t in1, uint8_t in2)
 {
-    if (g->timer_off) return;
+    if (g->fight.timer_off) return;
     game_tick_body(g, in1, in2);
     g->flow.speed_overlay_draw = g->flow.speed_overlay > 0 && g->flow.screen != OSC_SCREEN_MENU_F1 && g->flow.screen != OSC_SCREEN_MENU_F2;
     if (g->flow.speed_overlay_draw) g->flow.speed_overlay--;
-    if (g->paused) g->timer_off = true;
+    if (g->fight.paused) g->fight.timer_off = true;
 }
 
 static void speed_bar(osc_game *g)
@@ -659,7 +659,7 @@ static void osc_game_render_screen(osc_game *g)
              * and the title logo (Abertura 12/13, not Icone) at half size in the bottom right corner */
             if (g->flow.demo < 40)
                 for (int i = 0; i < 16; i++) barra(g, 0, 20 * i, 400, 20 * i + 40 - g->flow.demo, k_black);
-            if (g->ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);
+            if (g->fight.ciclo < 20) texto(g, 200, 240, osc_text(OSC_MEMO_TEXTO, 5, g->settings.lang), 'c', 10, k_white);
             int li = g->settings.lang == 1 ? 13 : 12;
             if (g->flow.demo < 500 && li < g->assets.n_abertura && g->assets.abertura[li]) {
                 int hw = lround_i(g->assets.abertura_w[li] / 2.0), hh = lround_i(g->assets.abertura_h[li] / 2.0);

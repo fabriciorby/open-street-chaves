@@ -182,12 +182,9 @@ typedef struct {
     int view_dx;             /* DXDraw1.Left, -40..40 (, / . keys) */
 } osc_flow;
 
+/* One fight and nothing else: the 28 ms tick simulation (fight.c, fighter.c, combat.c, cpu.c, effects.c, stage.c) and
+ * the state the HUD / fight_draw.c read back. Holds no SDL type; textures and sounds live in osc_assets. */
 typedef struct {
-    SDL_Renderer *ren;
-    char data_dir[1024];
-    osc_assets assets;
-    osc_settings settings;
-    osc_flow flow;
     int stage_id;
     int ciclo;           /* g_ciclo blink counter, 0..30 in the fight */
     osc_effect fx[OSC_MAX_FX];
@@ -202,11 +199,9 @@ typedef struct {
     uint32_t rng;        /* Delphi RandSeed */
     int round_start, round_end;
     int round_no, fight_no;  /* fight_no 1..8 drives the AI probabilities (05) */
-
     bool first_hit;          /* 0x4b57f4: the round's first attack was landed */
     int hud_y, hud_y2;       /* 0x4b44d2 / 0x4b44d4: top and bottom HUD offsets (slide out at round end) */
     int transition;          /* 0x4b449d: 1..4, wipe between rounds */
-
     int challenge;            /* g_challengeTimer: a second player joined a 1P fight */
     /* stage objects (05 "Stage objects") */
     struct { int x, y, speed, kind, freq; bool active; } mover;   /* 0x4b57c8: crosses stages 1 and 2 */
@@ -218,6 +213,15 @@ typedef struct {
     int dialogo;              /* g_dialogo: the last fight's dialogue, 600 ticks */
     int dialog_speaker, dialog_line;   /* 0x4b4494 and the memo line on screen */
     bool sp_draw; int sp_off; /* super pause: pattern instead of the stage, scrolled by sp_off */
+} osc_fight;
+
+typedef struct {
+    SDL_Renderer *ren;
+    char data_dir[1024];
+    osc_assets assets;
+    osc_settings settings;
+    osc_flow flow;
+    osc_fight fight;
 } osc_game;
 
 enum { OSC_SCREEN_ATTRACT = 1, OSC_SCREEN_MENU_F1 = 2, OSC_SCREEN_MENU_F2 = 3, OSC_SCREEN_SELECT = 4, OSC_SCREEN_VS = 5, OSC_SCREEN_FIGHT = 7,

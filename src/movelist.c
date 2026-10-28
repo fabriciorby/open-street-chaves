@@ -58,7 +58,7 @@ static void sequence(osc_game *g, int x, int y, const char *name, const char *ke
 void osc_movelist_render(osc_game *g)
 {
     for (int s = 1; s <= 2; s++) {
-        int x = (s - 1) * 200, c = g->p[s].char_id;
+        int x = (s - 1) * 200, c = g->fight.p[s].char_id;
         barra(g, x + 3, 115, x + 197, 200, rgb(20, 40, 60));
         retangulo(g, x + 3, 115, x + 197, 200, k_white);
         if (c < 1 || c > 15) continue;

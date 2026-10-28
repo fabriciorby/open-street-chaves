@@ -63,7 +63,7 @@ static void throw_spin(osc_fighter *o, int spin)
 /* flash of the screen (g_shakeHit 0x4b449b) with config line 7 on */
 static void throw_flash(osc_game *g, int chance)
 {
-    if (g->settings.cfg_flash && osc_random(g, chance) == 0) g->flash = 3;
+    if (g->settings.cfg_flash && osc_random(g, chance) == 0) g->fight.flash = 3;
 }
 
 /* Seu Madruga 28/29, 31, Chiquinha 30 and Sr. Barriga 30: the thrower grabs and shakes the opponent,
@@ -97,12 +97,12 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         throw_flash(g, 5);
         throw_hold(g, f, o, 40.0, 2, 8);
         f->hits += 2; f->combo_timer = 43;
-        if (osc_random(g, 30) == 0 && o->health > 0.0) g->hit_stop = 5;
+        if (osc_random(g, 30) == 0 && o->health > 0.0) g->fight.hit_stop = 5;
         if (last) {
             f->damage = 47;
             o->health -= f->damage * g->settings.damage_level;
             f->state = 1; f->frame = 38;
-            g->hit_stop = 5;
+            g->fight.hit_stop = 5;
             set_move(g, f, 19);
             set_move(g, o, 10);
             f->attacking = false;
@@ -115,7 +115,7 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         throw_flash(g, 5);
         throw_hold(g, f, o, 65.0, 3, 5);
         f->hits++; f->combo_timer = 43;
-        if (osc_random(g, 20) == 0 && o->health > 0.0) g->hit_stop = 5;
+        if (osc_random(g, 20) == 0 && o->health > 0.0) g->fight.hit_stop = 5;
         if (last) {
             f->damage = 36;
             o->health -= f->damage * g->settings.damage_level;
@@ -130,14 +130,14 @@ static void sel_throws(osc_game *g, osc_fighter *f, osc_fighter *o)
         f->hitstun = 0;
         f->frame = 1 + osc_random(g, 46);
         throw_flash(g, 5);
-        if (osc_random(g, 3) == 0) g->hit_stop = 3 + osc_random(g, 3);
+        if (osc_random(g, 3) == 0) g->fight.hit_stop = 3 + osc_random(g, 3);
         throw_hold(g, f, o, 40.0, 2, 8);
         f->hits++; f->combo_timer = 43;
         if (last) {
             f->damage = 36;
             o->health -= f->damage * g->settings.damage_level;
             f->state = 1; f->frame = 12;
-            if (o->health > 0.0) g->hit_stop = 5;
+            if (o->health > 0.0) g->fight.hit_stop = 5;
             f->anim_timer = 0; f->vy = -48; f->in_air = true;
             set_move(g, f, 21);
             set_move(g, o, 10);
@@ -155,7 +155,7 @@ static void sel_code(osc_game *g, osc_fighter *f, osc_fighter *o)
     /* 0x47db6a: a knocked-out fighter lies still */
     if (st == 20 && f->vy == 0 && f->health <= 0.0) { f->anim_timer = 0; f->y = OSC_GROUND_Y; }
     /* 0x47e540: Chaves' state 29 shakes the street once */
-    if (ch == 1 && st == 29 && t == 9) g->shake = 20;
+    if (ch == 1 && st == 29 && t == 9) g->fight.shake = 20;
     sel_throws(g, f, o);
 }
 
@@ -166,7 +166,7 @@ static void sel_frames(osc_game *g, osc_fighter *f)
         if (r->state != f->state || (r->ch && r->ch != f->char_id) || (r->ch_ne && r->ch_ne == f->char_id)) continue;
         if (f->anim_timer < r->t_lo || f->anim_timer > r->t_hi) continue;
         if (r->lvl && f->hit_level != r->lvl) continue;
-        if (r->mod && (((r->psrc ? g->ciclo : f->anim_timer) % r->mod == 0) == (r->meq != 0))) continue;
+        if (r->mod && (((r->psrc ? g->fight.ciclo : f->anim_timer) % r->mod == 0) == (r->meq != 0))) continue;
         if (r->cur > 0 && f->frame != r->cur) continue;
         if (r->cur < 0 && f->frame == -r->cur) continue;
         if (r->chance && osc_random(g, r->chance) != 0) continue;
@@ -226,7 +226,7 @@ void select_frame(osc_game *g, osc_fighter *f)
     sel_stores(g, f, opp(g, f));
     special_motion(g, f);
     sel_run_turn(g, f);
-    fx_spawns_for(g, f, f == &g->p[1] ? 1 : 2);
+    fx_spawns_for(g, f, f == &g->fight.p[1] ? 1 : 2);
     fx_sounds_for(g, f);
     sel_boxes(f);
 }
@@ -334,8 +334,8 @@ static void motion_rules(osc_game *g, osc_fighter *f, int phase)
     case 12:
         if (st == 23 && phase == 0) {
             f->x += f->facing == 1 ? 12.0 : f->facing == 2 ? -12.0 : 0.0;
-            if (f->x - g->cam_x <= 100.0) f->facing = 1;
-            if (f->x - g->cam_x >= 300.0) f->facing = 2;
+            if (f->x - g->fight.cam_x <= 100.0) f->facing = 1;
+            if (f->x - g->fight.cam_x >= 300.0) f->facing = 2;
         }
         if (st == 26 && phase == 0) {
             if (((T == 8 && S == 1) || (T == 10 && S == 2))) jump_off(f, -6);
@@ -355,8 +355,8 @@ static void motion_rules(osc_game *g, osc_fighter *f, int phase)
         }
         if (st == 28 && phase == 0 && T == 10) {
             static const int cx[5] = {0, 0x50, 0xa0, 0xf0, 0x140};
-            if (S >= 1 && S <= 4) f->x = g->cam_x + cx[S];
-            f->y = g->cam_y + 0x96;
+            if (S >= 1 && S <= 4) f->x = g->fight.cam_x + cx[S];
+            f->y = g->fight.cam_y + 0x96;
             f->in_air = true; f->vy = 0;
         }
         break;
