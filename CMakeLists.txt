@@ -50,12 +50,12 @@ add_executable(open-street-chaves
   src/screen_name.c
   src/screen_fight.c
   src/text.c
-  src/menu.c
+  src/screen_menu.c
   src/config.c
   src/unlocks.c
   src/arcade.c
   src/font.c
-  src/endings.c
+  src/screen_endings.c
   src/movelist.c
 )
 # Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.

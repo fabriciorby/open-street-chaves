@@ -37,7 +37,7 @@ void osc_play_music(osc_game *g, int n)
     if (osc_audio_open() && osc_wav_load(path, &g->assets.music)) { g->assets.has_music = true; osc_audio_music(&g->assets.music); }
 }
 
-/* ---- helpers for the ending scripts (endings.c) ---------------------------- */
+/* ---- helpers for the ending scripts (screen_endings.c) ---------------------------- */
 bool osc_load_fighter(osc_game *g, int slot, int ch)
 {
     char rel[64], path[1200];
