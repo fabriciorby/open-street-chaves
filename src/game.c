@@ -1,5 +1,6 @@
 #include "game.h"
 #include "canvas.h"
+#include "config.h"
 
 #include <math.h>
 #include <stdio.h>

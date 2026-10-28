@@ -227,9 +227,6 @@ void osc_spawn_fx(osc_game *g, int type, int x, int y);
 void osc_fx_tick(osc_game *g);
 void osc_fx_render(osc_game *g);
 /* menu.c */
-void osc_config_load(osc_game *g);
-void osc_config_save(osc_game *g);
-int osc_round_time(const osc_game *g);
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
