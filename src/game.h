@@ -231,8 +231,6 @@ void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
 void osc_menu_render(osc_game *g);
-void osc_make_ladder(osc_game *g, int char_id);
-int osc_stage_for(osc_game *g, int opponent);
 bool osc_load_stage(osc_game *g, int stage);
 
 #endif

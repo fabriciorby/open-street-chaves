@@ -8,6 +8,7 @@
 #include "font.h"
 #include "game.h"
 #include "canvas.h"
+#include "arcade.h"
 #include "text.h"
 #include "wav.h"
 #include <math.h>
