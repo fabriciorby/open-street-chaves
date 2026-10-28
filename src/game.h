@@ -209,9 +209,6 @@ void osc_game_shutdown(osc_game *g);
 /* fight-screen internals used by flow.c */
 void osc_fight_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_fight_render(osc_game *g);
-void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered);
-/* TForm1.texto: align 'c' centred, 'e' right-aligned, else left; size in points of the original font. */
-void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b);
 void osc_movelist_render(osc_game *g);   /* G: mostragolpe */
 void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G */
 int osc_random(osc_game *g, int n);      /* Delphi Random(n) */
@@ -230,15 +227,10 @@ void osc_spawn_fx(osc_game *g, int type, int x, int y);
 void osc_fx_tick(osc_game *g);
 void osc_fx_render(osc_game *g);
 /* menu.c */
-void osc_config_load(osc_game *g);
-void osc_config_save(osc_game *g);
-int osc_round_time(const osc_game *g);
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
 void osc_menu_render(osc_game *g);
-void osc_make_ladder(osc_game *g, int char_id);
-int osc_stage_for(osc_game *g, int opponent);
 bool osc_load_stage(osc_game *g, int stage);
 
 #endif

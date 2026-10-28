@@ -1,5 +1,8 @@
 #include "game.h"
 #include "canvas.h"
+#include "config.h"
+#include "arcade.h"
+#include "unlocks.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -1441,66 +1444,10 @@ bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)
     g->screen = OSC_SCREEN_ATTRACT;
     g->screen_tick = 0;
     g->sel[1] = 1; g->sel[2] = 2;
-    {   /* FormCreate: unlock files next to the game */
-        char upath[1200];
-        load_path(upath, sizeof upath, g->data_dir, "Churros.dat");
-        g->unlock_churros = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Gentalha.dat");
-        g->unlock_gentalha = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Energeticos.dat");
-        g->unlock_energeticos = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Satanas.dat");
-        g->unlock_satanas = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Fadiga.dat");
-        g->unlock_fadiga = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Mentecapto.dat");
-        g->unlock_mentecapto = SDL_GetPathInfo(upath, NULL);
-        load_path(upath, sizeof upath, g->data_dir, "Bruxa.dat");
-        g->unlock_bruxa = SDL_GetPathInfo(upath, NULL);
-        g->unlock_sc = 0;
-        for (int n = 1; n <= 12; n++) {      /* the last file found wins */
-            char nm[16];
-            snprintf(nm, sizeof nm, "SC%02d.dat", n);
-            load_path(upath, sizeof upath, g->data_dir, nm);
-            if (SDL_GetPathInfo(upath, NULL)) g->unlock_sc = n;
-        }
-    }
+    osc_unlocks_load(g);
     g->p1_in = false;   /* nobody has joined until a start button */
     g->p2_in = false;
     return true;
-}
-
-/* Stage chosen by the CPU opponent's character (07, state 5). */
-int osc_stage_for(osc_game *g, int opponent)
-{
-    static const int base[16] = {0, 1, 2, 2, 3, 3, 4, 11, 1, 1, 11, 6, 1, 1, 2, 1};
-    static const int alt[16] = {0, 0, 7, 10, 10, 8, 8, 5, 9, 10, 10, 5, 9, 5, 1, 6};
-    int st = base[opponent];
-    if (osc_random(g, 5) < 2 && g->fight_no < 8 && alt[opponent]) st = alt[opponent];
-    if (osc_random(g, 6) < 2 && g->fight_no < 8 &&
-        (opponent == 3 || opponent == 4 || opponent == 9 || opponent == 10 || opponent == 11 || opponent == 14)) st = 12;
-    if (g->unlock_sc && g->fight_no < 8) st = g->unlock_sc;   /* SCnn.dat, not on the Gentalha path */
-    return st;
-}
-
-/* criaadversario: 7 random distinct opponents plus the rival (02). */
-void osc_make_ladder(osc_game *g, int ch)
-{
-    static const int rival[16] = {0, 2, 5, 9, 1, 2, 7, 2, 5, 3, 1, 3, 1, 5, 5, 3};
-    static const int excl[16][6] = {{0}, {3, 9}, {3, 8, 9, 14, 15}, {1, 2, 14}, {5, 6}, {4, 6}, {4, 5, 15},
-                                    {8, 10}, {2, 7}, {1, 2, 15}, {7, 9}, {1, 9}, {5, 8}, {1, 8, 14}, {2, 3, 13}, {1, 2, 9}};
-    bool avail[16];
-    for (int i = 1; i <= 15; i++) avail[i] = true;
-    avail[ch] = false;
-    avail[rival[ch]] = false;
-    for (int i = 0; i < 6 && excl[ch][i]; i++) avail[excl[ch][i]] = false;
-    for (int slot = 1; slot <= 7; slot++) {
-        int c;
-        do { c = osc_random(g, 15) + 1; } while (!avail[c]);
-        g->ladder[slot] = c;
-        avail[c] = false;
-    }
-    g->ladder[8] = rival[ch];
 }
 
 /* Round/fight init (state 6 -> 7). */

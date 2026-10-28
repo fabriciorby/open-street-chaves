@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "game.h"
+#include "text.h"
 
 /* TForm1 canvas helpers (0x48e444..0x48e720), GDI semantics: rectangles exclude
  * their right and bottom edge; RoundRect corners are ellipses of diameter `d`. */

@@ -8,43 +8,12 @@
 #include "font.h"
 #include "game.h"
 #include "canvas.h"
+#include "arcade.h"
+#include "text.h"
 #include "wav.h"
 #include <math.h>
 
 static int lround_i(double v) { return (int)rint(v); }   /* Delphi Round: half to even */
-
-void osc_text_at(osc_game *g, float x, float y, const char *s, bool centered)
-{
-    if (!s || !*s) return;
-    if (osc_font_ready()) { osc_text_ex(g, x, y, s, centered ? 'c' : 'l', 8, 255, 255, 255); return; }
-    /* the debug font is ASCII only: strip UTF-8 accents to the base letter */
-    char buf[128];
-    size_t n = 0;
-    for (const unsigned char *p = (const unsigned char *)s; *p && n < sizeof buf - 1; p++) {
-        if (*p < 0x80) buf[n++] = (char)*p;
-        else if ((*p & 0xe0) == 0xc0 && p[1]) { unsigned cp = ((*p & 0x1f) << 6) | (p[1] & 0x3f); p++;
-            const char *map = "AAAAAAACEEEEIIIIDNOOOOOxOUUUUYTsaaaaaaaceeeeiiiidnooooo/ouuuuyty";
-            buf[n++] = (cp >= 0xc0 && cp <= 0xff) ? map[cp - 0xc0] : '?'; }
-    }
-    buf[n] = 0;
-    if (centered) x -= (float)(n * 8) / 2.f;
-    SDL_SetRenderDrawColor(g->ren, 255, 255, 255, 255);
-    SDL_RenderDebugText(g->ren, x, y, buf);
-}
-
-static void fill(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
-{
-    SDL_FRect rc = {SDL_min(x1, x2), SDL_min(y1, y2), SDL_fabsf(x2 - x1), SDL_fabsf(y2 - y1)};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderFillRect(g->ren, &rc);
-}
-
-static void rect(osc_game *g, float x1, float y1, float x2, float y2, Uint8 r, Uint8 gg, Uint8 b)
-{
-    SDL_FRect rc = {x1, y1, x2 - x1, y2 - y1};
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderRect(g->ren, &rc);
-}
 
 /* ---- character select (DXTimer1Timer state 4, 0x4a22f0..0x4a342f) ------------- */
 static int cell_x(int sel) { return 49 * ((sel - 1) % 8) + 3; }    /* at full scroll */
@@ -234,43 +203,6 @@ static void continue_render(osc_game *g)
 
 /* ---- dispatch ---------------------------------------------------------------------- */
 
-/* TForm1.texto (0x48e720): Comic Sans MS at `size` points with a black shadow at
- * (+1,+1). Until a bitmap font is produced we scale SDL's 8 px debug font by
- * size/6 (roughly points -> pixels at 96 dpi). */
-void osc_text_ex(osc_game *g, float x, float y, const char *s, char align, int size, Uint8 r, Uint8 gg, Uint8 b)
-{
-    if (!s || !*s) return;
-    if (osc_font_ready()) {
-        float w = osc_font_width(s, size);
-        if (align == 'c') x -= w / 2.f;
-        else if (align == 'e') x -= w;
-        osc_font_draw(g->ren, x, y, s, size, r, gg, b);
-        return;
-    }
-    char buf[160];
-    size_t n = 0;
-    for (const unsigned char *p = (const unsigned char *)s; *p && n < sizeof buf - 1; p++) {
-        if (*p < 0x80) buf[n++] = (char)*p;
-        else if ((*p & 0xe0) == 0xc0 && p[1]) { unsigned cp = ((*p & 0x1f) << 6) | (p[1] & 0x3f); p++;
-            const char *map = "AAAAAAACEEEEIIIIDNOOOOOxOUUUUYTsaaaaaaaceeeeiiiidnooooo/ouuuuyty";
-            buf[n++] = (cp >= 0xc0 && cp <= 0xff) ? map[cp - 0xc0] : '?'; }
-    }
-    buf[n] = 0;
-    /* Comic Sans at `size` pt is about size*1.3 px tall and size*0.8 px per letter */
-    float sx = (float)size / 10.f, sy = (float)size / 8.f;
-    if (sx < 0.7f) sx = 0.7f;
-    if (sy < 0.9f) sy = 0.9f;
-    float w = (float)n * 8.f * sx;
-    if (align == 'c') x -= w / 2.f;
-    else if (align == 'e') x -= w;
-    SDL_SetRenderScale(g->ren, sx, sy);
-    SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
-    SDL_RenderDebugText(g->ren, (x + 1.f) / sx, (y + 1.f) / sy, buf);
-    SDL_SetRenderDrawColor(g->ren, r, gg, b, 255);
-    SDL_RenderDebugText(g->ren, x / sx, y / sy, buf);
-    SDL_SetRenderScale(g->ren, 1.f, 1.f);
-}
-
 static void blit(osc_game *g, SDL_Texture *t, int w, int h, float x, float y)
 {
     if (!t) return;
@@ -342,12 +274,12 @@ static void attract_render(osc_game *g)
     SDL_SetRenderDrawColor(g->ren, 0, 0, 0, 255);
     SDL_RenderClear(g->ren);
     if (c < 100) {
-        fill(g, 0, 0, 400, 300, 120, 120, 250);
+        barra(g, 0, 0, 400, 300, rgb(120, 120, 250));
         blit_ab(g, 14, 110, 10);                                               /* Vencedores */
         osc_text_ex(g, 200, 210, osc_text(OSC_MEMO_TEXTO, 12, g->lang), 'c', 16, 250, 200, 0);
     }
     if (c >= 100 && c <= 370) {
-        for (int i = 0; i < 21; i++) fill(g, 0, (float)(15 * i), 400, (float)(15 * i + 15), (Uint8)(120 + 2 * i), (Uint8)(120 + 2 * i), 200);
+        for (int i = 0; i < 21; i++) barra(g, 0, 15 * i, 400, 15 * i + 15, rgb(120 + 2 * i, 120 + 2 * i, 200));
         int c2 = lround_i(cam / 2.0);
         blit_ab(g, 2, 50, (float)(50 - c2)); blit_ab(g, 2, 350, (float)(150 - c2)); blit_ab(g, 2, 300, (float)(180 - c2));
         for (int j = 0; j < 5; j++) {
@@ -358,8 +290,8 @@ static void attract_render(osc_game *g)
         for (int j = 0; j < 7; j++) { blit_ab(g, 0, 100, (float)(80 * j - 200 - cam)); blit_ab(g, 0, 305, (float)(80 * j - 200 - cam)); }
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 16; j++) blit_ab(g, 1, (float)(39 * i + 113), (float)(32 * j - 200 - cam));
-        fill(g, 147, (float)(-155 - cam), 270, (float)(-48 - cam), 0, 0, 0);
-        rect(g, 149, (float)(-153 - cam), 268, (float)(-50 - cam), 255, 255, 255);
+        barra(g, 147, -155 - cam, 270, -48 - cam, k_black);
+        retangulo(g, 149, -153 - cam, 268, -50 - cam, k_white);
         for (int i = 0; i < 8; i++) blit_ab(g, 4, (float)(50 * i), (float)(220 - cam));
         int bob = g->ciclo < 10 ? 4 : 0;
         for (int i = 0; i < 9; i++) {
