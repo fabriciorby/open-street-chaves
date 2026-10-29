@@ -15,7 +15,7 @@ jobs:
       - name: Regenerate
         run: python3 tools/gen_tables.py
       - name: Check no diff
-        run: git diff --exit-code src/tables_gen.c src/tables_gen.h
+        run: git diff --exit-code src/gen
 
   windows:
     name: Windows (MSVC)
