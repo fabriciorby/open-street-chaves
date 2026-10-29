@@ -235,12 +235,12 @@ void osc_game_shutdown(osc_game *g);
 void osc_movelist_render(osc_game *g);   /* G: mostragolpe */
 void osc_game_key(osc_game *g, SDL_Keycode key);   /* FormKeyDown: - = , . P G */
 void osc_go_attract(osc_game *g, int tick);
-/* endings.c */
+/* screen_endings.c */
 void osc_ending_start(osc_game *g, int ch);
 void osc_ending_seek(osc_game *g, int tick);
 void osc_ending_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_ending_render(osc_game *g);
-/* menu.c */
+/* screen_menu.c */
 void osc_menu_enter(osc_game *g, int which);   /* 2 = F1, 3 = F2 */
 void osc_menu_tick(osc_game *g, uint8_t in1, uint8_t in2);
 void osc_menu_key(osc_game *g, SDL_Scancode k);   /* FormKeyDown in state 3: assigns the key */
