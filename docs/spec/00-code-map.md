@@ -33,7 +33,7 @@ Every piece of game logic is a *published* method of TForm1, so the
 original Portuguese method names survive in the published method table
 [static]. Game state lives in **unit globals in BSS**. Code reaches them
 through a pointer table in DATA (`PTR_DAT_004b0dxx..004b12xx` → BSS).
-`re/tools/globals_pp.py` rewrites those accesses as `g_<addr>`.
+`tools/re/globals_pp.py` rewrites those accesses as `g_<addr>`.
 
 ### Form components (from the DFM resource `TFORM1`) [static]
 
@@ -59,7 +59,7 @@ Full decoded form: `re/out/forms/TFORM1.dfm.txt`.
 | MemoNomes, MemoTexto, MemoConfig, MemoFrases, MemoDialogo, MemoFinais, MemoCenarios, MemoConfigSalvo | TMemo (hidden) | text tables (names, texts, config, quotes, dialogue, endings, stages) and saved config |
 
 The embedded images have been extracted to `re/out/embedded/*.bmp` by
-`re/tools/dib2bmp.py`.
+`tools/re/dib2bmp.py`.
 
 ### TForm1 published methods [static: names and addresses; decomp: role]
 
@@ -157,15 +157,15 @@ The embedded images have been extracted to `re/out/embedded/*.bmp` by
 
 ## Tooling
 
-- `re/tools/dfm.py`: decode Delphi DFM resources.
-- `re/tools/dib2bmp.py`: extract DelphiX embedded images.
-- `re/tools/vmt.py`: Delphi VMT, published-method and field scan.
-- `re/tools/Improve.java`: Ghidra pass that defines Delphi string literals,
+- `tools/re/dfm.py`: decode Delphi DFM resources.
+- `tools/re/dib2bmp.py`: extract DelphiX embedded images.
+- `tools/re/vmt.py`: Delphi VMT, published-method and field scan.
+- `tools/re/Improve.java`: Ghidra pass that defines Delphi string literals,
   marks pointer-table entries constant and applies global names.
-- `re/tools/ExportAll.java`: Ghidra pass that applies function names and
+- `tools/re/ExportAll.java`: Ghidra pass that applies function names and
   exports all decompiled C and the string/global tables.
-- `re/tools/export.sh`: runs both Ghidra passes on the saved project.
-- `re/tools/globals_pp.py`: rewrites `PTR_DAT_` accesses as named globals.
+- `tools/re/export.sh`: runs both Ghidra passes on the saved project.
+- `tools/re/globals_pp.py`: rewrites `PTR_DAT_` accesses as named globals.
 - Outputs: `re/out/decomp/{all.c,tform1.c,tform1.pp.c,functions.tsv,strings.tsv,globals.tsv}`.
 
 REA (`rea` CLI 6.7.0 + Ghidra) is used for spot checks with Evidence IDs.

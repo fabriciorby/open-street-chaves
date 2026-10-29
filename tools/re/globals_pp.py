@@ -3,9 +3,9 @@
 Delphi references unit globals through a pointer table in DATA, so Ghidra
 shows `*PTR_DAT_004b1014` for what is really one global variable. This maps
 each pointer to its target and prints `g_<target>` (or the name assigned in
-globals.txt) instead.
+data/globals.txt) instead.
 
-Usage: python3 globals_pp.py Chaves.exe globals.txt in.c out.c
+Usage: python3 globals_pp.py Chaves.exe data/globals.txt in.c out.c
 """
 import os
 import re

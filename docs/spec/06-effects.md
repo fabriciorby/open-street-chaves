@@ -2,7 +2,7 @@
 
 Legend: **[decomp]** Ghidra pseudocode (not source), **[infer]**
 interpretation, **UNKNOWN** not established. Generated detail:
-`06a-effects.txt` (regenerate with `re/tools/effects.py`): per effect type
+`06a-effects.txt` (regenerate with `tools/re/effects.py`): per effect type
 the `(phase) → sprite` table, per-phase actions, and the spawn
 initialisation (life, speed, damage, hit box) of every type.
 

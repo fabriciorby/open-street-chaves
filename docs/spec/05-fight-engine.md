@@ -2,7 +2,7 @@
 
 Legend: **[decomp]** read from Ghidra pseudocode (analysis artifact, not
 source), **[infer]** interpretation, **UNKNOWN** not established. Generated
-tables (regenerate with the scripts in `re/tools/`):
+tables (regenerate with the scripts in `tools/re/`):
 
 - `05a-anim-tables.txt` — per character: hurt boxes per frame and hit boxes per
   `(state, timer)` set by the frame selector.
