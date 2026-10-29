@@ -94,7 +94,7 @@ right, left, two diagonals) at `y + 3`; `P` `K` `R` `?` print the tags "+S", "+C
 " (rapido)", "+S/C" with `texto(.., '-', 9, white)` at `y`; any other character leaves
 the cell empty. Names, inputs and tags are static Delphi string constants (one
 language only, not in the memos): the port reads them from `Chaves.exe` by constant
-index (`src/movelist.c` holds the index table, no text). There is no demonstration
+index (`src/screens/movelist.c` holds the index table, no text). There is no demonstration
 animation; the "3,500 lines" of the decompilation are the 15 x 5 inlined calls.
 
 ## Config file `Chaves.dat` [decomp]

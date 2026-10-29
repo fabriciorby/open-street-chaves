@@ -3,7 +3,7 @@ constant inside Chaves.exe's CODE section.
 
 Usage: python3 textindex.py re/out/text_constants.txt docs/spec/07a-texts.txt > docs/spec/07d-text-index.txt
 The port scans the executable for the same constants at runtime (see
-src/exetext.c), so the repository only stores numbers, never the text.
+src/data/exetext.c), so the repository only stores numbers, never the text.
 """
 import sys
 

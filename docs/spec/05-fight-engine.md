@@ -368,7 +368,7 @@ ground, x +- (distance + Random(n) * k); `hits` and `comboTimer` count up. At th
 dur - 2) the victim takes damage x `g_damageLevel`, `setMove(victim, 10)`, and the hitstun, vy and
 rotStep of that throw; the thrower ends in `setMove(19)` (Madruga 31, state 26) or `setMove(21)`
 (Barriga, state 27), Chiquinha leaps (state 12). Madruga 28 and 29 pick a random distinct victim
-frame in 41..43. The bodies are `sel_throws` in `src/game.c`.
+frame in 41..43. The bodies are `sel_throws` in `src/fight/selector.c`.
 
 ### Inventory of the frame selector `0x47d21c..0x48dcbf` (asm vs port) [objdump]
 

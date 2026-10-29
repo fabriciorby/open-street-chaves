@@ -3,7 +3,7 @@
  * The original keeps every string (fighter names, HUD texts, menus, stage
  * names, dialogue, endings, win quotes, in Portuguese and Spanish) as Delphi
  * string constants in the CODE section. We scan them in file order with the
- * same rule as re/tools/textconst.py and address them through the numeric
+ * same rule as tools/re/textconst.py and address them through the numeric
  * index table generated from docs/spec/07d-text-index.txt, so the repository
  * never contains the text itself.
  */
