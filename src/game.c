@@ -1,11 +1,11 @@
 /* Lifecycle of the game state (FormCreate / FormDestroy). */
 #include <string.h>
 
-#include "assets.h"
-#include "config.h"
-#include "font.h"
+#include "data/assets.h"
+#include "core/config.h"
+#include "render/font.h"
 #include "game.h"
-#include "unlocks.h"
+#include "core/unlocks.h"
 
 /* FormCreate: the common assets, the default records, the settings and the unlock files. */
 bool osc_game_init(osc_game *g, SDL_Renderer *ren, const char *data_dir)

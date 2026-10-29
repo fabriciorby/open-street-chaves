@@ -1,6 +1,6 @@
 """Build docs/spec/06b-spawn-offsets.txt: where each effect spawns relative to its owner.
 
-Usage: python3 spawnoffsets.py <objdump -d of Chaves.exe> Chaves.exe src/tables_gen.c
+Usage: python3 spawnoffsets.py <objdump -d of Chaves.exe> Chaves.exe src/gen/tables_gen.c
 Every FUN_00476a04(type, variant, owner, y, x) call in the frame selector computes
 x = owner.x +/- (dx + Random(rx)) and y = owner.y + dy + Random(ry); the sign follows the
 facing (the code has one call per facing). Combos are assigned to the characters that

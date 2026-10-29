@@ -46,7 +46,7 @@ animated to −120 at round end) — the second block uses `0x4b44d4`.
 ### Fight HUD, full transcription (2026-10-22) [decomp]
 
 The table above was a first pass; `draw_hud_top`, `draw_hud_bottom` and
-`draw_round_texts` in `src/game.c` now follow DXTimer1Timer
+`draw_round_texts` in `src/render/hud.c` now follow DXTimer1Timer
 (0x4a49ac..0x4a83bf) call by call. Corrections to the table:
 
 - Draw order: stage, stage animations, **top HUD**, shadows, fighters,
@@ -121,7 +121,7 @@ The table above was a first pass; `draw_hud_top`, `draw_hud_bottom` and
 ### Select, next battle, continue, records, name entry: full transcription (2026-10-22) [decomp]
 
 `select_*`, `vs_*`, `continue_*`, `records_render` and `name_*` in
-`src/flow.c` now follow DXTimer1Timer states 4, 5, 8, 9 and 12 call by
+`src/screens/flow.c` now follow DXTimer1Timer states 4, 5, 8, 9 and 12 call by
 call (0x4a22f0, 0x4a342f, 0x4ab259, 0x4ab647, 0x4adca3). Points that the
 summaries above got wrong or left open:
 
@@ -194,7 +194,7 @@ assign 0x49e74f..0x49e8b6) and the `Chaves.dat` reader in `FormCreate` (0x49d0c9
 port table was lifted from the decompiled listing and was wrong in many places; this section replaces it.
 
 **Call counts** (static call sites in the asm; "run" = calls executed per frame with the default values
-and a valid cursor; port = the same frame counted in `src/screen_menu.c` after the rewrite, before in brackets):
+and a valid cursor; port = the same frame counted in `src/screens/screen_menu.c` after the rewrite, before in brackets):
 
 | kind | F1 asm sites / run | F1 port | F2 asm sites / run | F2 port |
 |---|---|---|---|---|
@@ -208,7 +208,7 @@ and a valid cursor; port = the same frame counted in `src/screen_menu.c` after t
 | value steps | 12 left + 12 right sites, 12 clamps after the input | same | 8 assign stores | same |
 | config file | read: `FormCreate`; write: F1-leave only (`Clear`, 10 `Add`, `SaveToFile("Chaves.dat")`) | same (+ key lines, see below) | none | saved on F2-leave too (port extension) |
 
-**What was different and is fixed** (all in `src/screen_menu.c`, plus the exit keys in `flow.c`/`main.c`):
+**What was different and is fixed** (all in `src/screens/screen_menu.c`, plus the exit keys in `screens/flow.c`/`main.c`):
 
 - **The F1 menu could not be left**: `handle_keys` cleared `key_f1`/`key_f2` in every state before the
   menu saw them. F1 now leaves state 2 only (saves, resumes the attract cycle at the tick it was

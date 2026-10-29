@@ -219,7 +219,7 @@ anchored on `y`).
 
 Statement blocks of `desenhaefeitos` (`0x48edfc`, decomp
 `re/out/decomp/funcs/0048edfc_TForm1_desenhaefeitos.c`, FPU operands read from the
-disassembly) in execution order against `update_fx` / `osc_fx_render` in `src/game.c`.
+disassembly) in execution order against `update_fx` (`src/fight/effects.c`) / `osc_fx_render` (`src/render/fight_draw.c`).
 Status is that of the port **before** this audit: **ported** (matched), **missing**,
 **different**; every missing or different block is now ported (column "now").
 Pause gates: `P2` = `g_superPause` (`0x4b57f8`) and `g_hitStop` (`0x4b57f9`) both

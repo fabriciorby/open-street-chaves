@@ -17,9 +17,9 @@
 
 #include <string.h>
 
-#include "fight.h"
+#include "fight/fight.h"
 #include "game.h"
-#include "arcade.h"
+#include "screens/arcade.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 static int g_web_ready;

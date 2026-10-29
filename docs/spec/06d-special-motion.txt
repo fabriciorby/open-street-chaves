@@ -101,7 +101,7 @@
 #   15 28: k = 18 - timer (signed byte); variant 1: dx = k; variant 2: dx = k * 1.3 (the 80-bit constant at 0x48dd80)
 #   15 29: k = max(22 - timer, 1) (signed byte); dx = k, any variant
 
-## Direct position and flight rules (hand-coded in special_motion(), src/game.c)
+## Direct position and flight rules (hand-coded in special_motion(), src/fight/selector.c)
 
 Decompiled from the same function (0x47d21c). T = animTimer, side = hitLevel (1/2), frame = the
 character-relative frame index, floor = groundY (300), camX/camY = camera. "walk" is the table

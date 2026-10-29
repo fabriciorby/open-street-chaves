@@ -10,8 +10,8 @@
 #include <SDL3/SDL.h>
 #include <stdbool.h>
 
-#include "strip.h"
-#include "wav.h"
+#include "data/strip.h"
+#include "data/wav.h"
 
 #define OSC_SCREEN_W 400
 #define OSC_SCREEN_H 300

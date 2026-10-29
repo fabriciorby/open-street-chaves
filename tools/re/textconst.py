@@ -1,7 +1,7 @@
 """List every Delphi long-string constant in the CODE section of Chaves.exe.
 
 Usage: python3 textconst.py re/game/Chaves.exe > re/out/text_constants.txt
-Rule (mirrored exactly by src/exetext.c): walking the CODE section in
+Rule (mirrored exactly by src/data/exetext.c): walking the CODE section in
 4-byte steps, a constant starts where the 8 bytes before the text are
 refcount -1 and a length 1..512, the text has no control characters other
 than tab/CR/LF, and a NUL follows it. The output order is the index the

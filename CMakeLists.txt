@@ -23,46 +23,46 @@ endif()
 
 add_executable(open-street-chaves
   src/main.c
-  src/bmp.c
-  src/strip.c
-  src/wav.c
+  src/data/bmp.c
+  src/data/strip.c
+  src/data/wav.c
   src/game.c
-  src/assets.c
-  src/effects.c
-  src/fight.c
-  src/fight_draw.c
-  src/hud.c
-  src/fighter.c
-  src/stage.c
-  src/combat.c
-  src/commands.c
-  src/selector.c
-  src/cpu.c
-  src/tables_gen.c
-  src/exetext.c
-  src/exeimg.c
-  src/flow.c
-  src/screen_select.c
-  src/screen_vs.c
-  src/screen_continue.c
-  src/screen_attract.c
-  src/screen_records.c
-  src/screen_name.c
-  src/screen_fight.c
-  src/text.c
-  src/screen_menu.c
-  src/config.c
-  src/unlocks.c
-  src/arcade.c
-  src/font.c
-  src/screen_endings.c
-  src/movelist.c
+  src/data/assets.c
+  src/fight/effects.c
+  src/fight/fight.c
+  src/render/fight_draw.c
+  src/render/hud.c
+  src/fight/fighter.c
+  src/fight/stage.c
+  src/fight/combat.c
+  src/fight/commands.c
+  src/fight/selector.c
+  src/fight/cpu.c
+  src/gen/tables_gen.c
+  src/data/exetext.c
+  src/data/exeimg.c
+  src/screens/flow.c
+  src/screens/screen_select.c
+  src/screens/screen_vs.c
+  src/screens/screen_continue.c
+  src/screens/screen_attract.c
+  src/screens/screen_records.c
+  src/screens/screen_name.c
+  src/screens/screen_fight.c
+  src/render/text.c
+  src/screens/screen_menu.c
+  src/core/config.c
+  src/core/unlocks.c
+  src/screens/arcade.c
+  src/render/font.c
+  src/screens/screen_endings.c
+  src/screens/movelist.c
 )
 # Only our own code is strict C17; SDL (and Emscripten's EM_ASM) need GNU extensions.
 set_target_properties(open-street-chaves PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
 target_include_directories(open-street-chaves PRIVATE src third_party)
 # stb_truetype is compiled with -Wall; silence its known unused-function noise
-set_source_files_properties(src/font.c PROPERTIES COMPILE_OPTIONS "$<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-unused-function>")
+set_source_files_properties(src/render/font.c PROPERTIES COMPILE_OPTIONS "$<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-unused-function>")
 # bundled fallback font (SIL OFL) next to the executable
 add_custom_command(TARGET open-street-chaves POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:open-street-chaves>/assets)
