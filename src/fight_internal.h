@@ -18,7 +18,7 @@ extern const int k_gravity;
 
 static inline int iround(double v) { return (int)rint(v); }   /* Delphi Round: half to even */
 
-static inline osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->p[1] ? &g->p[2] : &g->p[1]; }
+static inline osc_fighter *opp(osc_game *g, osc_fighter *f) { return f == &g->fight.p[1] ? &g->fight.p[2] : &g->fight.p[1]; }
 
 /* fighter.c */
 void set_move(osc_game *g, osc_fighter *f, int move);
@@ -27,8 +27,8 @@ void counters(osc_game *g, osc_fighter *f);
 void move_clock(osc_game *g, osc_fighter *f);
 void physics(osc_game *g, osc_fighter *f);
 void fighter_frame(osc_game *g, osc_fighter *f);
-void init_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);
-void osc_reset_fighter(osc_fighter *f, int ch, int p, const osc_strip *strip);   /* zerardados */
+void init_fighter(osc_fighter *f, int ch, int p, int strip_slot);
+void osc_reset_fighter(osc_fighter *f, int ch, int p, int strip_slot);   /* zerardados */
 
 /* selector.c */
 void select_frame(osc_game *g, osc_fighter *f);

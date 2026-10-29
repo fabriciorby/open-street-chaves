@@ -6,6 +6,6 @@
 
 void osc_fight_render(osc_game *g);
 void osc_fx_render(osc_game *g);
-void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);   /* helper for the ending scripts (endings.c) */
+void osc_draw_fighter_at(osc_game *g, int slot, int x, int y, int state, int timer);   /* helper for the ending scripts (screen_endings.c) */
 
 #endif

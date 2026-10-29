@@ -131,7 +131,7 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
     SDL_SetRenderLogicalPresentation(a->ren, OSC_SCREEN_W, OSC_SCREEN_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderVSync(a->ren, 1);
 
-    a->game.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
+    a->game.settings.ai_p2 = !two_players && !demo;   /* P2 is the CPU unless --2p (or --demo) */
 #ifdef __EMSCRIPTEN__
     data = "/data";   /* filled by the page's folder picker (web/shell.html) */
     a->loaded = false;
@@ -139,33 +139,33 @@ SDL_AppResult SDL_AppInit(void **state, int argc, char **argv)
 #else
     a->loaded = osc_game_init(&a->game, a->ren, data);
 #endif
-    if (lang) a->game.lang = lang;
-    if (max_frames > 0) a->game.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
+    if (lang) a->game.settings.lang = lang;
+    if (max_frames > 0) a->game.fight.rng = 0x5EED1234u;   /* --frames runs are reproducible (tests/golden.sh): fixed RNG seed ... */
     if (a->loaded && (direct || demo)) {
-        a->game.p1_in = true; a->game.p2_in = !a->game.ai_p2;
-        a->game.fight_no = battle;
+        a->game.flow.p1_in = true; a->game.flow.p2_in = !a->game.settings.ai_p2;
+        a->game.fight.fight_no = battle;
         osc_make_ladder(&a->game, c1);
-        a->game.sel[1] = c1; a->game.sel[2] = c2;
-        a->game.p[1].human = true; a->game.p[2].human = !a->game.ai_p2;
-        a->game.p[1].char_id = c1; a->game.p[2].char_id = c2;
+        a->game.flow.sel[1] = c1; a->game.flow.sel[2] = c2;
+        a->game.fight.p[1].human = true; a->game.fight.p[2].human = !a->game.settings.ai_p2;
+        a->game.fight.p[1].char_id = c1; a->game.fight.p[2].char_id = c2;
         a->loaded = osc_fight_start(&a->game, c1, c2, stage);
     }
     if (a->loaded && !(direct || demo) && start_tick > 0) osc_go_attract(&a->game, start_tick);
     if (a->loaded && !(direct || demo) && (start_screen == OSC_SCREEN_MENU_F1 || start_screen == OSC_SCREEN_MENU_F2)) osc_menu_enter(&a->game, start_screen);
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_ENDING) { osc_ending_start(&a->game, c1); osc_ending_seek(&a->game, start_tick); }
-    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CREDITS) { a->game.screen = OSC_SCREEN_CREDITS; a->game.screen_tick = start_tick; }
-    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.screen = OSC_SCREEN_RECORDS; a->game.screen_tick = start_tick; }
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CREDITS) { a->game.flow.screen = OSC_SCREEN_CREDITS; a->game.flow.screen_tick = start_tick; }
+    if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_RECORDS) { a->game.flow.screen = OSC_SCREEN_RECORDS; a->game.flow.screen_tick = start_tick; }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_NAME) {   /* debug: P1 enters a name */
         osc_game *g = &a->game;
-        g->p[1].human = true; g->p[1].char_id = c1; g->p[1].score = 5000;
-        memcpy(g->name[1], "AAA", 4); g->name_pos[1] = 1; g->name_active[1] = true;
-        g->name_after = OSC_SCREEN_CONTINUE; g->screen = OSC_SCREEN_NAME;
+        g->fight.p[1].human = true; g->fight.p[1].char_id = c1; g->fight.p[1].score = 5000;
+        memcpy(g->flow.name[1], "AAA", 4); g->flow.name_pos[1] = 1; g->flow.name_active[1] = true;
+        g->flow.name_after = OSC_SCREEN_CONTINUE; g->flow.screen = OSC_SCREEN_NAME;
     }
     if (a->loaded && !(direct || demo) && start_screen == OSC_SCREEN_CONTINUE) {   /* debug: the continue countdown */
         osc_game *g = &a->game;
-        g->screen = OSC_SCREEN_CONTINUE; g->screen_tick = 0; g->ciclo = 0; g->timer_sec = 9; g->timer_sub = 25;
+        g->flow.screen = OSC_SCREEN_CONTINUE; g->flow.screen_tick = 0; g->fight.ciclo = 0; g->fight.timer_sec = 9; g->fight.timer_sub = 25;
     }
-    a->game.debug_boxes = boxes;
+    a->game.flow.debug_boxes = boxes;
 #ifndef __EMSCRIPTEN__
     if (!a->loaded)
         SDL_Log("Could not load the game data from '%s'. Pass --data <folder containing Chaves.exe>.", data);
@@ -181,15 +181,15 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
     case SDL_EVENT_QUIT:
         return SDL_APP_SUCCESS;
     case SDL_EVENT_KEY_DOWN:
-        if (e->key.scancode == SDL_SCANCODE_F1) a->game.key_f1 = true;
-        if (e->key.scancode == SDL_SCANCODE_F2) a->game.key_f2 = true;
+        if (e->key.scancode == SDL_SCANCODE_F1) a->game.flow.key_f1 = true;
+        if (e->key.scancode == SDL_SCANCODE_F2) a->game.flow.key_f2 = true;
         if (a->loaded) osc_menu_key(&a->game, e->key.scancode);   /* F2 menu: repeats count, as WM_KEYDOWN */
-        if (e->key.scancode == SDL_SCANCODE_5 || e->key.scancode == SDL_SCANCODE_KP_5) a->game.key_coin = true;
-        if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.key_start1 = true;
-        if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.key_start2 = true;
+        if (e->key.scancode == SDL_SCANCODE_5 || e->key.scancode == SDL_SCANCODE_KP_5) a->game.flow.key_coin = true;
+        if (e->key.scancode == SDL_SCANCODE_1 || e->key.scancode == SDL_SCANCODE_KP_1) a->game.flow.key_start1 = true;
+        if (e->key.scancode == SDL_SCANCODE_2 || e->key.scancode == SDL_SCANCODE_KP_2) a->game.flow.key_start2 = true;
         if (e->key.key == SDLK_ESCAPE) return SDL_APP_SUCCESS;
         if (a->loaded && !(e->key.repeat && (e->key.key == SDLK_P || e->key.key == SDLK_G))) osc_game_key(&a->game, e->key.key);   /* - = , . repeat like WM_KEYDOWN */
-        if (e->key.key == SDLK_B && !e->key.repeat) a->game.debug_boxes = !a->game.debug_boxes;
+        if (e->key.key == SDLK_B && !e->key.repeat) a->game.flow.debug_boxes = !a->game.flow.debug_boxes;
         if (e->key.scancode < SDL_SCANCODE_COUNT) a->keys[e->key.scancode] = true;
         break;
     case SDL_EVENT_KEY_UP:
@@ -213,22 +213,22 @@ SDL_AppResult SDL_AppEvent(void *state, SDL_Event *e)
 /* Scripted opponent for --demo: walk towards P1, punch every 25 ticks, block sometimes. */
 static uint8_t demo_input(const osc_game *g)
 {
-    const osc_fighter *p2 = &g->p[2], *p1 = &g->p[1];
+    const osc_fighter *p2 = &g->fight.p[2], *p1 = &g->fight.p[1];
     uint8_t in = 0;
     double dist = p2->x - p1->x;
     if (dist > 70) in |= OSC_IN_LEFT;
     if (dist < -70) in |= OSC_IN_RIGHT;
-    if (g->tick % 25 == 0 && dist >= -70 && dist <= 70) in |= (g->tick % 50 == 0) ? OSC_IN_B3 : OSC_IN_B1;
-    if (p1->attacking && g->tick % 3 == 0) in |= (dist > 0) ? OSC_IN_RIGHT : OSC_IN_LEFT; /* step back = block */
+    if (g->fight.tick % 25 == 0 && dist >= -70 && dist <= 70) in |= (g->fight.tick % 50 == 0) ? OSC_IN_B3 : OSC_IN_B1;
+    if (p1->attacking && g->fight.tick % 3 == 0) in |= (dist > 0) ? OSC_IN_RIGHT : OSC_IN_LEFT; /* step back = block */
     return in;
 }
 
 /* --autofire: P1 performs down, down-forward, forward + punch every 60 ticks (QCF+P). */
 static uint8_t autofire_input(const osc_game *g)
 {
-    if (g->screen != OSC_SCREEN_FIGHT) return (g->screen_tick % 30) == 20 ? OSC_IN_B1 : 0; /* confirm menus */
-    int t = (int)(g->tick % 60);
-    const osc_fighter *p1 = &g->p[1];
+    if (g->flow.screen != OSC_SCREEN_FIGHT) return (g->flow.screen_tick % 30) == 20 ? OSC_IN_B1 : 0; /* confirm menus */
+    int t = (int)(g->fight.tick % 60);
+    const osc_fighter *p1 = &g->fight.p[1];
     uint8_t fwd = p1->facing == 1 ? OSC_IN_RIGHT : OSC_IN_LEFT;
     if (t < 3) return OSC_IN_DOWN;
     if (t < 6) return OSC_IN_DOWN | fwd;
@@ -244,12 +244,12 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (!a->loaded && g_web_ready) {
         g_web_ready = 0;
         a->loaded = osc_game_init(&a->game, a->ren, "/data");
-        a->game.debug_boxes = false;
+        a->game.flow.debug_boxes = false;
         a->last_ns = SDL_GetTicksNS();
     }
 #endif
     /* DXTimer1.Interval = g_speedDelay ms; 0 runs one tick per frame */
-    const Uint64 TICK_NS = (Uint64)(a->game.speed_delay > 0 ? a->game.speed_delay : 1) * 1000000ull;
+    const Uint64 TICK_NS = (Uint64)(a->game.flow.speed_delay > 0 ? a->game.flow.speed_delay : 1) * 1000000ull;
     Uint64 now = SDL_GetTicksNS();
     a->acc_ns += now - a->last_ns;
     a->last_ns = now;
@@ -261,8 +261,8 @@ SDL_AppResult SDL_AppIterate(void *state)
 #endif
     while (a->acc_ns >= TICK_NS) {
         if (a->loaded) {
-            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[0]) | pad_input(a->pads[0]));
-            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.keymap[1]) | pad_input(a->pads[1]));
+            uint8_t in1 = a->autofire ? autofire_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.settings.keymap[0]) | pad_input(a->pads[0]));
+            uint8_t in2 = a->demo ? demo_input(&a->game) : (uint8_t)(read_input(a->keys, a->game.settings.keymap[1]) | pad_input(a->pads[1]));
             for (int i = 0; i < a->n_press; i++) {   /* scripted key taps for headless tests */
                 if (a->press_tick[i] == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_DOWN; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }
                 if (a->press_tick[i] + 3 == a->ticks_run) { SDL_Event ev = {0}; ev.type = SDL_EVENT_KEY_UP; ev.key.scancode = a->press_key[i]; ev.key.key = SDL_GetKeyFromScancode(a->press_key[i], SDL_KMOD_NONE, false); SDL_AppEvent(a, &ev); }
@@ -271,11 +271,11 @@ SDL_AppResult SDL_AppIterate(void *state)
             osc_game_tick(&a->game, in1, in2);
         }
         a->acc_ns -= TICK_NS;
-        if (a->game.speed_delay == 0) a->acc_ns = 0;
+        if (a->game.flow.speed_delay == 0) a->acc_ns = 0;
     }
     if (a->loaded) {
         /* DXDraw1.Left shift: the 400x300 picture slides, the form behind it is black */
-        int dx = a->game.view_dx;
+        int dx = a->game.flow.view_dx;
         SDL_SetRenderViewport(a->ren, NULL); SDL_SetRenderClipRect(a->ren, NULL);
         if (dx) {
             SDL_SetRenderDrawColor(a->ren, 0, 0, 0, 255); SDL_RenderClear(a->ren);
@@ -306,8 +306,8 @@ SDL_AppResult SDL_AppIterate(void *state)
     if (a->max_frames > 0 && a->frames >= a->max_frames) {
         const osc_game *g = &a->game;
         SDL_Log("frames=%ld ticks=%u loaded=%d p1(x=%.0f st=%d fr=%d hp=%.1f) p2(x=%.0f st=%d fr=%d hp=%.1f) cam=%d,%d",
-                a->frames, g->tick, a->loaded, g->p[1].x, g->p[1].state, g->p[1].frame, g->p[1].health,
-                g->p[2].x, g->p[2].state, g->p[2].frame, g->p[2].health, g->cam_x, g->cam_y);
+                a->frames, g->fight.tick, a->loaded, g->fight.p[1].x, g->fight.p[1].state, g->fight.p[1].frame, g->fight.p[1].health,
+                g->fight.p[2].x, g->fight.p[2].state, g->fight.p[2].frame, g->fight.p[2].health, g->fight.cam_x, g->fight.cam_y);
         return a->loaded ? SDL_APP_SUCCESS : SDL_APP_FAILURE;
     }
     return SDL_APP_CONTINUE;

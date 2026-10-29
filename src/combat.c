@@ -9,32 +9,32 @@
 void defend(osc_game *g, osc_fighter *f)
 {
     osc_fighter *o = opp(g, f);
-    int me = (f == &g->p[1]) ? 1 : 2;
+    int me = (f == &g->fight.p[1]) ? 1 : 2;
     if (f->human) {
         /* holding back guards against a body attack or any hostile projectile */
         if (held(f, "TRAS") && !held(f, "BAIXO") && o->attacking) set_move(g, f, 12);
         if (held(f, "TRAS") && held(f, "BAIXO") && o->attacking) set_move(g, f, 13);
         for (int i = 0; i < OSC_MAX_FX; i++) {
-            const osc_effect *e = &g->fx[i];
+            const osc_effect *e = &g->fight.fx[i];
             if (!e->type || !e->has_hitbox || e->owner == me) continue;
             if (held(f, "TRAS") && !held(f, "BAIXO")) set_move(g, f, 12);
             if (held(f, "TRAS") && held(f, "BAIXO")) set_move(g, f, 13);
         }
         return;
     }
-    int dist = abs(iround(g->p[1].x) - iround(g->p[2].x));
+    int dist = abs(iround(g->fight.p[1].x) - iround(g->fight.p[2].x));
     bool proj = false, pers = false;
     int pd = 0;
     double ey = 0;
     for (int i = 0; i < OSC_MAX_FX; i++) {
-        const osc_effect *e = &g->fx[i];
+        const osc_effect *e = &g->fight.fx[i];
         if (!e->has_hitbox || e->owner == me || !e->type) continue;
         proj = true;
         pd = abs(iround(f->x) - iround(e->x));
         if (e->persist) pers = true;
         ey = e->y;
     }
-    double kb = (8 - g->level) * 0.9 + 1.2 - 0.1 * g->fight_no;
+    double kb = (8 - g->settings.level) * 0.9 + 1.2 - 0.1 * g->fight.fight_no;
     if (kb < 0.0) kb = 0.0;
 
     if (o->attacking && dist <= 160) {
@@ -67,7 +67,7 @@ void melee_step(osc_game *g, osc_fighter *a)
 {
     osc_fighter *v = opp(g, a);
     /* states 17/18 slide forward with a trail of dust */
-    if ((a->state == 17 || a->state == 18) && !g->super_pause && !g->hit_stop) {
+    if ((a->state == 17 || a->state == 18) && !g->fight.super_pause && !g->fight.hit_stop) {
         if (a->facing == 1) move_x(g, a, -a->hitstun);
         if (a->facing == 2) move_x(g, a, a->hitstun);
         if (osc_random(g, 2) == 0) {
@@ -79,7 +79,7 @@ void melee_step(osc_game *g, osc_fighter *a)
     int ar = iround(a->x) + a->hit_r, ab = iround(a->y) - a->sprite_h + a->hit_b;
     int vl = iround(v->x) + v->hurt_l, vt = iround(v->y) - v->sprite_h + v->hurt_t;
     int vr = iround(v->x) + v->hurt_r, vb = iround(v->y) - v->sprite_h + v->hurt_b;
-    if (!a->attacking || v->invuln || !(al < vr && ar > vl && at < vb && ab > vt) || g->hit_stop || g->super_pause)
+    if (!a->attacking || v->invuln || !(al < vr && ar > vl && at < vb && ab > vt) || g->fight.hit_stop || g->fight.super_pause)
         return;
 
     /* low attacks open a standing guard, jump attacks a crouching one */
@@ -87,20 +87,20 @@ void melee_step(osc_game *g, osc_fighter *a)
     if (a->state >= 13 && a->state <= 16 && v->state == 22) v->blocking = false;
     double cx = a->x + iround((a->hit_l + a->hit_r) / 2.0);
     double cy = a->y - a->sprite_h + iround((a->hit_t + a->hit_b) / 2.0);
-    bool live = !g->challenge && !g->no_push;
+    bool live = !g->fight.challenge && !g->fight.no_push;
 
     if (v->blocking) {
         v->anim_timer = 1;
-        g->snd_pending = 10;
+        g->fight.snd_pending = 10;
         spawn_fx(g, 14, 0, 0, cx, cy);
         if (v->facing == 1) move_x(g, v, -10.0);
         if (v->facing == 2) move_x(g, v, 10.0);
-        if (live) { v->health -= a->chip * g->damage_level; v->trail_delay = 20; }
-        if (v->health <= 0.0) { g->snd_pending = 9; set_move(g, v, 10); }
+        if (live) { v->health -= a->chip * g->settings.damage_level; v->trail_delay = 20; }
+        if (v->health <= 0.0) { g->fight.snd_pending = 9; set_move(g, v, 10); }
         a->attacking = false;
         if (v->health > 0.0) {
-            if (a->hit_level == 1) g->hit_stop = osc_random(g, 4) + 2;
-            if (a->hit_level == 2) g->hit_stop = osc_random(g, 4) + 4;
+            if (a->hit_level == 1) g->fight.hit_stop = osc_random(g, 4) + 2;
+            if (a->hit_level == 2) g->fight.hit_stop = osc_random(g, 4) + 4;
         }
     }
     /* a chip KO dropped the guard (setMove 10), so it also lands as a hit */
@@ -108,7 +108,7 @@ void melee_step(osc_game *g, osc_fighter *a)
         int ch = a->char_id, st = a->state, t = a->anim_timer;
         if (v->x < a->x) v->facing = 1;
         if (v->x >= a->x) v->facing = 2;
-        if (a->human && v->health > 0.0 && !g->hit_stop && !g->super_pause) a->score += 5;
+        if (a->human && v->health > 0.0 && !g->fight.hit_stop && !g->fight.super_pause) a->score += 5;
         if (a->meter < OSC_METER_MAX) a->meter += 2.0 * k_meter_unit;
         if (v->meter < OSC_METER_MAX) v->meter += 1.0 * k_meter_unit;
         if (a->combo_timer <= 35) a->hits = 0;
@@ -120,12 +120,12 @@ void melee_step(osc_game *g, osc_fighter *a)
         if (ch == 6 && st == 29) a->combo_timer = 50;
         if (ch == 15 && st == 27) a->combo_timer = 50;
         if (a->hits > a->max_combo) a->max_combo = a->hits;
-        if (live) { v->health -= a->damage * g->damage_level; v->trail_delay = 20; }
-        if (g->cfg_flash) {
-            if (a->hit_level == 1 && osc_random(g, 5) == 0) g->flash = 6;
-            if (a->hit_level == 2 && osc_random(g, 2) == 0) g->flash = 6;
+        if (live) { v->health -= a->damage * g->settings.damage_level; v->trail_delay = 20; }
+        if (g->settings.cfg_flash) {
+            if (a->hit_level == 1 && osc_random(g, 5) == 0) g->fight.flash = 6;
+            if (a->hit_level == 2 && osc_random(g, 2) == 0) g->fight.flash = 6;
         }
-        if (v->health <= 0.0) { g->snd_pending = 8; set_move(g, v, 10); }
+        if (v->health <= 0.0) { g->fight.snd_pending = 8; set_move(g, v, 10); }
         /* spinning throws: the victim turns 20 degrees a tick */
         if ((ch == 4 && st == 29) || (ch == 5 && st == 29 && t >= 15) || (ch == 6 && st == 29 && t >= 22) ||
             (ch == 9 && st == 29 && t >= 14) || (ch == 10 && st == 29 && t >= 15) ||
@@ -134,7 +134,7 @@ void melee_step(osc_game *g, osc_fighter *a)
             if (v->facing == 2) v->rot_step = 20;
         }
         spawn_fx(g, 1, 0, 0, cx, cy);
-        if ((g->cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0) || g->unlock_satanas)
+        if ((g->settings.cfg_blood && a->hit_level == 2 && osc_random(g, 5) == 0) || g->settings.unlocks.satanas)
             spawn_fx(g, 10, 0, 0, v->x, v->y - (v->sprite_h - 40));
         set_move(g, v, (st == 4 || st == 6 || st == 8 || st == 9 || st == 10) ? 9 : 8);
         if (a->knockdown || v->vy != 0 || v->y < OSC_GROUND_Y) set_move(g, v, 10);
@@ -151,13 +151,13 @@ void melee_step(osc_game *g, osc_fighter *a)
         if (ch == 4 && st == 29) v->vy = -30;
         if (ch == 5 && st == 29 && t >= 15) v->vy = -30;
         if (ch == 15 && st == 27) v->vy = -26;
-        if (a->hit_level == 1) g->snd_pending = 7;
-        if (a->hit_level == 2) g->snd_pending = 8;
-        if (a->hit_level == 3) g->snd_pending = 9;
-        if (!g->first_hit) {
+        if (a->hit_level == 1) g->fight.snd_pending = 7;
+        if (a->hit_level == 2) g->fight.snd_pending = 8;
+        if (a->hit_level == 3) g->fight.snd_pending = 9;
+        if (!g->fight.first_hit) {
             a->msg_index = 1; a->msg_timer = 50;   /* "Primeiro Ataque" */
-            if (a->human && !g->hit_stop && !g->super_pause) a->score += 300;
-            g->first_hit = true;
+            if (a->human && !g->fight.hit_stop && !g->fight.super_pause) a->score += 300;
+            g->fight.first_hit = true;
         }
         a->on_top = true; v->on_top = false;
         a->attacking = false; v->attacking = false;
@@ -167,14 +167,14 @@ void melee_step(osc_game *g, osc_fighter *a)
         if (ch == 3 && a->state == 29) { a->state = 30; a->anim_timer = 0; a->anim_dur = 30; v->attacking = false; }
         if (ch == 7 && a->state == 29) { a->state = 30; a->anim_timer = 0; a->anim_dur = 15; v->attacking = false; }
         if (v->health > 0.0) {
-            if (a->hit_level == 1) g->hit_stop = osc_random(g, 4) + 5;
-            if (a->hit_level == 2) g->hit_stop = osc_random(g, 4) + 7;
+            if (a->hit_level == 1) g->fight.hit_stop = osc_random(g, 4) + 5;
+            if (a->hit_level == 2) g->fight.hit_stop = osc_random(g, 4) + 7;
         }
         select_frame(g, v);
     }
     /* the attacker bounces off a cornered victim */
-    if (!g->no_push) {
-        if (v->x >= g->cam_x + 370) move_x(g, a, -12.0);
-        if (v->x <= g->cam_x + 30) move_x(g, a, 12.0);
+    if (!g->fight.no_push) {
+        if (v->x >= g->fight.cam_x + 370) move_x(g, a, -12.0);
+        if (v->x <= g->fight.cam_x + 30) move_x(g, a, 12.0);
     }
 }

@@ -46,7 +46,7 @@ void sequences(osc_game *g, osc_fighter *f)
 /* ---- golpe: button -> special move ----------------------------------------------- */
 static void golpe(osc_game *g, osc_fighter *f, int btn)
 {
-    if (g->hit_stop) return;
+    if (g->fight.hit_stop) return;
     for (int i = 0; i < OSC_N_GOLPE; i++) {
         const osc_golpe_row *r = &osc_golpe[i];
         if (r->ch != f->char_id || r->btn != btn) continue;
